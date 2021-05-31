@@ -1,43 +1,43 @@
 # Laravel Translator
 
-Перевод приложений Laravel через удобный и современный интерфейс.
+Translate Laravel applications using modern ui.
 
-## Основные идеи
+## Concepts
 
-Внешний вид и концепция такие же, как у Horizon или Telescope. Пакет показывает все переведенные и не переведенные строки для всех языков, объявленных в системе. 
+Visually it would be like Horizon and Telescope. It will show all translated and untranslated strings for every locale, registered in application.
 
-Позволяет редактировать строки переводов на лету. 
+It allows to translate and create new strings.
 
-Синхронизирует строки переводов между языками. Если в en есть 100 строк, а в ru только 10, то можно дополнить русские строки недостающими из английского.
+It may populate strings through locales. Saying, if `en` has 100 strings, and `ru` only 10, it may create missing russian strings.
 
-Позволяет добавлять новые строки.
+It would be great to extend `\Illuminate\Translation\Translator` with Gettext support.
 
-Можно (и нужно) расширить функциональность `\Illuminate\Translation\Translator`, добавив частичную или полную поддержку Gettext.
+Gettext can not only extract strings from source codes, it is powerfull translation service itself. For some languages Laravel ranslates numeral adjectives in a wrong way, and Gettext may be helpful in that case. Furthermore, we may combine both ways: translate some strings in a traditional way, and the rest using gettext.
 
-Gettext может быть использован только для сбора строк переводов из исходных файлов проекта. Или же Gettext может быть использован в качестве механизма реализации переводов. Laravel неудовлетворительно реализует переводы числительных, а ngettext решает эту проблему. Можно комбинировать подходы — что-то переводить с помощью `Translator`, что-то — с помощью Gettext.
-
-Можно подключить функциональность онлайн-переводчиков.
+We may utilize online translation services.
 
 ## Gettext
 
-### Сборщик строк переводов
+### As string collector
 
-Режим, в котором команда `xgettext` используется для сбора строк переводов из исходных файлов проекта. Не сможет собрать переводы числительных. Нет. Не просите.
+In that mode we will use `xgettext` to collect strings from application source codes. `xgettext` can not detect Laravel's `trans_choice`. Can. Not. 
 
-Собранные строки добавляет в языковые файлы — `json` или `php` — в зависимости от их сигнатуры.
+Collected strings will be stored to `lang` files  — `json` or `php` — depending on string signature.
 
-Это уже решает множество проблем, алилуйа.
+### As translation service
 
-### Сервис переводов
+In that mode we will store collected strings not in `lang` files, but in `po` files. After all `po` files will be compiled to `mo`.
 
-Режим, в котором команда `xgettext` используется для сбора строк переводов из исходных файлов проекта, но сохраняет найденное не в стандартных языковых файлах, а в файлах `po`. После переводов файлы `po` компилируются в файлы `mo`.
+Service will search strings both in `lang` and `mo` files.
 
-Сервис `Gettext` переопределяет сервис `Translator`, и ищет строки переводов не только в стандартных файлах, но и в файлах `mo`.
+This mode brings to application true support of pluralization.
 
-Этот режим обеспечивает настоящую поддержку числительных.
+### Settings
 
-### Настройка
+Service should know the list of application locales. Also we should provide array of folders/files for searching strings. We suppose there should be possibility to exclude some resources from scanning.
 
-Gettext должен знать перечень языков приложения, и должен знать перечень папок/файлов для поиска строк переводов. Наверняка нужна возможность исключать отдельные папки/файлы из посика.
+We may define strings that should be translated traditional way, e.g. `['validation.', 'passwords.']`.
 
-Для работы в режиме сервиса переводов можно указать маску строк, которые следует переводить классическим способом. Например `['validation.', 'passwords.']`.
+## Dashboard
+
+We need all the functionality of PoEdit. It is not an ideal, but good strating point.
