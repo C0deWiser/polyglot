@@ -9,7 +9,7 @@ return [
     |
     | This option is used to enable or disable gettext functionality.
     |
-    | 'legacy'      - use pure Laravel Translator; collect string manually.
+    | 'inherit'     - use pure Laravel Translator; collect string manually.
     | 'collector'   - use gettext for collecting string; use Laravel Translator for translating.
     | 'translator'  — use gettext for collecting string and for translating too.
     |

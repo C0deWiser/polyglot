@@ -1,6 +1,7 @@
 {
     "name": "codewiser/polyglot",
     "description": "Translate Laravel applications",
+    "keywords": ["gettext", "ui", "web editor", "trans parser"],
     "license": "MIT",
     "authors": [
         {
@@ -9,6 +10,7 @@
         }
     ],
     "require": {
+        "php": "^7.3|^8.0",
         "ext-gettext": "*",
         "ext-json": "*",
         "laravel/framework": "^8.0",

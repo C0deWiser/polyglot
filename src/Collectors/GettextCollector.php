@@ -5,7 +5,6 @@ namespace Codewiser\Translation\Collectors;
 
 
 use Codewiser\Translation\Contracts\CollectorInterface;
-use Doctrine\Inflector\Rules\French\Rules;
 
 class GettextCollector implements CollectorInterface
 {

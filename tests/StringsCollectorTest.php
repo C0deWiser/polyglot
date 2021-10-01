@@ -8,6 +8,17 @@ use Codewiser\Translation\Contracts\CollectorInterface;
 class StringsCollectorTest extends \PHPUnit\Framework\TestCase
 {
     protected $pot = __DIR__ . '/test.pot';
+    /**
+     * @var StringsCollector
+     */
+    protected $collector;
+
+    protected function setUp(): void
+    {
+        $this->collector = new StringsCollector(__DIR__, ['en', 'es'], __DIR__ . '/resources/lang');
+
+        parent::setUp();
+    }
 
     protected function tearDown(): void
     {
@@ -19,8 +30,7 @@ class StringsCollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testListingPhpOnly()
     {
-        $scanner = new StringsCollector(__DIR__);
-        $listing = $scanner
+        $listing = $this->collector
             ->resourceListing(__DIR__ . '/sources/', '*.php')
             ->toArray();
 
@@ -32,8 +42,7 @@ class StringsCollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testListingJsOnly()
     {
-        $scanner = new StringsCollector(__DIR__);
-        $listing = $scanner
+        $listing = $this->collector
             ->resourceListing(__DIR__ . '/sources/', '*.js')
             ->toArray();
 
@@ -45,8 +54,7 @@ class StringsCollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testListingPhpExcluding()
     {
-        $scanner = new StringsCollector(__DIR__);
-        $listing = $scanner
+        $listing = $this->collector
             ->resourceListing(__DIR__ . '/sources/', '*.php', [__DIR__ . '/sources/php/first.php'])
             ->toArray();
 
@@ -58,8 +66,7 @@ class StringsCollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testListingJsExcluding()
     {
-        $scanner = new StringsCollector(__DIR__);
-        $listing = $scanner
+        $listing = $this->collector
             ->resourceListing(__DIR__ . '/sources/', '*.js', [__DIR__ . '/sources/js'])
             ->toArray();
 
@@ -71,20 +78,18 @@ class StringsCollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testCollectStrings($unlink = true)
     {
-        $scanner = new StringsCollector(__DIR__);
-
         if (file_exists($this->pot)) {
             unlink($this->pot);
         }
 
-        $scanner->collectStrings(__DIR__ . '/sources', $this->pot);
+        $this->collector->collectStrings(__DIR__ . '/sources', $this->pot);
 
         $this->assertTrue(file_exists($this->pot));
     }
 
     public function testMergeRecursive()
     {
-        $scanner = new StringsCollector(__DIR__);
+        $scanner = $this->collector;
         $merged = $scanner->mergeArrayRecursive([], 'path.to.string', 'path.to.string');
         $merged = $scanner->mergeArrayRecursive($merged, 'path.to.second', 'path.to.second');
         $merged = $scanner->mergeArrayRecursive($merged, 'path.to.string', 'fuck off');
@@ -96,7 +101,7 @@ class StringsCollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testSavingStringEntry()
     {
-        $scanner = new StringsCollector(__DIR__);
+        $scanner = $this->collector;
         $scanner->mergeStringEntry(__DIR__ . '/resources/lang', 'en', 'My string');
         $this->assertTrue(file_exists(__DIR__ . '/resources/lang/en.json'));
         unlink(__DIR__ . '/resources/lang/en.json');
@@ -104,7 +109,7 @@ class StringsCollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testSavingKeyEntry()
     {
-        $scanner = new StringsCollector(__DIR__);
+        $scanner = $this->collector;
         $scanner->mergeKeyEntry(__DIR__ . '/resources/lang', 'en', 'auth.failed');
         $this->assertTrue(file_exists(__DIR__ . '/resources/lang/en/auth.php'));
         unlink(__DIR__ . '/resources/lang/en/auth.php');
@@ -113,7 +118,7 @@ class StringsCollectorTest extends \PHPUnit\Framework\TestCase
     public function testPopulate()
     {
         $this->testCollectStrings(false);
-        $scanner = new StringsCollector(__DIR__);
+        $scanner = $this->collector;
         $scanner->populate($this->pot, __DIR__ . '/resources/lang', ['en', 'es']);
         unlink(__DIR__ . '/resources/lang/en.json');
         unlink(__DIR__ . '/resources/lang/es.json');
@@ -123,7 +128,7 @@ class StringsCollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testCollect()
     {
-        $scanner = new StringsCollector(__DIR__);
+        $scanner = $this->collector;
         $scanner->setIncludes([__DIR__ . '/sources/']);
         $strings = $scanner->parse()
             ->toArray();

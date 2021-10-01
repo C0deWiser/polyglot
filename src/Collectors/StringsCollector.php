@@ -25,17 +25,17 @@ class StringsCollector implements CollectorInterface
     /**
      * Populate strings from source.pot to target folder for every locale.
      *
-     * @param string $source
-     * @param string $target
+     * @param string $sourcePot
+     * @param string $targetDir
      * @param array $locales
      */
-    public function populate(string $source, string $target, array $locales)
+    public function populate(string $sourcePot, string $targetDir, array $locales)
     {
-        if (!file_exists($source)) {
+        if (!file_exists($sourcePot)) {
             return;
         }
 
-        $parser = new Parser(new FileSystem($source));
+        $parser = new Parser(new FileSystem($sourcePot));
         try {
             $content = $parser->parse();
 
@@ -43,13 +43,14 @@ class StringsCollector implements CollectorInterface
                 foreach ($locales as $locale) {
 
                     if ($this->isPluralEntry($entry)) {
+                        // Store plurals
                         continue;
                     }
 
                     if ($this->isKeyEntry($entry)) {
-                        $this->mergeKeyEntry($target, $locale, $entry->getMsgId());
+                        $this->mergeKeyEntry($targetDir, $locale, $entry->getMsgId());
                     } else {
-                        $this->mergeStringEntry($target, $locale, $entry->getMsgId());
+                        $this->mergeStringEntry($targetDir, $locale, $entry->getMsgId());
                     }
                 }
             }
@@ -60,7 +61,7 @@ class StringsCollector implements CollectorInterface
     }
 
     /**
-     * Merge translation string into translation folder (e.g. resources/lang).
+     * Merge translation string into json file.
      *
      * @param string $target
      * @param string $locale
@@ -88,9 +89,16 @@ class StringsCollector implements CollectorInterface
         file_put_contents($filename, json_encode($strings, JSON_UNESCAPED_UNICODE + JSON_PRETTY_PRINT));
     }
 
-    public function mergeKeyEntry(string $target, string $locale, string $msgid)
+    /**
+     * Merge translation string into php file.
+     *
+     * @param string $storageDir
+     * @param string $locale
+     * @param string $msgid
+     */
+    public function mergeKeyEntry(string $storageDir, string $locale, string $msgid)
     {
-        $path = rtrim($target, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $locale;
+        $path = rtrim($storageDir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $locale;
         if (!file_exists($path)) {
             mkdir($path, 0777, true);
         }
@@ -111,11 +119,26 @@ class StringsCollector implements CollectorInterface
         $this->saveArrayIntoLangFile($strings, $filename);
     }
 
+    /**
+     * Save array to file that may be included.
+     *
+     * @todo try to format output
+     * @param array $strings
+     * @param string $filename
+     */
     public function saveArrayIntoLangFile(array $strings, string $filename)
     {
-        file_put_contents($filename, '<?php return ' . var_export($strings, true) . ';');
+        file_put_contents($filename, "<?php\nreturn " . var_export($strings, true) . ';');
     }
 
+    /**
+     * Merge msgid into array of strings to the given path.
+     *
+     * @param array $strings
+     * @param string $path
+     * @param string $msgid
+     * @return array
+     */
     public function mergeArrayRecursive(array $strings, string $path, string $msgid)
     {
         $key = explode('.', $path);
@@ -135,11 +158,23 @@ class StringsCollector implements CollectorInterface
         return $strings;
     }
 
+    /**
+     * Check if given entry is plural.
+     *
+     * @param Entry $entry
+     * @return bool
+     */
     protected function isPluralEntry(Entry $entry)
     {
         return ($entry->getMsgId() && $entry->getMsgIdPlural()) ? true : false;
     }
 
+    /**
+     * Check if given entry is dot.separated.key.
+     *
+     * @param Entry $entry
+     * @return array|bool
+     */
     protected function isKeyEntry(Entry $entry)
     {
         $msgid = $entry->getMsgId();
