@@ -2,6 +2,8 @@
 
 Translate Laravel applications using modern ui.
 
+Prototype https://app.uizard.io/p/8d139445
+
 ## Concepts
 
 Visually it would be like Horizon and Telescope. It will show all translated and untranslated strings for every locale, registered in application.
@@ -12,7 +14,7 @@ It may populate strings through locales. Saying, if `en` has 100 strings, and `r
 
 This translation service is to extend `\Illuminate\Translation\Translator`, adding Gettext support.
 
-Gettext can perfectly extract strings from source codes, and it is powerfull translation service itself. Furthermore, we may combine both ways: translate some strings in a traditional way, and the rest using gettext.
+Gettext can perfectly extract strings from source codes, and it is powerful translation service itself. Furthermore, we may combine both ways: translate some strings in a traditional way, and the rest using gettext.
 
 We may utilize online translation services.
 
