@@ -1,10 +1,10 @@
 <?php
 
 
-namespace Codewiser\Translation\Collectors;
+namespace Codewiser\Polyglot\Collectors;
 
 
-use Codewiser\Translation\Contracts\CollectorInterface;
+use Codewiser\Polyglot\Contracts\CollectorInterface;
 use Exception;
 use Illuminate\Support\Str;
 use Sepia\PoParser\Catalog\Entry;
@@ -20,6 +20,7 @@ class StringsCollector implements CollectorInterface
         $this->base_path = $base_path;
         $this->locales = $locales;
         $this->storage = $storage;
+        $this->domain = 'default';
     }
 
     /**
@@ -41,12 +42,6 @@ class StringsCollector implements CollectorInterface
 
             foreach ($content->getEntries() as $entry) {
                 foreach ($locales as $locale) {
-
-                    if ($this->isPluralEntry($entry)) {
-                        // Store plurals
-                        continue;
-                    }
-
                     if ($this->isKeyEntry($entry)) {
                         $this->mergeKeyEntry($targetDir, $locale, $entry->getMsgId());
                     } else {
@@ -83,7 +78,7 @@ class StringsCollector implements CollectorInterface
         }
 
         if (!isset($strings[$msgid])) {
-            $strings[$msgid] = $msgid;
+            $strings[$msgid] = "";
         }
 
         file_put_contents($filename, json_encode($strings, JSON_UNESCAPED_UNICODE + JSON_PRETTY_PRINT));
@@ -122,13 +117,19 @@ class StringsCollector implements CollectorInterface
     /**
      * Save array to file that may be included.
      *
-     * @todo try to format output
      * @param array $strings
      * @param string $filename
+     * @todo try to format output
      */
     public function saveArrayIntoLangFile(array $strings, string $filename)
     {
-        file_put_contents($filename, "<?php\nreturn " . var_export($strings, true) . ';');
+        $content = var_export($strings, true);
+
+//        $content = str_replace('array (', '[', $content);
+//        $content = str_replace(');', ']', $content);
+//        $content = str_replace('),', ']', $content);
+
+        file_put_contents($filename, "<?php\nreturn " . $content . ';');
     }
 
     /**
@@ -139,7 +140,7 @@ class StringsCollector implements CollectorInterface
      * @param string $msgid
      * @return array
      */
-    public function mergeArrayRecursive(array $strings, string $path, string $msgid)
+    public function mergeArrayRecursive(array $strings, string $path, string $msgid): array
     {
         $key = explode('.', $path);
 
@@ -152,51 +153,20 @@ class StringsCollector implements CollectorInterface
             }
             $strings[$i] = $this->mergeArrayRecursive($strings[$i], implode('.', $key), $msgid);
         } elseif (!isset($strings[$i])) {
-            $strings[$i] = $msgid;
+            $strings[$i] = "";
         }
 
         return $strings;
     }
 
     /**
-     * Check if given entry is plural.
-     *
-     * @param Entry $entry
-     * @return bool
-     */
-    protected function isPluralEntry(Entry $entry)
-    {
-        return ($entry->getMsgId() && $entry->getMsgIdPlural()) ? true : false;
-    }
-
-    /**
-     * Check if given entry is dot.separated.key.
-     *
-     * @param Entry $entry
-     * @return array|bool
-     */
-    protected function isKeyEntry(Entry $entry)
-    {
-        $msgid = $entry->getMsgId();
-
-        if (preg_match('~^\S*$~', $msgid)
-            && (Str::lower($msgid) === $msgid)
-            && ($key = explode('.', $msgid))
-            && (count($key) > 1)) {
-            return $key;
-        } else {
-            return false;
-        }
-    }
-
-    /**
      * Store parsed strings into given path.
      *
+     * @param string|null $pot
      * @return void
      */
-    public function store()
+    public function store(string $pot = null): void
     {
-        $this->populate($this->getPortableObjectTemplate(), $this->storage, $this->locales);
+        $this->populate($pot ?: $this->getPortableObjectTemplate(), $this->storage, $this->locales);
     }
-
 }

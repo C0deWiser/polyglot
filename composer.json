@@ -1,8 +1,9 @@
 {
     "name": "codewiser/polyglot",
-    "description": "Translate Laravel applications",
-    "keywords": ["gettext", "ui", "web editor", "trans parser"],
+    "description": "Localize Laravel applications",
+    "keywords": ["gettext", "poedit", "trans", "Laravel"],
     "license": "MIT",
+    "version": "0.1.0",
     "authors": [
         {
             "name": "pm",
@@ -10,7 +11,7 @@
         }
     ],
     "require": {
-        "php": "^7.3|^8.0",
+        "php": "^7.4|^8.0",
         "ext-gettext": "*",
         "ext-json": "*",
         "laravel/framework": "^8.0",
@@ -18,7 +19,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Codewiser\\Translation\\": "src"
+            "Codewiser\\Polyglot\\": "src"
         }
     },
     "autoload-dev": {
@@ -26,8 +27,15 @@
             "Tests\\": "tests/"
         }
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "require-dev": {
-        "phpunit/phpunit": "^8.0"
+        "phpunit/phpunit": "^9.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Codewiser\\Polyglot\\PolyglotServiceProvider"
+            ]
+        }
     }
 }

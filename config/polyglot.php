@@ -7,7 +7,7 @@ return [
     | Polyglot mode
     |--------------------------------------------------------------------------
     |
-    | This option is used to enable or disable gettext functionality.
+    | This option is used to enable or disable some polyglot functionality.
     |
     | 'inherit'     - use pure Laravel Translator; collect string manually.
     | 'collector'   - use gettext for collecting string; use Laravel Translator for translating.
@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'mode' => 'inherit',
+    'mode' => env('POLYGLOT_MODE', 'inherit'),
 
     /*
     |--------------------------------------------------------------------------
@@ -34,7 +34,7 @@ return [
     | Gettext Executables Configuration
     |--------------------------------------------------------------------------
     |
-    | Provide paths to gettext shell scripts.
+    | Paths to gettext shell scripts.
     |
     */
     'executables' => [
@@ -43,19 +43,6 @@ return [
         'msgmerge' => env('MSGMERGE_EXECUTABLE', 'msgmerge'),
         'msgfmt' => env('MSGFMT_EXECUTABLE', 'msgfmt'),
         'msgcat' => env('MSGCAT_EXECUTABLE', 'msgcat')
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Inherit Strings Configuration
-    |--------------------------------------------------------------------------
-    */
-    'legacy' => [
-        'validation.',
-        'passwords.',
-        'auth.',
-        'pagination.',
-        'verify.'
     ],
 
     /*
@@ -75,9 +62,7 @@ return [
         'excludes' => [
             storage_path()
         ],
-        'storage' => [
-            resource_path('lang')
-        ]
+        'storage' => resource_path('lang')
     ],
 
     /*
@@ -89,10 +74,18 @@ return [
     | translation strings that should be translated traditional way.
     |
     */
-    'gettext' => [
-        'storage' => resource_path('i18n'),
-        'compile' => resource_path('i18n'),
+    'translator' => [
+        'po' => resource_path('gettext'),
+        'mo' => resource_path('gettext'),
 
-        'domain' => 'default',
+        'domain' => 'messages',
+
+        'legacy' => [
+            'validation.',
+            'passwords.',
+            'auth.',
+            'pagination.',
+            'verify.'
+        ],
     ],
 ];

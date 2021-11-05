@@ -1,10 +1,10 @@
 <?php
 
 
-namespace Codewiser\Translation\Console\Commands;
+namespace Codewiser\Polyglot\Console\Commands;
 
 
-use Codewiser\Translation\Contracts\CollectorInterface;
+use Codewiser\Polyglot\Contracts\CollectorInterface;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Lang;
 
@@ -15,7 +15,7 @@ class ScanSources extends Command
      *
      * @var string
      */
-    protected $signature = 'translator:collect {--save}';
+    protected $signature = 'polyglot:collect {--save}';
 
     /**
      * The console command description.
@@ -44,8 +44,13 @@ class ScanSources extends Command
         $collector = $this->collector();
 
         $collector->parse();
+        
+        if ($this->option('save')) {
+            $collector->store();
+        }
 
-        $this->table(['msgid'], $collector->toArray());
+        //dump($collector->toArray());
+        //$this->table(['msgid'], $collector->toArray());
 
         return 0;
     }

@@ -1,11 +1,11 @@
 <?php
 
 
-namespace Codewiser\Translation\Console\Commands;
+namespace Codewiser\Polyglot\Console\Commands;
 
 
-use Codewiser\Translation\Collectors\GettextCollector;
-use Codewiser\Translation\Contracts\CollectorInterface;
+use Codewiser\Polyglot\Collectors\GettextCollector;
+use Codewiser\Polyglot\Contracts\CollectorInterface;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Lang;
 
@@ -16,7 +16,7 @@ class CompileTranslations extends Command
      *
      * @var string
      */
-    protected $signature = 'translator:compile';
+    protected $signature = 'polyglot:compile';
 
     /**
      * The console command description.

@@ -2,8 +2,8 @@
 
 namespace Tests;
 
-use Codewiser\Translation\Collectors\StringsCollector;
-use Codewiser\Translation\Contracts\CollectorInterface;
+use Codewiser\Polyglot\Collectors\StringsCollector;
+use Codewiser\Polyglot\Contracts\CollectorInterface;
 
 class StringsCollectorTest extends \PHPUnit\Framework\TestCase
 {

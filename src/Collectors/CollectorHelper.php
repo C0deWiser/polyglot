@@ -1,9 +1,10 @@
 <?php
 
 
-namespace Codewiser\Translation\Collectors;
+namespace Codewiser\Polyglot\Collectors;
 
 
+use Codewiser\Polyglot\Contracts\CollectorInterface;
 use Exception;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -19,46 +20,54 @@ trait CollectorHelper
      *
      * @var string
      */
-    protected $base_path;
+    protected string $base_path;
+
+    protected string $xgettext = 'xgettext';
+    protected string $msginit = 'msginit';
+    protected string $msgmerge = 'msgmerge';
+    protected string $msgfmt = 'msgfmt';
 
     /**
-     * Path to xgettext executable.
+     * Translation domain used for naming files.
      *
      * @var string
      */
-    protected $xgettext = 'xgettext';
-    protected $msginit = 'msginit';
-    protected $msgmerge = 'msgmerge';
-    protected $msgfmt = 'msgfmt';
+    protected string $domain;
 
     /**
      * Source code folders and files.
      *
-     * @var array
+     * @var array|string[]
      */
-    protected $includes = [];
+    protected array $includes = [];
 
     /**
      * Exclude resources from scanning.
      *
-     * @var array
+     * @var array|string[]
      */
-    protected $excludes = [];
+    protected array $excludes = [];
 
     /**
      * Application locales.
      *
-     * @var array
+     * @var array|string[]
      */
-    protected $locales = [];
+    protected array $locales = [];
 
     /**
      * Directory with translation files.
      *
      * @var string
      */
-    protected $storage;
+    protected string $storage;
 
+    /**
+     * Set up gettext executables.
+     *
+     * @param array $executables
+     * @return $this
+     */
     public function setExecutables(array $executables)
     {
         if (isset($executables['xgettext']))
@@ -100,15 +109,14 @@ trait CollectorHelper
     /**
      * Scan sources for the strings.
      *
-     * @return $this
+     * @return CollectorInterface
      */
-    public function parse()
+    public function parse(): CollectorInterface
     {
         $output = $this->getPortableObjectTemplate();
 
         if (file_exists($output)) {
-            // todo really need to recreate pot file?
-            // unlink($output);
+            unlink($output);
         }
 
         foreach ($this->includes as $resource) {
@@ -122,15 +130,12 @@ trait CollectorHelper
     /**
      * Collect strings from given directory/file to given output file, excluding some resources...
      *
-     * @param $resource
-     * @param $output
+     * @param string $resource
+     * @param string $output
      * @param array $excluding
      */
-    public function collectStrings($resource, $output, array $excluding = [])
+    public function collectStrings(string $resource, string $output, array $excluding = [])
     {
-        // xgettext misses Lang::get.
-        // So we need to create tmp code of file and change its content.
-
         foreach ($this->resourceListing($resource, '*.php', $excluding) as $filename) {
             if (Str::endsWith($filename, '.blade.php')) {
                 $tmp = $this->temporaryBlade($filename);
@@ -157,8 +162,18 @@ trait CollectorHelper
     {
         $content = file_get_contents($file);
 
-        $content = str_replace("app('translator')->get", 'gettext', $content);
-        $content = str_replace("Lang::get", ' gettext', $content);
+        $content = str_replace("app('translator')->get", '__', $content);
+        $content = str_replace("Lang::get", ' __', $content);
+        $content = preg_replace(
+            '~trans_choice\s*?\(\s*?[\'"](.*?)\|(.*?)[\'"]\s*?,\s*?(\d+).*?\)~mi',
+            "ngettext('$1', '$2', $3)",
+            $content
+        );
+        $content = preg_replace(
+            '~trans_choice\s*?\(\s*?[\'"](.*?)[\'"]\s*?,\s*?(\d+).*?\)~mi',
+            "ngettext('$1', '$1', $2)",
+            $content
+        );
 
         file_put_contents($file, $content);
     }
@@ -171,7 +186,7 @@ trait CollectorHelper
      * @param array $excluding
      * @return Collection
      */
-    public function resourceListing(string $resource, $masks, array $excluding = [])
+    public function resourceListing(string $resource, $masks, array $excluding = []): Collection
     {
         $files = [];
         $resource = rtrim($resource, DIRECTORY_SEPARATOR); // remove last slash
@@ -212,7 +227,7 @@ trait CollectorHelper
      * @param $file
      * @return string
      */
-    protected function temporaryPhp($file)
+    protected function temporaryPhp($file): string
     {
         $tmp = $this->getTempFile($file);
 
@@ -228,10 +243,10 @@ trait CollectorHelper
     /**
      * Compile given blade template into temporary php file.
      *
-     * @param $filename
+     * @param string $filename
      * @return string
      */
-    protected function temporaryBlade($filename)
+    protected function temporaryBlade(string $filename): string
     {
         $tmp = $this->getTempFile($filename);
         $dir = dirname($tmp);
@@ -252,7 +267,7 @@ trait CollectorHelper
      *
      * @return string
      */
-    protected function getTempDirectory()
+    protected function getTempDirectory(): string
     {
         $dir = sys_get_temp_dir() .
             DIRECTORY_SEPARATOR . md5(env('APP_NAME')) .
@@ -268,10 +283,10 @@ trait CollectorHelper
     /**
      * Get path to temporary copy of given file.
      *
-     * @param $file
+     * @param string $file
      * @return string
      */
-    protected function getTempFile($file)
+    protected function getTempFile(string $file): string
     {
         $relativePathToFile = str_replace($this->base_path, '', $file);
         $tmp = $this->getTempDirectory() . $relativePathToFile;
@@ -284,7 +299,11 @@ trait CollectorHelper
         return $tmp;
     }
 
-    protected function getParsedEntries(string $source)
+    /**
+     * @param string $source
+     * @return array|Entry[]
+     */
+    protected function getParsedEntries(string $source): array
     {
         if (!file_exists($source)) {
             return [];
@@ -296,9 +315,28 @@ trait CollectorHelper
             $content = $parser->parse();
             return $content->getEntries();
         } catch (Exception $e) {
+            return [];
         }
-        return [];
+    }
 
+    /**
+     * Check if given entry is dot.separated.key.
+     *
+     * @param Entry $entry
+     * @return array|null
+     */
+    protected function isKeyEntry(Entry $entry): ?array
+    {
+        $msgid = $entry->getMsgId();
+
+        if (preg_match('~^\S*$~', $msgid)
+            && (Str::lower($msgid) === $msgid)
+            && ($key = explode('.', $msgid))
+            && (count($key) > 1)) {
+            return $key;
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -320,9 +358,9 @@ trait CollectorHelper
     /**
      * Run xgettext.
      *
-     * @param $language
-     * @param $source
-     * @param $target
+     * @param string $language
+     * @param string $source
+     * @param string $target
      */
     protected function runXGetText(string $language, string $source, string $target)
     {
@@ -332,7 +370,7 @@ trait CollectorHelper
             '--no-wrap',
             '--sort-output',
             '--from-code=UTF-8',
-            '--default-domain=default',
+            '--default-domain=' . $this->domain,
             '--package-name="' . env('APP_NAME') . '"',
             '--output=' . $target,
             '--keyword=__',
@@ -352,27 +390,28 @@ trait CollectorHelper
         // xgettext collects context, make it relative
         if (file_exists($target)) {
             $content = file_get_contents($target);
-            $content = str_replace($this->getTempDirectory(), '', $content);
-            $content = str_replace($this->base_path, '', $content);
+            $content = $this->compilePotHeader($content);
             file_put_contents($target, $content);
         }
     }
 
     /**
-     * @return string
+     * Update pot file header.
+     *
+     * @param $domain
      */
-    public function getPortableObjectTemplate(): string
+    protected function compilePotHeader(string $content): string
     {
-        return $this->getTempFile('default.pot');
+        $content = str_replace($this->getTempDirectory(), '', $content);
+        $content = str_replace($this->base_path, '', $content);
+        $content = str_replace('Content-Type: text/plain; charset=CHARSET', 'Content-Type: text/plain; charset=UTF-8', $content);
+        
+        return $content;
     }
 
-    /**
-     * @param string $storage
-     * @return $this
-     */
-    public function setStorage(string $storage)
+    public function getPortableObjectTemplate(): string
     {
-        $this->storage = $storage;
-        return $this;
+        return $this->getTempFile($this->domain . '.pot');
     }
+
 }
