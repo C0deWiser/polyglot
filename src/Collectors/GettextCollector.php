@@ -26,7 +26,7 @@ class GettextCollector implements CollectorInterface
      *
      * @var array
      */
-    protected array $legacy = [];
+    protected array $passthroughs = [];
 
     public function __construct(string $base_path, array $locales, string $storage, string $domain, string $compile)
     {
@@ -40,12 +40,12 @@ class GettextCollector implements CollectorInterface
     /**
      * Set array of strings, that should be translated by legacy service.
      *
-     * @param array $legacy
+     * @param array $passthroughs
      * @return $this
      */
-    public function setLegacy(array $legacy): GettextCollector
+    public function setPassthroughs(array $passthroughs): GettextCollector
     {
-        $this->legacy = $legacy;
+        $this->passthroughs = $passthroughs;
         
         return $this;
     }
@@ -76,7 +76,7 @@ class GettextCollector implements CollectorInterface
         // We should divide collected strings into two parts — legacy and gettext...
         // Then store legacy strings using StringCollector
         $legacyPot = dirname($pot) . DIRECTORY_SEPARATOR . 'legacy' . basename($pot);
-        $this->splitPortableObjectTemplate($pot, $legacyPot, $this->legacy);
+        $this->splitPortableObjectTemplate($pot, $legacyPot, $this->passthroughs);
         if (file_exists($legacyPot)) {
             app(StringsCollector::class)->store($legacyPot);
             unlink($legacyPot);
@@ -111,7 +111,7 @@ class GettextCollector implements CollectorInterface
             $catalog = $parser->parse();
 
             foreach ($catalog->getEntries() as $entry) {
-                if ($this->isKeyEntry($entry) && $this->isLegacy($entry->getMsgId())) {
+                if ($this->isKeyEntry($entry) && Str::startsWith($entry->getMsgId(), $legacyStrings)) {
                     $catalog->removeEntry($entry->getMsgId());
                 }
             }
@@ -125,18 +125,13 @@ class GettextCollector implements CollectorInterface
             $catalog = $parser->parse();
 
             foreach ($catalog->getEntries() as $entry) {
-                if (!$this->isKeyEntry($entry) || !$this->isLegacy($entry->getMsgId())) {
+                if (!$this->isKeyEntry($entry) || !Str::startsWith($entry->getMsgId(), $legacyStrings)) {
                     $catalog->removeEntry($entry->getMsgId());
                 }
             }
 
             $file->save((new PoCompiler())->compile($catalog));
         } catch (\Exception $e) {}
-    }
-
-    protected function isLegacy(string $key): bool
-    {
-        return Str::startsWith($key, $this->legacy);
     }
 
     /**

@@ -4,25 +4,25 @@
 namespace Codewiser\Polyglot\Console\Commands;
 
 
+use Codewiser\Polyglot\Collectors\GettextCollector;
 use Codewiser\Polyglot\Contracts\CollectorInterface;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Lang;
 
-class ScanSources extends Command
+class CompileCommand extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'polyglot:collect';
+    protected $signature = 'polyglot:compile';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Collect translation strings';
+    protected $description = 'Compile translation strings';
 
     /**
      * Create a new command instance.
@@ -41,16 +41,15 @@ class ScanSources extends Command
      */
     public function handle()
     {
-        $collector = $this->collector();
-
-        $collector->parse();
-
-        $collector->store();
+        $this->collector()->compile();
 
         return 0;
     }
 
-    protected function collector(): CollectorInterface
+    /**
+     * @return GettextCollector
+     */
+    protected function collector(): GettextCollector
     {
         return app(CollectorInterface::class);
     }

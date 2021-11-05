@@ -3,6 +3,7 @@
 namespace Codewiser\Polyglot;
 
 use Illuminate\Contracts\Translation\Loader;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
 class Polyglot extends \Illuminate\Translation\Translator
@@ -28,13 +29,13 @@ class Polyglot extends \Illuminate\Translation\Translator
      *
      * @var array
      */
-    protected array $legacy = [];
+    protected array $passthroughs = [];
 
-    public function __construct(Loader $loader, $locale, $domain, $compiled, $legacy)
+    public function __construct(Loader $loader, $locale, $domain, $compiled, $passthroughs)
     {
         $this->domain = $domain;
         $this->compiled = $compiled;
-        $this->legacy = $legacy;
+        $this->passthroughs = $passthroughs;
 
         parent::__construct($loader, $locale);
     }
@@ -49,7 +50,7 @@ class Polyglot extends \Illuminate\Translation\Translator
 
     public function get($key, array $replace = [], $locale = null, $fallback = true)
     {
-        if ($this->isLegacy($key)) {
+        if ($this->shouldPassThrough($key)) {
             return parent::get($key, $replace, $locale, $fallback);
         }
 
@@ -70,7 +71,7 @@ class Polyglot extends \Illuminate\Translation\Translator
 
     public function choice($key, $number, array $replace = [], $locale = null)
     {
-        if ($this->isLegacy($key)) {
+        if ($this->shouldPassThrough($key)) {
             return parent::choice($key, $number, $replace, $locale);
         }
 
@@ -93,9 +94,9 @@ class Polyglot extends \Illuminate\Translation\Translator
         return $this->makeReplacements($string, $replace);
     }
 
-    protected function isLegacy(string $key): bool
+    protected function shouldPassThrough(string $key): bool
     {
-        return Str::startsWith($key, $this->legacy);
+        return Str::startsWith($key, $this->passthroughs);
     }
 
     protected function putEnvironment(string $locale)
@@ -122,5 +123,35 @@ class Polyglot extends \Illuminate\Translation\Translator
 
             $this->loaded_domain = $this->domain;
         }
+    }
+
+    /**
+     * Determine if Polyglot's published assets are up-to-date.
+     *
+     * @return bool
+     *
+     * @throws \RuntimeException
+     */
+    public static function assetsAreCurrent(): bool
+    {
+        $publishedPath = public_path('vendor/polyglot/mix-manifest.json');
+
+        if (! File::exists($publishedPath)) {
+            throw new \RuntimeException('Polyglot assets are not published. Please run: php artisan polyglot:publish');
+        }
+
+        return File::get($publishedPath) === File::get(__DIR__.'/../public/mix-manifest.json');
+    }
+
+    /**
+     * Get the default JavaScript variables for Polyglot.
+     *
+     * @return array
+     */
+    public static function scriptVariables(): array
+    {
+        return [
+            'path' => config('polyglot.path'),
+        ];
     }
 }
