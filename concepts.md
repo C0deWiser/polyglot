@@ -6,7 +6,7 @@ Translate Laravel applications using modern ui.
 
 Visually it would be like Horizon and Telescope. It will show all translated and untranslated strings for every locale, registered in application.
 
-It allows to translate and create new strings.
+It allows translating and creating new strings.
 
 It may populate strings through locales. Saying, if `en` has 100 strings, and `ru` only 10, it may create missing russian strings.
 

@@ -50,7 +50,7 @@ class CompileTranslations extends Command
     /**
      * @return GettextCollector
      */
-    protected function collector()
+    protected function collector(): GettextCollector
     {
         return app(CollectorInterface::class);
     }

@@ -27,7 +27,7 @@ return [
     | translation strings across locales.
     |
     */
-    'locales' => ['ru', 'en'],
+    'locales' => ['en'],
 
     /*
     |--------------------------------------------------------------------------

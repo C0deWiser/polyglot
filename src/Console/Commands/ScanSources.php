@@ -15,7 +15,7 @@ class ScanSources extends Command
      *
      * @var string
      */
-    protected $signature = 'polyglot:collect {--save}';
+    protected $signature = 'polyglot:collect';
 
     /**
      * The console command description.
@@ -44,21 +44,13 @@ class ScanSources extends Command
         $collector = $this->collector();
 
         $collector->parse();
-        
-        if ($this->option('save')) {
-            $collector->store();
-        }
 
-        //dump($collector->toArray());
-        //$this->table(['msgid'], $collector->toArray());
+        $collector->store();
 
         return 0;
     }
 
-    /**
-     * @return CollectorInterface
-     */
-    protected function collector()
+    protected function collector(): CollectorInterface
     {
         return app(CollectorInterface::class);
     }
