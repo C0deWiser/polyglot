@@ -75,7 +75,7 @@ class GettextCollector implements CollectorInterface
 
         // We should divide collected strings into two parts — legacy and gettext...
         // Then store legacy strings using StringCollector
-        $legacyPot = dirname($pot) . DIRECTORY_SEPARATOR . 'legacy' . basename($pot);
+        $legacyPot = dirname($pot) . DIRECTORY_SEPARATOR . 'passthroughs' . basename($pot);
         $this->splitPortableObjectTemplate($pot, $legacyPot, $this->passthroughs);
         if (file_exists($legacyPot)) {
             app(StringsCollector::class)->store($legacyPot);
@@ -176,7 +176,7 @@ class GettextCollector implements CollectorInterface
      * @param string $category
      * @return string
      */
-    protected function getPortableObject(string $path, string $locale, $category = 'LC_MESSAGES'): string
+    public function getPortableObject(string $path, string $locale, string $category = 'LC_MESSAGES'): string
     {
         $path = rtrim($path, DIRECTORY_SEPARATOR) .
             DIRECTORY_SEPARATOR . $locale .
@@ -198,7 +198,7 @@ class GettextCollector implements CollectorInterface
      * @param string $category
      * @return string
      */
-    protected function getMachineObject(string $path, string $locale, $category = 'LC_MESSAGES'): string
+    public function getMachineObject(string $path, string $locale, string $category = 'LC_MESSAGES'): string
     {
         $path = rtrim($path, DIRECTORY_SEPARATOR) .
             DIRECTORY_SEPARATOR . $locale .

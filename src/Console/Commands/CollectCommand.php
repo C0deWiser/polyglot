@@ -5,6 +5,7 @@ namespace Codewiser\Polyglot\Console\Commands;
 
 
 use Codewiser\Polyglot\Contracts\CollectorInterface;
+use Codewiser\Polyglot\Polyglot;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Lang;
 
@@ -52,6 +53,6 @@ class CollectCommand extends Command
 
     protected function collector(): CollectorInterface
     {
-        return app(CollectorInterface::class);
+        return Polyglot::collector();
     }
 }

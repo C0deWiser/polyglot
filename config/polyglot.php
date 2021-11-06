@@ -7,15 +7,15 @@ return [
     | Polyglot mode
     |--------------------------------------------------------------------------
     |
-    | This option is used to enable or disable some polyglot functionality.
+    | This option is used to enable or disable some Polyglot functionality.
     |
-    | 'inherit'     - use pure Laravel Translator; collect string manually.
-    | 'collector'   - use gettext for collecting string; use Laravel Translator for translating.
-    | 'translator'  — use gettext for collecting string and for translating too.
+    | 'editor'      - use Polyglot as an editor; collect string manually.
+    | 'collector'   - use Polyglot for collecting string; use Translator for translating.
+    | 'translator'  — use Polyglot for collecting string and for translating too.
     |
     */
 
-    'mode' => env('POLYGLOT_MODE', 'inherit'),
+    'mode' => env('POLYGLOT_MODE', 'editor'),
 
     /*
     |--------------------------------------------------------------------------

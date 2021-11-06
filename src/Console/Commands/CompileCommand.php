@@ -6,6 +6,7 @@ namespace Codewiser\Polyglot\Console\Commands;
 
 use Codewiser\Polyglot\Collectors\GettextCollector;
 use Codewiser\Polyglot\Contracts\CollectorInterface;
+use Codewiser\Polyglot\Polyglot;
 use Illuminate\Console\Command;
 
 class CompileCommand extends Command
@@ -49,8 +50,8 @@ class CompileCommand extends Command
     /**
      * @return GettextCollector
      */
-    protected function collector(): GettextCollector
+    protected function collector(): CollectorInterface
     {
-        return app(CollectorInterface::class);
+        return Polyglot::collector();
     }
 }

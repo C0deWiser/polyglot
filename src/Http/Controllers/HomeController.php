@@ -17,7 +17,7 @@ class HomeController extends Controller
         return view('polyglot::layout', [
             'assetsAreCurrent' => Polyglot::assetsAreCurrent(),
             'cssFile' => 'app.css',
-            'horizonScriptVariables' => Polyglot::scriptVariables(),
+            'polyglotScriptVariables' => Polyglot::scriptVariables(),
             'isDownForMaintenance' => App::isDownForMaintenance(),
         ]);
     }

@@ -2,6 +2,7 @@
 
 namespace Codewiser\Polyglot;
 
+use Codewiser\Polyglot\Contracts\CollectorInterface;
 use Illuminate\Contracts\Translation\Loader;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -136,11 +137,11 @@ class Polyglot extends \Illuminate\Translation\Translator
     {
         $publishedPath = public_path('vendor/polyglot/mix-manifest.json');
 
-        if (! File::exists($publishedPath)) {
+        if (!File::exists($publishedPath)) {
             throw new \RuntimeException('Polyglot assets are not published. Please run: php artisan polyglot:publish');
         }
 
-        return File::get($publishedPath) === File::get(__DIR__.'/../public/mix-manifest.json');
+        return File::get($publishedPath) === File::get(__DIR__ . '/../public/mix-manifest.json');
     }
 
     /**
@@ -154,4 +155,22 @@ class Polyglot extends \Illuminate\Translation\Translator
             'path' => config('polyglot.path'),
         ];
     }
+
+    public static function collector(): ?CollectorInterface
+    {
+        return app(CollectorInterface::class);
+    }
+
+    /**
+     * Polyglot version.
+     *
+     * @return string
+     */
+    public static function getVersion(): string
+    {
+        $composer = __DIR__ . '/../composer.json';
+        $data = json_decode(file_get_contents($composer), true);
+        return (string)$data['version'];
+    }
+
 }

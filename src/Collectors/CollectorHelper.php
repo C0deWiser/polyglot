@@ -320,6 +320,14 @@ trait CollectorHelper
     }
 
     /**
+     * @return string
+     */
+    public function getStorage(): string
+    {
+        return $this->storage;
+    }
+
+    /**
      * Check if given entry is dot.separated.key.
      *
      * @param Entry $entry
