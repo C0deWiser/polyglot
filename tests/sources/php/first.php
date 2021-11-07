@@ -7,7 +7,7 @@ __('Short message');
 Lang::get('Short message');
 Illuminate\Support\Facades\Lang::get('Short message');
 
-trans('Short message');
+pgettext('Test context', 'Short message');
 
 ngettext('One cat', 'Few cats', rand(0, 10));
 

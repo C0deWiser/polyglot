@@ -190,6 +190,10 @@ class StringsCollector
      */
     protected function runXGetText(string $language, string $source, string $target)
     {
+        if (!file_exists(dirname($target))) {
+            mkdir(dirname($target), 0777, true);
+        }
+
         $command = [
             $this->xgettext,
             '--language=' . $language,
@@ -200,6 +204,7 @@ class StringsCollector
             '--output=' . $target,
             '--keyword=__',
             '--keyword=trans',
+            '--keyword=pgettext:1c,2',
         ];
 
         if (file_exists($target)) {
