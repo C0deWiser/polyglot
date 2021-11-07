@@ -1,9 +1,9 @@
 {
     "name": "codewiser/polyglot",
     "description": "Localize Laravel applications",
-    "keywords": ["gettext", "poedit", "trans", "Laravel"],
+    "keywords": ["gettext", "poedit", "trans", "laravel", "localization", "L10n"],
     "license": "MIT",
-    "version": "0.1.2",
+    "version": "0.2.0",
     "authors": [
         {
             "name": "pm",

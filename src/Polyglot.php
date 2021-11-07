@@ -2,7 +2,6 @@
 
 namespace Codewiser\Polyglot;
 
-use Codewiser\Polyglot\Contracts\CollectorInterface;
 use Illuminate\Contracts\Translation\Loader;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -30,9 +29,9 @@ class Polyglot extends \Illuminate\Translation\Translator
      *
      * @var array
      */
-    protected array $passthroughs = [];
+    protected array $passthroughs;
 
-    public function __construct(Loader $loader, $locale, $domain, $compiled, $passthroughs)
+    public function __construct(Loader $loader, $locale, string $domain, string $compiled, array $passthroughs)
     {
         $this->domain = $domain;
         $this->compiled = $compiled;
@@ -156,9 +155,9 @@ class Polyglot extends \Illuminate\Translation\Translator
         ];
     }
 
-    public static function collector(): ?CollectorInterface
+    public static function collector(): StringsCollector
     {
-        return app(CollectorInterface::class);
+        return app(StringsCollector::class);
     }
 
     /**
@@ -166,7 +165,7 @@ class Polyglot extends \Illuminate\Translation\Translator
      *
      * @return string
      */
-    public static function getVersion(): string
+    public static function version(): string
     {
         $composer = __DIR__ . '/../composer.json';
         $data = json_decode(file_get_contents($composer), true);

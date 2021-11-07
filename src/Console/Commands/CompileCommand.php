@@ -4,9 +4,7 @@
 namespace Codewiser\Polyglot\Console\Commands;
 
 
-use Codewiser\Polyglot\Collectors\GettextCollector;
-use Codewiser\Polyglot\Contracts\CollectorInterface;
-use Codewiser\Polyglot\Polyglot;
+use Codewiser\Polyglot\GettextPopulator;
 use Illuminate\Console\Command;
 
 class CompileCommand extends Command
@@ -42,16 +40,13 @@ class CompileCommand extends Command
      */
     public function handle()
     {
-        $this->collector()->compile();
+        $this->populator()->compile();
 
         return 0;
     }
 
-    /**
-     * @return GettextCollector
-     */
-    protected function collector(): CollectorInterface
+    protected function populator(): GettextPopulator
     {
-        return Polyglot::collector();
+        return app(GettextPopulator::class);
     }
 }

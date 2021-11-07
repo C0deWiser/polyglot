@@ -2,9 +2,10 @@
 
 namespace Codewiser\Polyglot;
 
-use Codewiser\Polyglot\Collectors\GettextCollector;
-use Codewiser\Polyglot\Collectors\StringsCollector;
-use Codewiser\Polyglot\Contracts\CollectorInterface;
+use Codewiser\Polyglot\Contracts\PopulatorInterface;
+use Codewiser\Polyglot\GettextPopulator;
+use Codewiser\Polyglot\StringsPopulator;
+use Codewiser\Polyglot\StringsCollector;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -77,68 +78,81 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__ . '/../config/polyglot.php', 'polyglot');
 
-        $this->registerStringsCollector();
-        $this->registerGettextCollector();
         $this->registerCollector();
+        $this->registerStringsPopulator();
+        $this->registerGettextPopulator();
+        $this->registerPopulator();
     }
 
-
-    protected function registerStringsCollector()
+    protected function registerPopulator()
     {
-        $this->app->bind(StringsCollector::class, function ($app) {
+        $this->app->bind(PopulatorInterface::class, function($app) {
             $config = $app['config']['polyglot'];
-
-            $collector = new StringsCollector(
-                base_path(),
-                $config['locales'],
-                $config['collector']['storage']
-            );
-
-            $collector
-                ->setIncludes($config['collector']['includes'])
-                ->setExcludes($config['collector']['excludes'])
-                ->setExecutables($config['executables']);
-
-            return $collector;
+            switch ($config['mode']) {
+                case 'translator':
+                    return app(GettextPopulator::class);
+                case 'collector':
+                    return app(StringsPopulator::class);
+                default:
+                    return null;
+            }
         });
     }
 
-    protected function registerGettextCollector()
+    protected function registerStringsPopulator()
     {
-        $this->app->bind(GettextCollector::class, function ($app) {
+        $this->app->bind(StringsPopulator::class, function ($app) {
             $config = $app['config']['polyglot'];
 
-            $collector = new GettextCollector(
-                base_path(),
+            return new StringsPopulator(
+                $config['locales'],
+                $config['collector']['storage'],
+                app(StringsCollector::class)
+            );
+        });
+    }
+
+    protected function registerGettextPopulator()
+    {
+        $this->app->bind(GettextPopulator::class, function ($app) {
+            $config = $app['config']['polyglot'];
+
+            $populator = new GettextPopulator(
                 $config['locales'],
                 $config['translator']['po'],
+                $config['translator']['mo'],
                 $config['translator']['domain'],
-                $config['translator']['mo']
+                app(StringsPopulator::class)
             );
 
-            $collector
-                ->setIncludes($config['collector']['includes'])
-                ->setExcludes($config['collector']['excludes'])
-                ->setExecutables($config['executables'])
+            $populator
+                ->msginit($config['executables']['msginit'])
+                ->msgmerge($config['executables']['msgmerge'])
+                ->msgfmt($config['executables']['msgfmt'])
                 ->setPassthroughs($config['translator']['passthroughs']);
 
-            return $collector;
+            return $populator;
         });
     }
 
     protected function registerCollector()
     {
-        $this->app->bind(CollectorInterface::class, function ($app) {
+        $this->app->bind(StringsCollector::class, function ($app) {
             $config = $app['config']['polyglot'];
 
-            switch ($config['mode']) {
-                case 'collector':
-                    return app(StringsCollector::class);
-                case 'translator':
-                    return app(GettextCollector::class);
-                default:
-                    return null;
-            }
+            $collector = new StringsCollector(
+                config('app.name'),
+                base_path(),
+                $config['collector']['includes'],
+                $config['translator']['po'] .
+                DIRECTORY_SEPARATOR . $config['translator']['domain'] . '.pot'
+            );
+
+            $collector
+                ->exclude($config['collector']['excludes'])
+                ->xgettext($config['executables']['xgettext']);
+
+            return $collector;
         });
     }
 }

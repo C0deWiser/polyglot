@@ -2,8 +2,6 @@
 
 namespace Codewiser\Polyglot\Http\Controllers;
 
-use Codewiser\Polyglot\Collectors\GettextCollector;
-use Codewiser\Polyglot\Polyglot;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 

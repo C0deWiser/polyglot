@@ -2,71 +2,51 @@
 
 namespace Codewiser\Polyglot\Http\Controllers;
 
-use Codewiser\Polyglot\Collectors\GettextCollector;
+use Codewiser\Polyglot\GettextPopulator;
 use Codewiser\Polyglot\Polyglot;
+use Codewiser\Polyglot\StringsPopulator;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 use Sepia\PoParser\Catalog\Entry;
-use Sepia\PoParser\Parser;
-use Sepia\PoParser\PoCompiler;
-use Sepia\PoParser\SourceHandler\FileSystem;
 
 class L10nController extends Controller
 {
-    protected function locales(): array
-    {
-        return config('polyglot.locales');
-    }
+    protected StringsPopulator $strings;
+    protected GettextPopulator $gettext;
 
-    protected function stringsDir(): string
+    public function __construct()
     {
-        return rtrim(config('polyglot.collector.storage'), DIRECTORY_SEPARATOR);
-    }
+        parent::__construct();
 
-    protected function gettextDir(): string
-    {
-        return rtrim(config('polyglot.translator.po'), DIRECTORY_SEPARATOR);
+        $this->strings = app(StringsPopulator::class);
+        $this->gettext = app(GettextPopulator::class);
     }
 
     public function index()
     {
         $output = [];
 
-        /** @var GettextCollector $gettext */
-        $gettext = app(GettextCollector::class);
-
-        foreach ($this->locales() as $locale) {
+        foreach ($this->strings->getLocales() as $locale) {
             $row = [
                 'locale' => $locale
             ];
 
-            $json = $this->stringsDir() . DIRECTORY_SEPARATOR . $locale . '.json';
-            $row['json'] = $this->jsonStat($json);
-
-            $stringsDir = $this->stringsDir() . DIRECTORY_SEPARATOR . $locale;
-            $pattern = $stringsDir . DIRECTORY_SEPARATOR . '*.php';
+            $row['json'] = $this->statJson($locale);
 
             $row['strings'] = [];
-            foreach (glob($pattern) as $filename) {
-                $row['strings'][] = $this->phpStat($filename);
+            foreach ($this->strings->getPhpListing($locale) as $filename) {
+                $row['strings'][] = $this->statPhp($locale, basename($filename, '.php'));
             }
 
-            $gettextDir = $this->gettextDir() . DIRECTORY_SEPARATOR . $locale;
-            $pattern = $gettextDir . DIRECTORY_SEPARATOR . 'LC_*';
             $row['gettext'] = [
                 'categories' => []
             ];
-            foreach (glob($pattern) as $category) {
+            foreach ($this->gettext->getCategoryListing($locale) as $category) {
                 $cat = [
                     'category' => basename($category),
                     'domains' => []
                 ];
-                $subpattern = $category . DIRECTORY_SEPARATOR . '*.po';
-                foreach (glob($subpattern) as $filename) {
-                    $cat['domains'][] = ['domain' => basename($filename, '.po')] + $this->poStat($filename);
+                foreach ($this->gettext->getPortableObjectListing($locale, $category) as $filename) {
+                    $cat['domains'][] = $this->statPo($locale, $category, basename($filename, '.po'));
                 }
                 $row['gettext']['categories'][] = $cat;
             }
@@ -77,13 +57,9 @@ class L10nController extends Controller
         return response()->json($output);
     }
 
-    protected function validateJson(string $filename): string
+    protected function validateJson(string $locale): string
     {
-        if (!Str::endsWith($filename, '.json')) {
-            abort(404);
-        }
-
-        $json = $this->stringsDir() . DIRECTORY_SEPARATOR . $filename;
+        $json = $this->strings->getJsonFile($locale);
 
         if (!file_exists($json)) {
             abort(404);
@@ -92,37 +68,35 @@ class L10nController extends Controller
         return $json;
     }
 
-    public function getJson(string $filename)
+    public function getJson(string $locale)
     {
-        $json = $this->validateJson($filename);
+        $this->validateJson($locale);
 
         return response()->json(
-            json_decode(file_get_contents($json), true)
+            $this->strings->getJsonStrings($locale)
         );
     }
 
-    public function postJson(Request $request, string $filename)
+    public function postJson(Request $request, string $locale)
     {
-        $json = $this->validateJson($filename);
+        $this->validateJson($locale);
 
         $request->validate([
             'key' => 'required|string',
             'value' => 'present'
         ]);
 
-        $values = json_decode(file_get_contents($json), true);
-        $values[$request->get('key')] = (string)$request->get('value');
-        file_put_contents($json, json_encode($values, JSON_UNESCAPED_UNICODE + JSON_PRETTY_PRINT));
+
+        $this->strings->put(
+            $locale,
+            (string)$request->get('key'),
+            (string)$request->get('value')
+        );
     }
 
-    protected function validatePhp(string $locale, string $filename): string
+    protected function validatePhp(string $locale, string $namespace): string
     {
-        if (!Str::endsWith($filename, '.php')) {
-            abort(404);
-        }
-
-        $php = $this->stringsDir() . DIRECTORY_SEPARATOR . $locale .
-            DIRECTORY_SEPARATOR . $filename;
+        $php = $this->strings->getPhpFile($locale, $namespace);
 
         if (!file_exists($php)) {
             abort(404);
@@ -131,242 +105,123 @@ class L10nController extends Controller
         return $php;
     }
 
-    public function getPhp(string $locale, string $filename)
+    public function getPhp(string $locale, string $namespace)
     {
-        $php = $this->validatePhp($locale, $filename);
+        $this->validatePhp($locale, $namespace);
 
-        $data = include $php;
-
-        $data = $this->flatten($data);
-
-        return response()->json($data);
+        return response()->json(
+            $this->strings->getPhpStrings($locale, $namespace)
+        );
     }
 
-    public function postPhp(Request $request, string $locale, string $filename)
+    public function postPhp(Request $request, string $locale, string $namespace)
     {
-        $php = $this->validatePhp($locale, $filename);
+        $this->validatePhp($locale, $namespace);
 
         $request->validate([
             'key' => 'required|string',
             'value' => 'present'
         ]);
 
-        $data = include $php;
-
-        $data = $this->mergeIntoArray($data, explode('.', $request->get('key')), (string)$request->get('value'));
-
-        $content = var_export($data, true);
-        file_put_contents($php, "<?php\nreturn " . $content . ';');
+        $this->strings->put(
+            $locale,
+            $namespace . '.' . $request->get('key'),
+            (string)$request->get('value')
+        );
     }
 
-    protected function mergeIntoArray(array $array, array $keyPath, $value): array
+    protected function validatePo(string $locale, string $category, string $domain): string
     {
-        $key = array_shift($keyPath);
+        $filename = $this->gettext->getPortableObject($locale, $category, $domain);
 
-        if ($keyPath) {
-            // dive into
-            $array[$key] = $this->mergeIntoArray($array[$key], $keyPath, $value);
-        } else {
-            $array[$key] = $value;
-        }
-
-        return $array;
-    }
-
-    protected function validatePo(string $locale, string $category, string $filename): string
-    {
-        if (!Str::endsWith($filename, '.po')) {
+        if (!file_exists($filename)) {
             abort(404);
         }
 
-        $po = $this->gettextDir() .
-            DIRECTORY_SEPARATOR . $locale .
-            DIRECTORY_SEPARATOR . $category .
-            DIRECTORY_SEPARATOR . $filename;
-
-        if (!file_exists($po)) {
-            abort(404);
-        }
-
-        return $po;
+        return $filename;
     }
 
-    public function getPo(string $locale, string $category, string $filename)
+    public function getPo(string $locale, string $category, string $domain)
     {
-        $po = $this->validatePo($locale, $category, $filename);
-
-        $parser = new Parser(new FileSystem($po));
-        $catalog = $parser->parse();
+        $this->validatePo($locale, $category, $domain);
 
         $output = [];
 
-        $output['headers'] = collect($catalog->getHeaders())
-            ->mapWithKeys(function (string $string) {
-                $values = explode(':', $string);
-                return [array_shift($values) => trim(implode(':', $values))];
+        $output['headers'] = $this->gettext->getHeaders($locale, $category, $domain);
+
+        $output['messages'] = $this->gettext->getStrings($locale, $category, $domain)
+            ->map(function (Entry $entry) {
+                $row = [];
+                $row['msgid'] = $entry->getMsgId();
+
+                if ($entry->isPlural()) {
+                    $row['msgid_plural'] = $entry->getMsgIdPlural();
+                    $row['msgstr'] = $entry->getMsgStrPlurals();
+                } else {
+                    $row['msgstr'] = $entry->getMsgStr();
+                }
+
+                $row['fuzzy'] = $entry->isFuzzy();
+                $row['obsolete'] = $entry->isObsolete();
+
+                // Not actually supported
+                $row['context'] = $entry->getMsgCtxt();
+
+                $row['reference'] = $entry->getReference();
+                $row['developer_comments'] = $entry->getDeveloperComments();
+                $row['translator_comments'] = $entry->getTranslatorComments();
+
+                return $row;
             })
-            ->toArray();
-
-        $output['messages'] = [];
-
-        foreach ($catalog->getEntries() as $entry) {
-            $row = [];
-            $row['msgid'] = $entry->getMsgId();
-
-            if ($entry->isPlural()) {
-                $row['msgid_plural'] = $entry->getMsgIdPlural();
-                $row['msgstr'] = $entry->getMsgStrPlurals();
-            } else {
-                $row['msgstr'] = $entry->getMsgStr();
-            }
-
-            $row['fuzzy'] = $entry->isFuzzy();
-            $row['obsolete'] = $entry->isObsolete();
-
-            // Not actually supported
-            $row['context'] = $entry->getMsgCtxt();
-
-            $row['reference'] = $entry->getReference();
-            $row['developer_comments'] = $entry->getDeveloperComments();
-            $row['translator_comments'] = $entry->getTranslatorComments();
-
-            $output['messages'][] = $row;
-        }
+            ->values();
 
         return response()->json($output);
     }
 
-    public function postPo(Request $request, string $locale, string $category, string $filename)
+    public function postPo(Request $request, string $locale, string $category, string $domain)
     {
-        $po = $this->validatePo($locale, $category, $filename);
+        $this->validatePo($locale, $category, $domain);
 
-        $request->validate([
+        $rules = [
             'msgid' => 'required|string',
             'msgstr' => 'present',
             'fuzzy' => 'boolean',
             'comment' => 'present|array',
             'comment.*' => 'string'
-        ]);
+        ];
 
-        $file = new FileSystem($po);
-        $parser = new Parser($file);
-        $catalog = $parser->parse();
+        $entry = $this->gettext->get($locale, $category, $domain, $request->get('msgid'));
 
-        $entry = $catalog->getEntry($request->get('msgid'));
-        if (!$entry) {
-            $exists = false;
-            $entry = new Entry($request->get('msgid'));
-            if ($request->has('msgid_plural')) {
-                $entry->setMsgIdPlural($request->get('msgid_plural'));
-            }
-        } else {
-            $exists = true;
+        if (($entry && $entry->isPlural()) || (!$entry && $request->has('msgid_plural'))) {
+            $rules['msgid_plural'] = 'required|string';
+            $rules['msgstr'] = 'array|size:' . $this->gettext
+                    ->getHeader($locale, $category, $domain)
+                    ->getPluralFormsCount();
         }
 
-        if (($exists && $entry->isPlural()) || (!$exists && $request->has('msgid_plural'))) {
-            $request->validate([
-                'msgid_plural' => 'required|string',
-                'msgstr' => 'array|size:' . $catalog->getHeader()->getPluralFormsCount(),
-            ]);
-            $entry->setMsgStrPlurals(
-                collect($request->get('msgstr'))
-                    ->map(function ($value) {
-                        return (string)$value;
-                    })
-                    ->toArray()
-            );
-        } else {
-            $entry->setMsgStr((string)$request->get('msgstr'));
-        }
+        $validated = $request->validate($rules);
 
-        $flags = $entry->getFlags();
-        if ($request->get('fuzzy')) {
-            $flags[] = 'fuzzy';
-        } else {
-            $flags = array_diff($flags, ['fuzzy']);
-        }
-        $entry->setFlags(array_unique($flags));
+        $this->gettext->put($locale, $category, $domain, $validated);
 
-        $entry->setTranslatorComments($request->get('comment'));
-
-        if (!$exists) {
-            $catalog->addEntry($entry);
-        }
-
-        $file->save((new PoCompiler())->compile($catalog));
-
-        $this->updatePoHeader($po, 'X-Generator', 'Polyglot ' . Polyglot::getVersion());
-        $this->updatePoHeader($po, 'PO-Revision-Date', now()->format('Y-m-d H:i:sO'));
+        $this->gettext->updateHeader($locale, $category, $domain, 'X-Generator', 'Polyglot ' . Polyglot::version());
+        $this->gettext->updateHeader($locale, $category, $domain, 'PO-Revision-Date', now()->format('Y-m-d H:i:sO'));
         if ($user = $request->user()) {
-            $this->updatePoHeader($po, 'Last-Translator', "{$user->name} <{$user->email}>");
+            $this->gettext->updateHeader($locale, $category, $domain, 'Last-Translator', "{$user->name} <{$user->email}>");
         }
     }
 
-    protected function updatePoHeader(string $filename, $key, $value)
+    protected function statPo(string $locale, string $category, string $domain): ?array
     {
-        $content = file_get_contents($filename);
-        $content = preg_replace(
-            '~^"' . $key . ':.*?"~mi',
-            '"' . $key . ': ' . $value . '\n"',
-            $content
-        );
-        file_put_contents($filename, $content);
-    }
-
-    protected function flatten(array $rows): array
-    {
-        $flatten = [];
-
-        foreach ($rows as $key => $value) {
-            if (is_array($value)) {
-                foreach ($this->flatten($value) as $subkey => $subvalue) {
-                    $flatten[$key . '.' . $subkey] = $subvalue;
-                }
-            } else {
-                $flatten[$key] = $value;
-            }
-        }
-
-        return $flatten;
-    }
-
-    protected function poStat(string $filename): ?array
-    {
+        $filename = $this->gettext->getPortableObject($locale, $category, $domain);
         if (file_exists($filename)) {
             $output = [];
+            $output['domain'] = $domain;
             $output['filename'] = basename($filename);
 
-            $file = new FileSystem($filename);
-            $parser = new Parser($file);
-            try {
-                $catalog = $parser->parse();
-                $output['count'] = 0;
-                $output['empty'] = 0;
-                $output['fuzzy'] = 0;
-
-                foreach ($catalog->getEntries() as $entry) {
-
-                    $output['count']++;
-
-                    if ($entry->isPlural()) {
-                        if (collect($entry->getMsgStrPlurals())->reject(function ($string) {
-                            return $string;
-                        })->isNotEmpty()) {
-                            $output['empty']++;
-                        }
-                    } else {
-                        if (!$entry->getMsgStr()) {
-                            $output['empty']++;
-                        }
-                    }
-
-                    if ($entry->isFuzzy()) {
-                        $output['fuzzy']++;
-                    }
-                }
-            } catch (\Exception $e) {
-                $output['error'] = $e->getMessage();
-            }
+            $strings = $this->gettext->getStrings($locale, $category, $domain);
+            $output['count'] = $strings->count();
+            $output['empty'] = $strings->untranslated()->count();
+            $output['fuzzy'] = $strings->fuzzy()->count();
         } else {
             $output = null;
         }
@@ -374,17 +229,18 @@ class L10nController extends Controller
         return $output;
     }
 
-    protected function phpStat(string $filename): ?array
+    protected function statPhp(string $locale, string $namespace): ?array
     {
+        $filename = $this->strings->getPhpFile($locale, $namespace);
+
         if (file_exists($filename)) {
             $output = [];
+            $output['namespace'] = basename($namespace);
             $output['filename'] = basename($filename);
-            $strings = include($filename);
-            if (is_array($strings)) {
-                $output += $this->stringsStat($strings);
-            } else {
-                $output['error'] = 'Not an array';
-            }
+
+            $strings = $this->strings->getPhpStrings($locale, $namespace);
+            $output['count'] = $strings->flatten()->count();
+            $output['empty'] = $strings->flatten()->untranslated()->count();
         } else {
             $output = null;
         }
@@ -392,36 +248,22 @@ class L10nController extends Controller
         return $output;
     }
 
-    protected function jsonStat(string $filename): ?array
+    protected function statJson(string $locale): ?array
     {
+        $filename = $this->strings->getJsonFile($locale);
+
         if (file_exists($filename)) {
             $output = [];
             $output['filename'] = basename($filename);
-            $strings = json_decode(file_get_contents($filename), true);
-            if ($strings) {
-                $output += $this->stringsStat($strings);
-            } else {
-                $output['error'] = json_last_error_msg();
-            }
+
+            $strings = $this->strings->getJsonStrings($locale);
+            $output['count'] = $strings->flatten()->count();
+            $output['empty'] = $strings->flatten()->untranslated()->count();
         } else {
             $output = null;
         }
 
         return $output;
-    }
-
-    protected function stringsStat(array $strings): array
-    {
-        $strings = collect($strings)->flatten();
-
-        $data = [];
-        $data['count'] = $strings->count();
-        $data['empty'] = $strings
-            ->filter(function ($string) {
-                return !$string;
-            })->count();
-
-        return $data;
     }
 
 }

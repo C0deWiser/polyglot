@@ -2,13 +2,11 @@
 
 namespace Codewiser\Polyglot;
 
-use Codewiser\Polyglot\Collectors\GettextCollector;
-use Codewiser\Polyglot\Collectors\StringsCollector;
 use Codewiser\Polyglot\Console\Commands\CompileCommand;
 use Codewiser\Polyglot\Console\Commands\InstallCommand;
 use Codewiser\Polyglot\Console\Commands\PublishCommand;
 use Codewiser\Polyglot\Console\Commands\CollectCommand;
-use Codewiser\Polyglot\Contracts\CollectorInterface;
+use Codewiser\Polyglot\Contracts\PopulatorInterface;
 use Codewiser\Polyglot\Http\Middleware\Authorize;
 use Illuminate\Support\Facades\Route;
 
@@ -71,10 +69,10 @@ class PolyglotServiceProvider extends \Illuminate\Translation\TranslationService
                 PublishCommand::class
             ];
 
-            if ($collector = app(CollectorInterface::class)) {
+            if ($collector = app(PopulatorInterface::class)) {
                 $commands[] = CollectCommand::class;
 
-                if ($collector instanceof GettextCollector) {
+                if ($collector instanceof GettextPopulator) {
                     $commands[] = CompileCommand::class;
                 }
             }

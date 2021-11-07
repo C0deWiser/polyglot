@@ -2,20 +2,22 @@
 
 namespace Tests;
 
-use Codewiser\Polyglot\Collectors\StringsCollector;
-use Codewiser\Polyglot\Contracts\CollectorInterface;
+use Codewiser\Polyglot\StringsCollector;
 
 class StringsCollectorTest extends \PHPUnit\Framework\TestCase
 {
-    protected $pot = __DIR__ . '/test.pot';
-    /**
-     * @var StringsCollector
-     */
-    protected $collector;
+    protected $pot = __DIR__ . '/resources/lang/test.pot';
+    protected StringsCollector $collector;
 
     protected function setUp(): void
     {
-        $this->collector = new StringsCollector(__DIR__, ['en', 'es'], __DIR__ . '/resources/lang');
+        $this->collector = new StringsCollector(
+            'unit-test',
+            __DIR__,
+            [__DIR__ . '/sources'],
+            $this->pot
+        );
+        $this->collector->exclude([__DIR__ . '/resources/lang']);
 
         parent::setUp();
     }
@@ -24,8 +26,8 @@ class StringsCollectorTest extends \PHPUnit\Framework\TestCase
     {
         parent::tearDown();
 
-        if (file_exists($this->pot))
-            unlink($this->pot);
+//        if (file_exists($this->pot))
+//            unlink($this->pot);
     }
 
     public function testListingPhpOnly()
@@ -76,64 +78,16 @@ class StringsCollectorTest extends \PHPUnit\Framework\TestCase
 
     }
 
-    public function testCollectStrings($unlink = true)
+    public function testCollectStrings()
     {
-        if (file_exists($this->pot)) {
-            unlink($this->pot);
-        }
+        $this->collector->collect();
 
-        $this->collector->collectStrings(__DIR__ . '/sources', $this->pot);
+        $strings = $this->collector->getStrings(
+            $this->collector->getPortableObjectTemplate()
+        );
+
+        $this->assertGreaterThan(0, $strings->count());
 
         $this->assertTrue(file_exists($this->pot));
-    }
-
-    public function testMergeRecursive()
-    {
-        $scanner = $this->collector;
-        $merged = $scanner->mergeArrayRecursive([], 'path.to.string', 'path.to.string');
-        $merged = $scanner->mergeArrayRecursive($merged, 'path.to.second', 'path.to.second');
-        $merged = $scanner->mergeArrayRecursive($merged, 'path.to.string', 'fuck off');
-
-        $this->assertTrue(isset($merged['path']['to']['string']));
-        $this->assertTrue(isset($merged['path']['to']['second']));
-        $this->assertEquals('path.to.string', $merged['path']['to']['string']);
-    }
-
-    public function testSavingStringEntry()
-    {
-        $scanner = $this->collector;
-        $scanner->mergeStringEntry(__DIR__ . '/resources/lang', 'en', 'My string');
-        $this->assertTrue(file_exists(__DIR__ . '/resources/lang/en.json'));
-        unlink(__DIR__ . '/resources/lang/en.json');
-    }
-
-    public function testSavingKeyEntry()
-    {
-        $scanner = $this->collector;
-        $scanner->mergeKeyEntry(__DIR__ . '/resources/lang', 'en', 'auth.failed');
-        $this->assertTrue(file_exists(__DIR__ . '/resources/lang/en/auth.php'));
-        unlink(__DIR__ . '/resources/lang/en/auth.php');
-    }
-
-    public function testPopulate()
-    {
-        $this->testCollectStrings(false);
-        $scanner = $this->collector;
-        $scanner->populate($this->pot, __DIR__ . '/resources/lang', ['en', 'es']);
-        unlink(__DIR__ . '/resources/lang/en.json');
-        unlink(__DIR__ . '/resources/lang/es.json');
-        unlink(__DIR__ . '/resources/lang/en/short.php');
-        unlink(__DIR__ . '/resources/lang/es/short.php');
-    }
-
-    public function testCollect()
-    {
-        $scanner = $this->collector;
-        $scanner->setIncludes([__DIR__ . '/sources/']);
-        $strings = $scanner->parse()
-            ->toArray();
-
-        $this->assertTrue(in_array('One cat', $strings));
-        $this->assertTrue(in_array('short.message', $strings));
     }
 }
