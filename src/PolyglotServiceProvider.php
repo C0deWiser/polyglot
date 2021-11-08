@@ -6,7 +6,7 @@ use Codewiser\Polyglot\Console\Commands\CompileCommand;
 use Codewiser\Polyglot\Console\Commands\InstallCommand;
 use Codewiser\Polyglot\Console\Commands\PublishCommand;
 use Codewiser\Polyglot\Console\Commands\CollectCommand;
-use Codewiser\Polyglot\Contracts\PopulatorInterface;
+use Codewiser\Polyglot\Contracts\ManipulatorInterface;
 use Codewiser\Polyglot\Http\Middleware\Authorize;
 use Illuminate\Support\Facades\Route;
 
@@ -69,10 +69,10 @@ class PolyglotServiceProvider extends \Illuminate\Translation\TranslationService
                 PublishCommand::class
             ];
 
-            if ($collector = app(PopulatorInterface::class)) {
+            if ($collector = app(ManipulatorInterface::class)) {
                 $commands[] = CollectCommand::class;
 
-                if ($collector instanceof GettextPopulator) {
+                if ($collector instanceof GettextManipulator) {
                     $commands[] = CompileCommand::class;
                 }
             }

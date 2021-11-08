@@ -2,11 +2,11 @@
 
 namespace Codewiser\Polyglot;
 
-use Codewiser\Polyglot\Contracts\PopulatorInterface;
+use Codewiser\Polyglot\Contracts\ManipulatorInterface;
 use Illuminate\Support\Str;
 use Sepia\PoParser\Catalog\Entry;
 
-class StringsPopulator implements PopulatorInterface
+class StringsManipulator implements ManipulatorInterface
 {
     /**
      * Path to lang folder.
@@ -57,14 +57,17 @@ class StringsPopulator implements PopulatorInterface
      *
      * @param string $locale
      * @param Entry $entry
+     * @return string|array
      */
     protected function initEntry(string $locale, Entry $entry)
     {
         if ($path = $this->isDotKey($entry->getMsgId())) {
             $this->mergeDotKeyEntry($locale, $path, null);
+            return $path;
         } else {
             list($key) = $this->keyValue($entry);
             $this->mergeStringEntry($locale, $key, null);
+            return $key;
         }
     }
 
@@ -97,13 +100,93 @@ class StringsPopulator implements PopulatorInterface
     {
         $entries = $this->collector->getStrings($pot);
 
-        // todo remove obsolete values from json and php files.
-
         foreach ($this->locales as $locale) {
-            $entries->each(function (Entry $entry) use ($locale) {
-                $this->initEntry($locale, $entry);
-            });
+
+            // Json strings
+            $strings = $entries->stringKeyed()
+                ->mapWithKeys(function (Entry $entry) use ($locale) {
+                    list($key, $value) = $this->keyValue($entry);
+                    return [$key => $value];
+                })
+                ->toArray();
+
+            // Merge with current
+            $this->getJsonStrings($locale)
+                ->each(function ($value, $key) use (&$strings) {
+                    // Merge old values into new strings
+                    if (isset($strings[$key])) $strings[$key] = $value;
+                });
+
+            // Save
+            $this->saveJson($locale, $strings);
+
+            // Php strings
+            $affectedNamespaces = $entries->dotKeyed()
+                // Group by filename (aka namespace)
+                ->mapToGroups(function (Entry $entry) use ($entries) {
+                    $path = $entries->hasDotSeparatedKey($entry->getMsgId());
+                    $namespace = array_shift($path);
+                    return [$namespace => implode('.', $path)];
+                })
+                // Merge with current
+                ->each(function (EntryCollection $entries, $namespace) use ($locale) {
+                    $flatten = array_fill_keys($entries->toArray(), '');
+                    $merged = [];
+
+                    foreach ($flatten as $key => $value) {
+                        $merged = $this->mergeKeyIntoArray($merged, explode('.', $key), $value);
+                    }
+
+                    $this->getPhpStrings($locale, $namespace)
+                        ->each(function ($value, $key) use ($flatten, &$merged) {
+                            // Merge old values into new strings
+                            if (isset($flatten[$key]))
+                                $merged = $this->mergeKeyIntoArray($merged, explode('.', $key), $value);
+                        });
+
+                    // Save
+                    $this->savePhp($locale, $namespace, $merged);
+                })
+                ->keys()
+                ->toArray();
+
+            // Delete obsolete php files?
+//            foreach ($this->getPhpListing($locale) as $filename) {
+//                $namespace = basename($filename, '.php');
+//                if (!in_array($namespace, $affectedNamespaces)) {
+//                    unlink($filename);
+//                }
+//            }
         }
+    }
+
+    protected function filterOutPhp(string $locale, string $namespace, array $keys)
+    {
+        $filtered = [];
+
+        foreach ($this->getPhpStrings($locale, $namespace) as $key => $value) {
+            if (in_array($key, $keys)) {
+                $filtered = $this->mergeKeyIntoArray($filtered, explode('.', $key), $value);
+            }
+        }
+
+        $this->savePhp($locale, $namespace, $filtered);
+    }
+
+    /**
+     * Remove from json keys not in given list.
+     *
+     * @param string $locale
+     * @param array $keys
+     */
+    protected function filterOutJson(string $locale, array $keys)
+    {
+        $filtered = $this->getJsonStrings($locale)
+            ->filter(function ($string, $key) use ($keys) {
+                return in_array($key, $keys);
+            });
+
+        $this->saveJson($locale, $filtered->toArray());
     }
 
     /**
@@ -136,6 +219,17 @@ class StringsPopulator implements PopulatorInterface
             $strings[$key] = $value;
         }
 
+        $this->saveJson($locale, $strings);
+    }
+
+    protected function saveJson(string $locale, array $strings)
+    {
+        $filename = $this->getJsonFile($locale);
+
+        if (!file_exists(dirname($filename))) {
+            mkdir(dirname($filename), 0777, true);
+        }
+
         file_put_contents($filename, json_encode($strings, JSON_UNESCAPED_UNICODE + JSON_PRETTY_PRINT));
     }
 
@@ -163,6 +257,17 @@ class StringsPopulator implements PopulatorInterface
 
         $strings = $this->mergeKeyIntoArray($strings, $path, $value);
 
+        $this->savePhp($locale, $namespace, $strings);
+    }
+
+    protected function savePhp(string $locale, string $namespace, array $strings)
+    {
+        $filename = $this->getPhpFile($locale, $namespace);
+
+        if (!file_exists(dirname($filename))) {
+            mkdir(dirname($filename), 0777, true);
+        }
+
         $content = var_export($strings, true);
         // todo try to format source code.
         file_put_contents($filename, "<?php\nreturn " . $content . ';');
@@ -182,7 +287,7 @@ class StringsPopulator implements PopulatorInterface
 
         if ($keyPath) {
             // dive into
-            $strings[$key] = $this->mergeKeyIntoArray($strings[$key], $keyPath, $value);
+            $strings[$key] = $this->mergeKeyIntoArray((array)@$strings[$key], $keyPath, $value);
         } else {
             if (is_null($value)) {
                 // create if not exists

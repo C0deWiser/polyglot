@@ -3,7 +3,7 @@
     "description": "Localize Laravel applications",
     "keywords": ["gettext", "poedit", "trans", "laravel", "localization", "L10n"],
     "license": "MIT",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "authors": [
         {
             "name": "pm",

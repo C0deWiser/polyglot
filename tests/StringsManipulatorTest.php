@@ -3,14 +3,14 @@
 namespace Tests;
 
 use Codewiser\Polyglot\StringsCollector;
-use Codewiser\Polyglot\StringsPopulator;
+use Codewiser\Polyglot\StringsManipulator;
 use Monolog\Test\TestCase;
 
-class StringsPopulatorTest extends TestCase
+class StringsManipulatorTest extends TestCase
 {
-    protected $pot = __DIR__ . '/resources/lang/test.pot';
+    protected $pot = __DIR__ . '/resources/lang/messages.pot';
     protected StringsCollector $collector;
-    protected StringsPopulator $populator;
+    protected StringsManipulator $manipulator;
 
     protected function setUp(): void
     {
@@ -23,7 +23,7 @@ class StringsPopulatorTest extends TestCase
         $this->collector->exclude([__DIR__ . '/resources/lang']);
         $this->collector->collect();
 
-        $this->populator = new StringsPopulator(
+        $this->manipulator = new StringsManipulator(
             ['en'],
             __DIR__ . '/resources/lang',
             $this->collector
@@ -34,11 +34,11 @@ class StringsPopulatorTest extends TestCase
 
     public function testPopulate()
     {
-        $this->populator->populate(
+        $this->manipulator->populate(
             $this->collector->getPortableObjectTemplate()
         );
 
-        $this->assertTrue(file_exists($this->populator->getJsonFile('en')));
-        $this->assertTrue(file_exists($this->populator->getPhpFile('en', 'short')));
+        $this->assertTrue(file_exists($this->manipulator->getJsonFile('en')));
+        $this->assertTrue(file_exists($this->manipulator->getPhpFile('en', 'short')));
     }
 }

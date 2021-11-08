@@ -4,7 +4,7 @@
 namespace Codewiser\Polyglot\Console\Commands;
 
 
-use Codewiser\Polyglot\Contracts\PopulatorInterface;
+use Codewiser\Polyglot\Contracts\ManipulatorInterface;
 use Codewiser\Polyglot\StringsCollector;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Lang;
@@ -54,8 +54,8 @@ class CollectCommand extends Command
         return app(StringsCollector::class);
     }
 
-    protected function populator(): PopulatorInterface
+    protected function populator(): ManipulatorInterface
     {
-        return app(PopulatorInterface::class);
+        return app(ManipulatorInterface::class);
     }
 }

@@ -116,8 +116,8 @@ return [
     |
     */
     'translator' => [
-        'po' => resource_path('gettext'),
-        'mo' => resource_path('gettext'),
+        'po' => resource_path('lang'),
+        'mo' => resource_path('lang'),
 
         'domain' => 'messages',
 

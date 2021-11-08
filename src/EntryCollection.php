@@ -2,10 +2,43 @@
 
 namespace Codewiser\Polyglot;
 
+use Illuminate\Support\Str;
 use Sepia\PoParser\Catalog\Entry;
 
 class EntryCollection extends \Illuminate\Support\Collection
 {
+    public function stringKeyed(): EntryCollection
+    {
+        return $this->filter(function (Entry $entry) {
+            return !$this->hasDotSeparatedKey($entry->getMsgId());
+        });
+    }
+
+    public function dotKeyed():EntryCollection
+    {
+        return $this->filter(function (Entry $entry) {
+            return $this->hasDotSeparatedKey($entry->getMsgId());
+        });
+    }
+
+    /**
+     * Check if given entry has dot.separated.key.
+     *
+     * @param string $msgid
+     * @return array|null
+     */
+    public function hasDotSeparatedKey(string $msgid): ?array
+    {
+        if (preg_match('~^\S*$~', $msgid)
+            && (Str::lower($msgid) === $msgid)
+            && ($key = explode('.', $msgid))
+            && (count($key) > 1)) {
+            return $key;
+        } else {
+            return null;
+        }
+    }
+
     public function fuzzy(): EntryCollection
     {
         return $this
@@ -13,6 +46,7 @@ class EntryCollection extends \Illuminate\Support\Collection
                 return $entry->isFuzzy();
             });
     }
+
     public function untranslated(): EntryCollection
     {
         return $this

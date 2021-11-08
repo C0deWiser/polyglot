@@ -2,9 +2,9 @@
 
 namespace Codewiser\Polyglot;
 
-use Codewiser\Polyglot\Contracts\PopulatorInterface;
-use Codewiser\Polyglot\GettextPopulator;
-use Codewiser\Polyglot\StringsPopulator;
+use Codewiser\Polyglot\Contracts\ManipulatorInterface;
+use Codewiser\Polyglot\GettextManipulator;
+use Codewiser\Polyglot\StringsManipulator;
 use Codewiser\Polyglot\StringsCollector;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
@@ -86,13 +86,13 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
 
     protected function registerPopulator()
     {
-        $this->app->bind(PopulatorInterface::class, function($app) {
+        $this->app->bind(ManipulatorInterface::class, function($app) {
             $config = $app['config']['polyglot'];
             switch ($config['mode']) {
                 case 'translator':
-                    return app(GettextPopulator::class);
+                    return app(GettextManipulator::class);
                 case 'collector':
-                    return app(StringsPopulator::class);
+                    return app(StringsManipulator::class);
                 default:
                     return null;
             }
@@ -101,10 +101,10 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
 
     protected function registerStringsPopulator()
     {
-        $this->app->bind(StringsPopulator::class, function ($app) {
+        $this->app->bind(StringsManipulator::class, function ($app) {
             $config = $app['config']['polyglot'];
 
-            return new StringsPopulator(
+            return new StringsManipulator(
                 $config['locales'],
                 $config['collector']['storage'],
                 app(StringsCollector::class)
@@ -114,15 +114,14 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
 
     protected function registerGettextPopulator()
     {
-        $this->app->bind(GettextPopulator::class, function ($app) {
+        $this->app->bind(GettextManipulator::class, function ($app) {
             $config = $app['config']['polyglot'];
 
-            $populator = new GettextPopulator(
-                $config['locales'],
+            $populator = new GettextManipulator(
                 $config['translator']['po'],
                 $config['translator']['mo'],
                 $config['translator']['domain'],
-                app(StringsPopulator::class)
+                app(StringsManipulator::class)
             );
 
             $populator

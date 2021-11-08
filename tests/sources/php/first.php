@@ -21,3 +21,4 @@ trans_choice('short.plural', rand(0, 10));
 trans_choice('One lamp|Few lamps', rand(0, 10));
 
 __('short.message');
+__('short.long.message');

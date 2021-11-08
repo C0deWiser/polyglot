@@ -4,7 +4,7 @@ namespace Codewiser\Polyglot\Contracts;
 
 use Sepia\PoParser\Catalog\Entry;
 
-interface PopulatorInterface
+interface ManipulatorInterface
 {
     /**
      * Populate entries from given .pot file to translation files through every known locale.

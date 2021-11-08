@@ -10,7 +10,7 @@ use Sepia\PoParser\Parser;
 use Sepia\PoParser\PoCompiler;
 use Sepia\PoParser\SourceHandler\FileSystem;
 
-class GettextPopulator implements Contracts\PopulatorInterface
+class GettextManipulator implements Contracts\ManipulatorInterface
 {
     /**
      * Directory with .po files.
@@ -26,14 +26,12 @@ class GettextPopulator implements Contracts\PopulatorInterface
      */
     protected string $compiled;
 
-    protected array $locales;
-
     /**
-     * StringsPopulator to work with passthroughs.
+     * StringsManipulator to work with passthroughs strings.
      *
-     * @var StringsPopulator
+     * @var StringsManipulator
      */
-    protected StringsPopulator $passthroughsPopulator;
+    protected StringsManipulator $stringsManipulator;
 
     /**
      * Translate these strings using Translator service.
@@ -48,13 +46,12 @@ class GettextPopulator implements Contracts\PopulatorInterface
 
     protected string $domain;
 
-    public function __construct(array $locales, string $storage, string $compiled, string $domain, StringsPopulator $populator)
+    public function __construct(string $storage, string $compiled, string $domain, StringsManipulator $manipulator)
     {
-        $this->locales = $locales;
         $this->storage = $storage;
         $this->compiled = $compiled;
         $this->domain = $domain;
-        $this->passthroughsPopulator = $populator;
+        $this->stringsManipulator = $manipulator;
 
         $this->passthroughs = [];
         $this->msginit = 'msginit';
@@ -69,7 +66,7 @@ class GettextPopulator implements Contracts\PopulatorInterface
 
     public function getLocales(): array
     {
-        return $this->locales;
+        return $this->stringsManipulator->getLocales();
     }
 
     public function getDomain(): string
@@ -83,7 +80,7 @@ class GettextPopulator implements Contracts\PopulatorInterface
      * @param array $passthroughs
      * @return $this
      */
-    public function setPassthroughs(array $passthroughs): GettextPopulator
+    public function setPassthroughs(array $passthroughs): GettextManipulator
     {
         $this->passthroughs = $passthroughs;
         return $this;
@@ -94,7 +91,7 @@ class GettextPopulator implements Contracts\PopulatorInterface
      */
     public function compile()
     {
-        foreach ($this->locales as $locale) {
+        foreach ($this->getLocales() as $locale) {
 
             $po = $this->getPortableObject($locale, 'LC_MESSAGES', $this->domain);
             $mo = $this->getMachineObject($locale, 'LC_MESSAGES', $this->domain);
@@ -123,11 +120,11 @@ class GettextPopulator implements Contracts\PopulatorInterface
         $this->splitPortableObjectTemplate($pot, $legacyPot, $this->passthroughs);
 
         if (file_exists($legacyPot)) {
-            $this->passthroughsPopulator->populate($legacyPot);
+            $this->stringsManipulator->populate($legacyPot);
             unlink($legacyPot);
         }
 
-        foreach ($this->locales as $locale) {
+        foreach ($this->getLocales() as $locale) {
             $po = $this->getPortableObject($locale, 'LC_MESSAGES', $this->domain);
 
             if (!file_exists($po)) {
@@ -343,7 +340,7 @@ class GettextPopulator implements Contracts\PopulatorInterface
      * @param string $executable
      * @return $this
      */
-    public function msginit(string $executable): GettextPopulator
+    public function msginit(string $executable): GettextManipulator
     {
         $this->msginit = $executable;
         return $this;
@@ -355,7 +352,7 @@ class GettextPopulator implements Contracts\PopulatorInterface
      * @param string $executable
      * @return $this
      */
-    public function msgmerge(string $executable): GettextPopulator
+    public function msgmerge(string $executable): GettextManipulator
     {
         $this->msgmerge = $executable;
         return $this;
@@ -367,7 +364,7 @@ class GettextPopulator implements Contracts\PopulatorInterface
      * @param string $executable
      * @return $this
      */
-    public function msgfmt(string $executable): GettextPopulator
+    public function msgfmt(string $executable): GettextManipulator
     {
         $this->msgfmt = $executable;
         return $this;

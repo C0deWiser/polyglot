@@ -4,7 +4,7 @@
 namespace Codewiser\Polyglot\Console\Commands;
 
 
-use Codewiser\Polyglot\GettextPopulator;
+use Codewiser\Polyglot\GettextManipulator;
 use Illuminate\Console\Command;
 
 class CompileCommand extends Command
@@ -45,8 +45,8 @@ class CompileCommand extends Command
         return 0;
     }
 
-    protected function populator(): GettextPopulator
+    protected function populator(): GettextManipulator
     {
-        return app(GettextPopulator::class);
+        return app(GettextManipulator::class);
     }
 }

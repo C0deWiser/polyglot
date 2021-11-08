@@ -2,23 +2,23 @@
 
 namespace Codewiser\Polyglot\Http\Controllers;
 
-use Codewiser\Polyglot\GettextPopulator;
+use Codewiser\Polyglot\GettextManipulator;
 use Codewiser\Polyglot\Polyglot;
-use Codewiser\Polyglot\StringsPopulator;
+use Codewiser\Polyglot\StringsManipulator;
 use Illuminate\Http\Request;
 use Sepia\PoParser\Catalog\Entry;
 
 class L10nController extends Controller
 {
-    protected StringsPopulator $strings;
-    protected GettextPopulator $gettext;
+    protected StringsManipulator $strings;
+    protected GettextManipulator $gettext;
 
     public function __construct()
     {
         parent::__construct();
 
-        $this->strings = app(StringsPopulator::class);
-        $this->gettext = app(GettextPopulator::class);
+        $this->strings = app(StringsManipulator::class);
+        $this->gettext = app(GettextManipulator::class);
     }
 
     public function index()
