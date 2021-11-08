@@ -3,15 +3,15 @@ if (!function_exists('pgettext')) {
     /**
      * Particular (with context) gettext.
      *
-     * @param $msgctxt
-     * @param $msgid
-     * @return mixed|string
+     * @param string $context
+     * @param string $message
+     * @return string
      */
-    function pgettext($msgctxt, $msgid)
+    function pgettext(string $context, string $message): string
     {
-        $string = "{$msgctxt}\004{$msgid}";
+        $string = "{$context}\004{$message}";
         $translation = gettext($string);
-        if ($translation == $string) return $msgid;
+        if ($translation == $string) return $message;
         else return $translation;
     }
 }
@@ -20,15 +20,16 @@ if (!function_exists('dpgettext')) {
     /**
      * Particular (with context) dgettext.
      *
-     * @param $domain
-     * @param $msgctxt
-     * @param $msgid
-     * @return mixed|string
+     * @param string $domain
+     * @param string $context
+     * @param string $message
+     * @return string
      */
-    function dpgettext($domain, $msgctxt, $msgid) {
-        $string = "{$msgctxt}\004{$msgid}";
+    function dpgettext(string $domain, string $context, string $message): string
+    {
+        $string = "{$context}\004{$message}";
         $translation = dgettext($domain, $string);
-        if ($translation == $string) return $msgid;
+        if ($translation == $string) return $message;
         else return $translation;
     }
 }
@@ -37,16 +38,17 @@ if (!function_exists('dcpgettext')) {
     /**
      * Particular (with context) dcgettext.
      *
-     * @param $domain
-     * @param $msgctxt
-     * @param $msgid
-     * @param $category
-     * @return mixed|string
+     * @param string $domain
+     * @param string $context
+     * @param string $message
+     * @param int $category
+     * @return string
      */
-    function dcpgettext($domain, $msgctxt, $msgid, $category) {
-        $string = "{$msgctxt}\004{$msgid}";
+    function dcpgettext(string $domain, string $context, string $message, int $category): string
+    {
+        $string = "{$context}\004{$message}";
         $translation = dcgettext($domain, $string, $category);
-        if ($translation == $string) return $msgid;
+        if ($translation == $string) return $message;
         else return $translation;
     }
 }
@@ -55,17 +57,17 @@ if (!function_exists('npgettext')) {
     /**
      * Particular (with context) ngettext.
      *
-     * @param $msgctxt
-     * @param $msgid
-     * @param $msgid_plural
-     * @param $count
-     * @return mixed|string
+     * @param string $context
+     * @param string $singular
+     * @param string $plural
+     * @param int $count
+     * @return string
      */
-    function npgettext($msgctxt, $msgid, $msgid_plural, $count)
+    function npgettext(string $context, string $singular, string $plural, int $count): string
     {
-        $string = "{$msgctxt}\004{$msgid}";
-        $translation = ngettext($string, $msgid_plural, $count);
-        if ($translation == $string) return $msgid;
+        $string = "{$context}\004{$singular}";
+        $translation = ngettext($string, $plural, $count);
+        if ($translation == $string) return $singular;
         else return $translation;
     }
 }
@@ -74,17 +76,18 @@ if (!function_exists('dnpgettext')) {
     /**
      * Particular (with context) dngettext.
      *
-     * @param $domain
-     * @param $msgctxt
-     * @param $msgid
-     * @param $msgid_plural
-     * @param $count
-     * @return mixed|string
+     * @param string $domain
+     * @param string $context
+     * @param string $singular
+     * @param string $plural
+     * @param int $count
+     * @return string
      */
-    function dnpgettext($domain, $msgctxt, $msgid, $msgid_plural, $count) {
-        $string = "{$msgctxt}\004{$msgid}";
-        $translation = dngettext($domain, $string, $msgid_plural, $count);
-        if ($translation == $string) return $msgid;
+    function dnpgettext(string $domain, string $context, string $singular, string $plural, int $count): string
+    {
+        $string = "{$context}\004{$singular}";
+        $translation = dngettext($domain, $string, $plural, $count);
+        if ($translation == $string) return $singular;
         else return $translation;
     }
 }
@@ -93,17 +96,19 @@ if (!function_exists('dcnpgettext')) {
     /**
      * Particular (with context) dcngettext.
      *
-     * @param $domain
-     * @param $msgctxt
-     * @param $msgid
-     * @param $count
-     * @param $category
-     * @return mixed|string
+     * @param string $domain
+     * @param string $context
+     * @param string $singular
+     * @param string $plural
+     * @param int $count
+     * @param int $category
+     * @return string
      */
-    function dcnpgettext($domain, $msgctxt, $msgid, $msgid_plural, $count, $category) {
-        $string = "{$msgctxt}\004{$msgid}";
-        $translation = dcngettext($domain, $string, $msgid_plural, $count, $category);
-        if ($translation == $string) return $msgid;
+    function dcnpgettext(string $domain, string $context, string $singular, string $plural, int $count, int $category): string
+    {
+        $string = "{$context}\004{$singular}";
+        $translation = dcngettext($domain, $string, $plural, $count, $category);
+        if ($translation == $string) return $singular;
         else return $translation;
     }
 }

@@ -187,10 +187,11 @@ class L10nController extends Controller
             'msgstr' => 'present',
             'fuzzy' => 'boolean',
             'comment' => 'present|array',
-            'comment.*' => 'string'
+            'comment.*' => 'string',
+            'context' => 'string'
         ];
 
-        $entry = $this->gettext->get($locale, $category, $domain, $request->get('msgid'));
+        $entry = $this->gettext->get($locale, $category, $domain, $request->get('msgid'), $request->get('context'));
 
         if (($entry && $entry->isPlural()) || (!$entry && $request->has('msgid_plural'))) {
             $rules['msgid_plural'] = 'required|string';

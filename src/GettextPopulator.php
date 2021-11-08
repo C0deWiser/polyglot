@@ -246,11 +246,11 @@ class GettextPopulator implements Contracts\PopulatorInterface
         }
     }
 
-    public function get(string $locale, string $category, string $domain, string $msgid): ?Entry
+    public function get(string $locale, string $category, string $domain, string $msgid, string $context = null): ?Entry
     {
         try {
             return $this->readPortableObject($locale, $category, $domain)
-                ->getEntry($msgid);
+                ->getEntry($msgid, $context ?: null);
         } catch (\Exception $e) {
             return null;
         }
@@ -264,7 +264,7 @@ class GettextPopulator implements Contracts\PopulatorInterface
 
         $catalog = $this->readPortableObject($locale, $category, $domain);
 
-        $entry = $catalog->getEntry($data['msgid']);
+        $entry = $catalog->getEntry($data['msgid'], @$data['context'] ? $data['context'] : null);
         if (!$entry) {
             $exists = false;
             $entry = new Entry($data['msgid']);

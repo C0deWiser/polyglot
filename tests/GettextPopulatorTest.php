@@ -7,7 +7,7 @@ use Codewiser\Polyglot\StringsCollector;
 use Codewiser\Polyglot\StringsPopulator;
 use Monolog\Test\TestCase;
 
-class GettextCollectorTest extends TestCase
+class GettextPopulatorTest extends TestCase
 {
     protected $pot = __DIR__ . '/resources/lang/test.pot';
     protected StringsCollector $collector;

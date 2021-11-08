@@ -194,6 +194,9 @@ class StringsCollector
             mkdir(dirname($target), 0777, true);
         }
 
+        // For keywords
+        // See https://www.gnu.org/software/gettext/manual/html_node/Default-Keywords.html
+
         $command = [
             $this->xgettext,
             '--language=' . $language,
@@ -202,9 +205,28 @@ class StringsCollector
             '--from-code=UTF-8',
             '--package-name="' . $this->app_name . '"',
             '--output=' . $target,
+//            '--output-dir=' . dirname($target),
+            '--add-comments',
+            '--keyword', // Disable defaults
+
             '--keyword=__',
             '--keyword=trans',
+
+            '--keyword=gettext',
+//            '--keyword=dgettext:2',
+//            '--keyword=dcgettext:2',
+
+            '--keyword=ngettext:1,2',
+//            '--keyword=dngettext:2,3',
+//            '--keyword=dcngettext:2,3',
+
             '--keyword=pgettext:1c,2',
+//            '--keyword=dpgettext:2c,3',
+//            '--keyword=dcpgettext:2c,3',
+
+            '--keyword=npgettext:1c,2,3',
+//            '--keyword=dnpgettext:2c,3,4',
+//            '--keyword=dcnpgettext:2c,3,4'
         ];
 
         if (file_exists($target)) {

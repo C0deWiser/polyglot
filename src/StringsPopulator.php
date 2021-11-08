@@ -97,6 +97,8 @@ class StringsPopulator implements PopulatorInterface
     {
         $entries = $this->collector->getStrings($pot);
 
+        // todo remove obsolete values from json and php files.
+
         foreach ($this->locales as $locale) {
             $entries->each(function (Entry $entry) use ($locale) {
                 $this->initEntry($locale, $entry);

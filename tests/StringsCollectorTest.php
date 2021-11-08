@@ -6,7 +6,7 @@ use Codewiser\Polyglot\StringsCollector;
 
 class StringsCollectorTest extends \PHPUnit\Framework\TestCase
 {
-    protected $pot = __DIR__ . '/resources/lang/test.pot';
+    protected $pot = __DIR__ . '/resources/lang/messages.pot';
     protected StringsCollector $collector;
 
     protected function setUp(): void
