@@ -100,7 +100,7 @@ return [
         app_path(),
         resource_path('views')
     ],
-//    'exclude' => [],
+    'exclude' => [],
 
 //    'domains' => [['domain' => 'example', ...], ...],
 

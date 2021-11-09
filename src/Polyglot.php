@@ -3,9 +3,13 @@
 namespace Codewiser\Polyglot;
 
 use Codewiser\Polyglot\Contracts\ManipulatorInterface;
+use Codewiser\Polyglot\Manipulators\GettextManipulator;
+use Codewiser\Polyglot\Manipulators\StringsManipulator;
 use Illuminate\Contracts\Translation\Loader;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use Sepia\PoParser\Catalog\Entry;
 
 class Polyglot extends \Illuminate\Translation\Translator
 {
@@ -17,11 +21,12 @@ class Polyglot extends \Illuminate\Translation\Translator
     protected string $domain;
 
     /**
-     * Folder with gettext mo files.
+     * List of supported locales;
      *
-     * @var string
+     * @var array
      */
-    protected string $compiled;
+    protected array $locales;
+
     protected string $loaded_domain = '';
     protected string $current_locale = '';
 
@@ -32,10 +37,9 @@ class Polyglot extends \Illuminate\Translation\Translator
      */
     protected array $passthroughs;
 
-    public function __construct(Loader $loader, $locale, string $domain, string $compiled, array $passthroughs)
+    public function __construct(Loader $loader, $locale, string $domain, array $passthroughs)
     {
         $this->domain = $domain;
-        $this->compiled = $compiled;
         $this->passthroughs = $passthroughs;
 
         parent::__construct($loader, $locale);
@@ -46,6 +50,12 @@ class Polyglot extends \Illuminate\Translation\Translator
         parent::setLocale($locale);
 
         $this->putEnvironment($locale);
+        $this->loadTranslations();
+    }
+
+    public function setDomain(string $domain)
+    {
+        $this->domain = $domain;
         $this->loadTranslations();
     }
 
@@ -119,7 +129,7 @@ class Polyglot extends \Illuminate\Translation\Translator
         if ($this->loaded_domain != $this->domain) {
 
             textdomain($this->domain);
-            bindtextdomain($this->domain, $this->compiled);
+            bindtextdomain($this->domain, $this->loader->storage());
             bind_textdomain_codeset($this->domain, 'UTF-8');
 
             $this->loaded_domain = $this->domain;
@@ -186,5 +196,57 @@ class Polyglot extends \Illuminate\Translation\Translator
     public static function manipulator(): ManipulatorInterface
     {
         return app(ManipulatorInterface::class);
+    }
+
+    public function all($locale, $domain = null, $category = 'LC_MESSAGES'): Collection
+    {
+        $manipulator = self::manipulator();
+
+        if ($domain && $manipulator instanceof GettextManipulator) {
+            return $manipulator->getStrings($locale, $domain, $category);
+        }
+
+        if ($manipulator instanceof StringsManipulator) {
+            $strings = $manipulator->getJsonStrings($locale);
+
+            if ($domain) {
+                $strings->merge(
+                    $manipulator->getPhpStrings($locale, $domain)
+                        ->mapWithKeys(function ($value, $key) use ($domain) {
+                            return [$domain . '.' . $key => $value];
+                        })
+                );
+            } else {
+                foreach ($manipulator->getPhpListing($locale) as $filename) {
+                    $domain = basename($filename, '.php');
+                    $strings->merge(
+                        $manipulator->getPhpStrings($locale, $domain)
+                            ->mapWithKeys(function ($value, $key) use ($domain) {
+                                return [$domain . '.' . $key => $value];
+                            })
+                    );
+                }
+            }
+
+            return $strings;
+        }
+
+        return new Collection();
+    }
+
+    /**
+     * @return array
+     */
+    public function getLocales(): array
+    {
+        return $this->locales;
+    }
+
+    /**
+     * @param array $locales
+     */
+    public function setLocales(array $locales): void
+    {
+        $this->locales = $locales;
     }
 }

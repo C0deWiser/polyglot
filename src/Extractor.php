@@ -290,6 +290,8 @@ class Extractor
     {
         $files = [];
 
+        $resource = rtrim($resource, DIRECTORY_SEPARATOR);
+
         if ($this->fs->isFile($resource)) {
             if (in_array('*.' . $this->fs->extension($resource), (array)$masks)) {
                 $files[] = $resource;
@@ -438,7 +440,7 @@ class Extractor
         return $this;
     }
 
-    protected function categoryName(int $category): string
+    public function categoryName(int $category): string
     {
         switch ($category) {
             case LC_CTYPE:

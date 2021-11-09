@@ -123,12 +123,20 @@ class PolyglotServiceProvider extends \Illuminate\Translation\TranslationService
             $locale = $app['config']['app.locale'];
             $config = $app['config']['polyglot'];
 
-            $trans = new Polyglot($loader, $locale,
-                $config['translator']['domain'],
-                $config['translator']['mo'],
-                $config['translator']['passthroughs']
+            if (isset($config['domains']) && $config['domains']) {
+                $domain = $config['domains'][0]['domain'];
+            } else {
+                $domain = 'messages';
+            }
+
+            $trans = new Polyglot(
+                $loader,
+                $locale,
+                $domain,
+                $config['passthroughs']
             );
 
+            $trans->setLocales($config['locales']);
             $trans->setFallback($app['config']['app.fallback_locale']);
 
             return $trans;

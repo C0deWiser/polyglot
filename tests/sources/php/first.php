@@ -4,14 +4,11 @@ use Illuminate\Support\Facades\Lang;
 
 __('Short message');
 
-Lang::get('Short message');
-Illuminate\Support\Facades\Lang::get('Short message');
+/* The message will be shown at test page only. */
+echo gettext('Hello world.');
 
-/* Testing context */
-pgettext('Test context', 'Short message');
-
-/* Testing domain change */
-dgettext('shell', 'Message for shell');
+gettext('May');
+pgettext('Month', 'May');
 
 ngettext('One cat', 'Few cats', rand(0, 10));
 
