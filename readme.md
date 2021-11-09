@@ -21,7 +21,7 @@
 
 Polyglot provides a beautiful translation editor and can extract translations strings from the application source codes.
 
-Using Polyglot you may be sure, that you application is fully localized.
+With Polyglot you may be sure, that you application is fully localized.
 
 > Before digging into Polyglot you should familiarize yourself with [Gettext](https://www.gnu.org/software/gettext/).
 

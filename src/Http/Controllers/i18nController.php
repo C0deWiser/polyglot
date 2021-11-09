@@ -9,13 +9,30 @@ class i18nController extends Controller
 {
     public function index()
     {
+        $config = config('polyglot');
+
         $data = [
-            'mode' => config('polyglot.mode'),
-            'locales' => config('polyglot.locales')
+            'mode' => $config['mode'],
+            'locales' => $config['locales']
         ];
 
-        $data['translator'] = config('polyglot.translator');
-        $data['collector'] = config('polyglot.collector');
+        $domains = [];
+
+        if (isset($config['domains'])) {
+            $domains = $config['domains'];
+        } else {
+            $domain = [
+                'domain' => 'messages',
+                'sources' => $config['sources'],
+            ];
+            if (isset($config['exclude']) && $config['exclude']) {
+                $domain['exclude'] = $config['exclude'];
+            }
+            $domains[] = $domain;
+        }
+
+        $data['domains'] = $domains;
+        $data['passthroughs'] = $config['passthroughs'];
 
         return response()->json($data);
     }

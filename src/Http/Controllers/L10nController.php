@@ -25,36 +25,35 @@ class L10nController extends Controller
     {
         $output = [];
 
+        $output[0] = ['filename' => 'lang', 'depth' => 4, 'dir' => true];
+
         foreach ($this->strings->getLocales() as $locale) {
-            $row = [
-                'locale' => $locale
-            ];
 
-            $row['json'] = $this->statJson($locale);
+            $output['a/' . $locale] = ['filename' => $locale, 'depth' => 3, 'dir' => true];
 
-            $row['strings'] = [];
+            if ($json = $this->statJson($locale)) {
+                $output['z/' . $json['filename']] = $json + ['depth' => 3, 'dir' => false];
+            }
+
             foreach ($this->strings->getPhpListing($locale) as $filename) {
-                $row['strings'][] = $this->statPhp($locale, basename($filename, '.php'));
+                $namespace = basename($filename, '.php');
+                $output['a/' . $locale . '/' . $namespace] =
+                    $this->statPhp($locale, $namespace) + ['depth' => 2, 'dir' => false];
             }
-
-            $row['gettext'] = [
-                'categories' => []
-            ];
             foreach ($this->gettext->getCategoryListing($locale) as $category) {
-                $cat = [
-                    'category' => basename($category),
-                    'domains' => []
-                ];
-                foreach ($this->gettext->getPortableObjectListing($locale, $category) as $filename) {
-                    $cat['domains'][] = $this->statPo($locale, $category, basename($filename, '.po'));
-                }
-                $row['gettext']['categories'][] = $cat;
-            }
+                $category = basename($category);
+                $output['a/' . $locale . '/' . $category] = ['filename' => $category, 'depth' => 2, 'dir' => true];
 
-            $output[] = $row;
+                foreach ($this->gettext->getPortableObjectListing($locale, $category) as $filename) {
+                    $domain = basename($filename, '.po');
+                    $output['a/' . $locale . '/' . $category . '/' . $domain] =
+                        $this->statPo($locale, $category, $domain) + ['depth' => 1, 'dir' => false];
+                }
+            }
         }
 
-        return response()->json($output);
+        ksort($output);
+        return response()->json(array_values($output));
     }
 
     protected function validateJson(string $locale): string
@@ -217,12 +216,13 @@ class L10nController extends Controller
         if (file_exists($filename)) {
             $output = [];
             $output['domain'] = $domain;
+            $output['category'] = $category;
             $output['filename'] = basename($filename);
-
             $strings = $this->gettext->getStrings($locale, $category, $domain);
-            $output['count'] = $strings->count();
+            $output['strings'] = $strings->count();
             $output['empty'] = $strings->untranslated()->count();
             $output['fuzzy'] = $strings->fuzzy()->count();
+            $output['route'] = 'L10n/' . $locale . '/' . $category . '/' . $domain;
         } else {
             $output = null;
         }
@@ -240,8 +240,9 @@ class L10nController extends Controller
             $output['filename'] = basename($filename);
 
             $strings = $this->strings->getPhpStrings($locale, $namespace);
-            $output['count'] = $strings->flatten()->count();
+            $output['strings'] = $strings->flatten()->count();
             $output['empty'] = $strings->flatten()->untranslated()->count();
+            $output['route'] = 'L10n/' . $locale . '/' . $namespace;
         } else {
             $output = null;
         }
@@ -258,8 +259,9 @@ class L10nController extends Controller
             $output['filename'] = basename($filename);
 
             $strings = $this->strings->getJsonStrings($locale);
-            $output['count'] = $strings->flatten()->count();
+            $output['strings'] = $strings->flatten()->count();
             $output['empty'] = $strings->flatten()->untranslated()->count();
+            $output['route'] = 'L10n/' . $locale;
         } else {
             $output = null;
         }
