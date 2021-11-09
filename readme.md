@@ -33,7 +33,7 @@ You may install Polyglot into your project using the Composer package manager:
 
     composer require codewiser/polyglot
 
-After installing Polyglot, publish its assets using the polyglot:install Artisan command:
+After installing Polyglot, publish its assets using the `polyglot:install` Artisan command:
 
     php artisan polyglot:install
 
@@ -63,7 +63,7 @@ Polyglot supports three working modes:
 
 ### Source codes
 
-Polyglot scans files and folders, that are configured in `sources` property. It may be as a folder, as a single file or array if any filesystem resources.
+Polyglot scans files and folders, that are configured in `sources` property. It may be as a folder, as a single file, or an array with any filesystem resources.
 
     'sources' => [
         app_path(),
@@ -132,7 +132,7 @@ Once you have configured mode to `collector` in your application's `config/polyg
   
 Polyglot uses `xgettext` to collect translation strings, understanding even `trans`, `trans_choice`, `@trans` and other Laravel specific directives.
 
-After collecting strings is finished, your application's `resourse/lang` folder may look like:
+After collecting strings your application's `resourse/lang` folder may look like:
 
     resources/
       lang/
@@ -155,11 +155,11 @@ After collecting strings is finished, your application's `resourse/lang` folder 
 
 You only left to translate files.
 
-## Gettext translator
+## Gettext Translator
 
-As Laravel Translator may hold strings in different files, as Gettext may hold strings in different files. The idea is alike, but there are a lot of difference.
+As Laravel Translator may hold strings in different files (that we call namespace), so Gettext may hold strings in different files (that is called domains). The idea is alike, but there are a lot of difference.
 
-Also, Gettext may split strings by categories, described by php constants `LC_MESSAGES`, `LC_MONETARY`, `LC_TIME` and so on.
+Gettext may split strings by categories, described by php constants `LC_MESSAGES`, `LC_MONETARY`, `LC_TIME` and so on.
 
 By default, Polyglot stores collected strings on `messages` domain in `LC_MESSAGES`category.
 
@@ -180,13 +180,13 @@ So, if you have configured Polyglot mode to `translator`, after you run `polyglo
           LC_MESSAGES/
             messages.po
 
-After you have translated `po` files you should compile it all to `mo` format, that is understandable by Gettext. Use Artisan command to compile.
+Generated files contains collected string, that you might want to translate. After you have finished translation you should compile all `po` files to `mo` format, that is understandable by Gettext. Use Artisan command to compile.
 
     php artisan polyglot:compile
 
 Beside every `po` file will appear `mo` file.
 
-Do remember, that php caches contents of `mo` files. So, after compiling, be sure, you have restarted the web server.
+> Do remember, that php caches contents of `mo` files. So, after compiling, be sure, you have restarted the web server.
 
 ### Compatability with Laravel Translator
 
@@ -194,7 +194,9 @@ Even using Gettext driver, you may continue to use Laravel translator directives
 
 Meanwhile, you may use Gettext directives, such as `gettext`, `ngettext` and others.
 
-Sometimes, you may want to keep existing translations as it is, and use `po` for only new strings. You may configure the array of translation keys, that should be placed into `php` files, not in `po`:
+They are all understandable by Polyglot.
+
+Sometimes, you may want to keep existing translations as it is, and use `po` only for new strings. You may configure the array of translation keys, that should be stored into `php` files, not in `po`:
 
     'passthroughs' => [
         'validation.',
@@ -204,9 +206,9 @@ Sometimes, you may want to keep existing translations as it is, and use `po` for
         'verify.'
     ],
 
-In that case, all strings, that begins with configured values, will be kept in `php` files, following Laravel Translator style.
+In that case, all strings that begins with configured values, will be stored in `php` files, following Laravel Translator style.
 
-### Multiple domains
+### Multiple Domains
 
 Sometimes, you may want to divide your application's translation strings into few domains, e.g. strings for frontend and strings for administrative panel.
 
@@ -241,7 +243,7 @@ By default, Polyglot will load into php memory the first configured domain. You 
 @todo   
 experimental
 
-Gettext do may collect strings from JavaScript (and from Vue, but there are some problems...). It is enough, if developer will define proper functions: `gettext`, `ngettext` etc.
+Gettext does collect strings from JavaScript (and from Vue, but with some problems...). It is enough, if developer will define custom JavaScript functions: `gettext`, `ngettext` etc — Polyglot will reconize them.
 
 Then loading you JavaScript app, just deliver the array of strings from back to front of your app.
 
@@ -286,7 +288,7 @@ Gettext can be very helpful for the translator. Use following recipes to get loc
 
 #### References
 
-Gettext extracts references of the string, so translator may suppose the context of the string.
+Gettext extracts references of the string, so translator may suppose the context.
 
     #: /sources/php/second.php:3 /sources/js/first.js:1
     msgid "Short message"
@@ -294,7 +296,7 @@ Gettext extracts references of the string, so translator may suppose the context
 
 #### Developer comments
 
-Gettext may extract developer comment, that may be helpful for translator.
+Gettext may extract developer comment, that might be helpful for translator.
 
     #. The message will be shown at test page only.
     msgid "Hello world"
@@ -324,7 +326,7 @@ Here we have two messages with equal `msgid` but with defferent `msgctxt` that i
 
 #### Translator comments
 
-While editing strings, translator may left one or many comments. This comments may help future translators.
+While editing strings, translator may left one or many comments. This comments may be helpful for future translators.
 
     # They say it was about posibilities...
     msgid "May"
@@ -332,7 +334,7 @@ While editing strings, translator may left one or many comments. This comments m
 
 #### Fuzzy strings
 
-Both Gettext (while parsing source codes) and a translataor may mark string as fuzzy. It means that a string, previously situated on that place, was changed, so existing translation may be no more appropriate.
+Both Gettext (while parsing source codes) and a translataor may mark string as fuzzy. It means that a string, previously situated on that place, was changed, so current translation might no longer be appropriate.
 
     #, fuzzy
     msgid "May"
