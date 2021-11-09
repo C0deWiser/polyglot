@@ -161,7 +161,11 @@ class StringsManipulator implements ManipulatorInterface
             $this->fs->makeDirectory($this->fs->dirname($filename), 0777, true);
         }
 
-        $this->fs->put($filename, json_encode($strings, JSON_UNESCAPED_UNICODE + JSON_PRETTY_PRINT));
+        if ($strings) {
+            $this->fs->put($filename, json_encode($strings, JSON_UNESCAPED_UNICODE + JSON_PRETTY_PRINT));
+        } else {
+            // $this->fs->delete($filename);
+        }
     }
 
     /**
@@ -199,9 +203,13 @@ class StringsManipulator implements ManipulatorInterface
             $this->fs->makeDirectory($this->fs->dirname($filename), 0777, true);
         }
 
-        $content = var_export($strings, true);
-        // todo try to format source code.
-        $this->fs->put($filename, "<?php\nreturn " . $content . ';');
+        if ($strings) {
+            $content = var_export($strings, true);
+            // todo try to format source code.
+            $this->fs->put($filename, "<?php\nreturn " . $content . ';');
+        } else {
+            // $this->fs->delete($filename);
+        }
     }
 
     /**

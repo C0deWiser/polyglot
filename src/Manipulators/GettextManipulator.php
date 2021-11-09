@@ -202,7 +202,7 @@ class GettextManipulator implements Contracts\ManipulatorInterface
 
             foreach ($catalog->getEntries() as $entry) {
                 if (Str::startsWith($entry->getMsgId(), $passthrougs)) {
-                    $catalog->removeEntry($entry->getMsgId());
+                    $catalog->removeEntry($entry->getMsgId(), $entry->getMsgCtxt());
                 }
             }
 
@@ -217,7 +217,7 @@ class GettextManipulator implements Contracts\ManipulatorInterface
 
             foreach ($catalog->getEntries() as $entry) {
                 if (!Str::startsWith($entry->getMsgId(), $passthrougs)) {
-                    $catalog->removeEntry($entry->getMsgId());
+                    $catalog->removeEntry($entry->getMsgId(), $entry->getMsgCtxt());
                 }
             }
 
