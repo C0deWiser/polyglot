@@ -10,16 +10,9 @@ interface ManipulatorInterface
      * Populate entries from given .pot file to translation files through every known locale.
      * It will not modify translations, just add new entries.
      *
-     * @param string $pot
+     * @param string $template
      */
-    public function populate(string $pot);
-
-    /**
-     * Get path where populator stores their files.
-     *
-     * @return string
-     */
-    public function getStorage(): string;
+    public function populate(string $template);
 
     /**
      * Get lost of supported locales.

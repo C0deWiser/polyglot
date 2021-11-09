@@ -2,6 +2,7 @@
 
 namespace Codewiser\Polyglot;
 
+use Codewiser\Polyglot\Collections\EntryCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\View\Compilers\BladeCompiler;
@@ -10,9 +11,9 @@ use Sepia\PoParser\Parser;
 use Sepia\PoParser\SourceHandler\FileSystem;
 
 /**
- * Collects strings from app source code using xgettext.
+ * Extracts strings from app source code using xgettext.
  */
-class StringsCollector
+class Extractor
 {
     /**
      * Application name used for .pot headers
@@ -21,55 +22,66 @@ class StringsCollector
      */
     protected string $app_name;
 
-    /**
-     * Application base path. Used to convert absolute paths to relative.
-     *
-     * @var string
-     */
-    protected string $app_path;
+    protected FileLoader $loader;
 
     /**
      * Search strings in file system resources.
      *
      * @var array
      */
-    protected array $include;
+    protected array $sources;
 
     /**
      * Exclude file system resources from search.
      *
      * @var array
      */
-    protected array $exclude;
+    protected array $exclude = [];
 
     /**
      * xgettext executable.
      *
      * @var string
      */
-    protected string $xgettext;
+    protected string $xgettext = 'xgettext';
 
     /**
-     * Path to .pot file (collects found strings).
+     * Default domain for xgettext.
      *
      * @var string
      */
-    protected string $pot;
+    protected string $domain = 'messages';
+
+    /**
+     * Default category for xgettext.
+     *
+     * @var int
+     */
+    protected int $category = LC_MESSAGES;
+
+    /**
+     * Filesystem shorthand.
+     *
+     * @var \Illuminate\Filesystem\Filesystem
+     */
+    protected \Illuminate\Filesystem\Filesystem $fs;
 
     /**
      * @param string $app_name App name used in .pot header.
-     * @param string $app_path App base path used to calculate relative paths.
-     * @param array $paths File system files and folders to search strings.
-     * @param string $pot Path to output .pot file.
+     * @param array $sources File system files and folders to search strings.
      */
-    public function __construct(string $app_name, string $app_path, array $paths, string $pot)
+    public function __construct(string $app_name, array $sources)
     {
         $this->app_name = $app_name;
-        $this->app_path = $app_path;
-        $this->include = $paths;
-        $this->exclude = [];
-        $this->xgettext = 'xgettext';
-        $this->pot = $pot;
+        $this->sources = $sources;
+
+    }
+
+    public function setLoader(FileLoader $loader):Extractor
+    {
+        $this->loader = $loader;
+        $this->fs = $loader->filesystem();
+        return $this;
     }
 
     /**
@@ -78,10 +90,21 @@ class StringsCollector
      * @param string $executable
      * @return $this
      */
-    public function xgettext(string $executable): StringsCollector
+    public function xgettext(string $executable): Extractor
     {
         $this->xgettext = $executable;
         return $this;
+    }
+
+    public function setDomain(string $domain): Extractor
+    {
+        $this->domain = $domain;
+        return $this;
+    }
+
+    public function getDomain(): string
+    {
+        return $this->domain;
     }
 
     /**
@@ -90,7 +113,7 @@ class StringsCollector
      * @param array $exclude
      * @return $this
      */
-    public function exclude(array $exclude): StringsCollector
+    public function exclude(array $exclude): Extractor
     {
         $this->exclude = $exclude;
         return $this;
@@ -103,7 +126,10 @@ class StringsCollector
      */
     public function getPortableObjectTemplate(): string
     {
-        return $this->pot;
+        return $this->loader->tmpPath() . DIRECTORY_SEPARATOR .
+            'templates' . DIRECTORY_SEPARATOR .
+            $this->categoryName($this->category) . DIRECTORY_SEPARATOR .
+            $this->domain . '.pot';
     }
 
     /**
@@ -114,7 +140,7 @@ class StringsCollector
      */
     public function getStrings(string $pot): EntryCollection
     {
-        if (!file_exists($pot)) {
+        if (!$this->fs->exists($pot)) {
             return new EntryCollection;
         }
 
@@ -133,11 +159,11 @@ class StringsCollector
      *
      * @return $this
      */
-    public function collect(): StringsCollector
+    public function extract(): Extractor
     {
         $this->clear();
 
-        foreach ($this->include as $resource) {
+        foreach ($this->sources as $resource) {
             $this->collectStrings($resource, $this->getPortableObjectTemplate(), $this->exclude);
         }
 
@@ -151,8 +177,8 @@ class StringsCollector
     {
         $output = $this->getPortableObjectTemplate();
 
-        if (file_exists($output)) {
-            unlink($output);
+        if ($this->fs->exists($output)) {
+            $this->fs->delete($output);
         }
     }
 
@@ -173,7 +199,7 @@ class StringsCollector
             }
             $this->prepareTemporary($tmp);
             $this->runXGetText('PHP', $tmp, $output);
-            unlink($tmp);
+            $this->fs->delete($tmp);
         }
 
         foreach ($this->resourceListing($resource, ['*.js', '*.vue'], $excluding) as $filename) {
@@ -190,8 +216,8 @@ class StringsCollector
      */
     protected function runXGetText(string $language, string $source, string $target)
     {
-        if (!file_exists(dirname($target))) {
-            mkdir(dirname($target), 0777, true);
+        if (!$this->fs->exists($this->fs->dirname($target))) {
+            $this->fs->makeDirectory($this->fs->dirname($target), 0777, true);
         }
 
         // For keywords
@@ -229,7 +255,7 @@ class StringsCollector
 //            '--keyword=dcnpgettext:2c,3,4'
         ];
 
-        if (file_exists($target)) {
+        if ($this->fs->exists($target)) {
             $command[] = '--join-existing';
         }
 
@@ -239,16 +265,16 @@ class StringsCollector
 
         exec($command);
 
-        if (file_exists($target)) {
-            $content = file_get_contents($target);
+        if ($this->fs->exists($target)) {
+            $content = $this->fs->get($target);
 
             // xgettext collects context, make it relative
-            $content = str_replace($this->getTempDirectory(), '', $content);
-            $content = str_replace($this->app_path, '', $content);
+            $content = Str::replace($this->loader->tmpPath(), '', $content);
+            $content = Str::replace($this->loader->appPath(), '', $content);
 
             $content = $this->compilePotHeader($content);
 
-            file_put_contents($target, $content);
+            $this->fs->put($target, $content);
         }
     }
 
@@ -263,20 +289,19 @@ class StringsCollector
     public function resourceListing(string $resource, $masks, array $excluding = []): Collection
     {
         $files = [];
-        $resource = rtrim($resource, DIRECTORY_SEPARATOR); // remove last slash
 
-        if (is_file($resource)) {
-            if (in_array('*.' . pathinfo($resource, PATHINFO_EXTENSION), (array)$masks)) {
+        if ($this->fs->isFile($resource)) {
+            if (in_array('*.' . $this->fs->extension($resource), (array)$masks)) {
                 $files[] = $resource;
             }
         } else {
 
             foreach ((array)$masks as $mask) {
-                foreach (glob("{$resource}/{$mask}") as $filename) {
+                foreach ($this->fs->glob("{$resource}/{$mask}") as $filename) {
                     $files[] = $filename;
                 }
-                foreach (glob("{$resource}/*") as $filename) {
-                    if (is_dir($filename)) {
+                foreach ($this->fs->glob("{$resource}/*") as $filename) {
+                    if ($this->fs->isDirectory($filename)) {
                         $files = array_merge($files, $this->resourceListing($filename, $mask)->toArray());
                     }
                 }
@@ -295,24 +320,6 @@ class StringsCollector
     }
 
     /**
-     * Temporary directory for compiled blades and php files.
-     *
-     * @return string
-     */
-    protected function getTempDirectory(): string
-    {
-        $dir = sys_get_temp_dir() .
-            DIRECTORY_SEPARATOR . md5($this->app_name) .
-            DIRECTORY_SEPARATOR . 'polyglot';
-
-        if (!file_exists($dir)) {
-            mkdir($dir, 0777, true);
-        }
-
-        return $dir;
-    }
-
-    /**
      * Get path to temporary copy of given file.
      *
      * @param string $file
@@ -320,12 +327,11 @@ class StringsCollector
      */
     protected function getTempFile(string $file): string
     {
-        $relativePathToFile = str_replace($this->app_path, '', $file);
-        $tmp = $this->getTempDirectory() . $relativePathToFile;
-        $dir = dirname($tmp);
+        $relativePathToFile = Str::replace($this->loader->appPath(), '', $file);
+        $tmp = $this->loader->tmpPath() . $relativePathToFile;
 
-        if (!file_exists($dir)) {
-            mkdir($dir, 0777, true);
+        if (!$this->fs->exists($this->fs->dirname($tmp))) {
+            $this->fs->makeDirectory($this->fs->dirname($tmp), 0777, true);
         }
 
         return $tmp;
@@ -340,15 +346,19 @@ class StringsCollector
     protected function makeTemporaryBlade(string $filename): string
     {
         $tmp = $this->getTempFile($filename);
-        $dir = dirname($tmp);
+        $dir = $this->fs->dirname($tmp);
 
-        if (file_exists($tmp)) {
-            unlink($tmp);
+        if ($this->fs->exists($tmp)) {
+            $this->fs->delete($tmp);
         }
 
-        $filesystem = new \Illuminate\Filesystem\Filesystem();
-        $compiler = new BladeCompiler($filesystem, $dir);
-        file_put_contents($tmp, $compiler->compileString(file_get_contents($filename)));
+        $compiler = new BladeCompiler($this->fs, $dir);
+        $this->fs->put(
+            $tmp,
+            $compiler->compileString(
+                $this->fs->get($filename)
+            )
+        );
 
         return $tmp;
     }
@@ -363,11 +373,11 @@ class StringsCollector
     {
         $tmp = $this->getTempFile($filename);
 
-        if (file_exists($tmp)) {
-            unlink($tmp);
+        if ($this->fs->exists($tmp)) {
+            $this->fs->delete($tmp);
         }
 
-        copy($filename, $tmp);
+        $this->fs->copy($filename, $tmp);
 
         return $tmp;
     }
@@ -379,10 +389,10 @@ class StringsCollector
      */
     protected function prepareTemporary(string $filename)
     {
-        $content = file_get_contents($filename);
+        $content = $this->fs->get($filename);
 
-        $content = str_replace("app('translator')->get", '__', $content);
-        $content = str_replace("Lang::get", ' __', $content);
+        $content = Str::replace("app('translator')->get", '__', $content);
+        $content = Str::replace("Lang::get", ' __', $content);
         $content = preg_replace(
             '~trans_choice\s*?\(\s*?[\'"](.*?)\|(.*?)[\'"]\s*?,(.+?)\)~mi',
             "ngettext('$1', '$2', $3)",
@@ -394,7 +404,7 @@ class StringsCollector
             $content
         );
 
-        file_put_contents($filename, $content);
+        $this->fs->put($filename, $content);
     }
 
     /**
@@ -405,8 +415,56 @@ class StringsCollector
      */
     protected function compilePotHeader(string $content): string
     {
-        $content = str_replace('Content-Type: text/plain; charset=CHARSET', 'Content-Type: text/plain; charset=UTF-8', $content);
+        $content = Str::replace('Content-Type: text/plain; charset=CHARSET', 'Content-Type: text/plain; charset=UTF-8', $content);
 
         return $content;
+    }
+
+    /**
+     * @return int
+     */
+    public function getCategory(): int
+    {
+        return $this->category;
+    }
+
+    /**
+     * @param int $category
+     * @return $this
+     */
+    public function setCategory(int $category): Extractor
+    {
+        $this->category = $category;
+        return $this;
+    }
+
+    protected function categoryName(int $category): string
+    {
+        switch ($category) {
+            case LC_CTYPE:
+                return 'LC_CTYPE';
+            case LC_NUMERIC:
+                return 'LC_NUMERIC';
+            case LC_TIME:
+                return 'LC_TIME';
+            case LC_COLLATE:
+                return 'LC_COLLATE';
+            case LC_MONETARY:
+                return 'LC_MONETARY';
+            case LC_MESSAGES:
+                return 'LC_MESSAGES';
+            case LC_ALL:
+                return 'LC_ALL';
+            default:
+                return 'UNKNOWN';
+        }
+    }
+
+    /**
+     * @return FileLoader
+     */
+    public function loader(): FileLoader
+    {
+        return $this->loader;
     }
 }

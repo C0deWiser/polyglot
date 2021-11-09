@@ -3,9 +3,8 @@
 namespace Codewiser\Polyglot;
 
 use Codewiser\Polyglot\Contracts\ManipulatorInterface;
-use Codewiser\Polyglot\GettextManipulator;
-use Codewiser\Polyglot\StringsManipulator;
-use Codewiser\Polyglot\StringsCollector;
+use Codewiser\Polyglot\Manipulators\GettextManipulator;
+use Codewiser\Polyglot\Manipulators\StringsManipulator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -78,15 +77,48 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__ . '/../config/polyglot.php', 'polyglot');
 
-        $this->registerCollector();
-        $this->registerStringsPopulator();
-        $this->registerGettextPopulator();
-        $this->registerPopulator();
+        $this->registerManager();
+        $this->registerStringsManipulator();
+        $this->registerGettextManipulator();
+        $this->registerManipulator();
     }
 
-    protected function registerPopulator()
+    protected function registerManager()
     {
-        $this->app->bind(ManipulatorInterface::class, function($app) {
+        $this->app->singleton(ExtractorsManager::class, function ($app) {
+            $manager = new ExtractorsManager($app['translation.loader']);
+
+            $config = $app['config']['polyglot'];
+
+            if (isset($config['domains'])) {
+                // Multiple (configurable) extractors.
+                foreach ($config['domains'] as $domain) {
+                    $extractor = $this->getExtractor(
+                        isset($domain['sources']) ? (array)$domain['sources'] : [],
+                        isset($domain['exclude']) ? (array)$domain['exclude'] : []
+                    );
+                    $extractor->setDomain($domain['domain']);
+                    $extractor->setCategory($domain['category'] ?? LC_MESSAGES);
+
+                    $manager->addExtractor($extractor);
+                }
+            } else {
+                // Single (default) extractor.
+                $manager->addExtractor(
+                    $this->getExtractor(
+                        isset($config['sources']) ? (array)$config['sources'] : [],
+                        isset($config['exclude']) ? (array)$config['exclude'] : []
+                    )
+                );
+            }
+
+            return $manager;
+        });
+    }
+
+    protected function registerManipulator()
+    {
+        $this->app->bind(ManipulatorInterface::class, function ($app) {
             $config = $app['config']['polyglot'];
             switch ($config['mode']) {
                 case 'translator':
@@ -99,59 +131,52 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
         });
     }
 
-    protected function registerStringsPopulator()
+    protected function registerStringsManipulator()
     {
         $this->app->bind(StringsManipulator::class, function ($app) {
             $config = $app['config']['polyglot'];
 
             return new StringsManipulator(
                 $config['locales'],
-                $config['collector']['storage'],
-                app(StringsCollector::class)
+                $app['translation.loader']
             );
         });
     }
 
-    protected function registerGettextPopulator()
+    protected function registerGettextManipulator()
     {
         $this->app->bind(GettextManipulator::class, function ($app) {
             $config = $app['config']['polyglot'];
 
-            $populator = new GettextManipulator(
-                $config['translator']['po'],
-                $config['translator']['mo'],
-                $config['translator']['domain'],
+            $manipulator = new GettextManipulator(
+                $config['locales'],
+                $app['translation.loader'],
                 app(StringsManipulator::class)
             );
 
-            $populator
+            $manipulator
                 ->msginit($config['executables']['msginit'])
                 ->msgmerge($config['executables']['msgmerge'])
                 ->msgfmt($config['executables']['msgfmt'])
-                ->setPassthroughs($config['translator']['passthroughs']);
+                ->setPassthroughs($config['passthroughs']);
 
-            return $populator;
+            return $manipulator;
         });
     }
 
-    protected function registerCollector()
+    protected function getExtractor(array $sources, array $exclude): Extractor
     {
-        $this->app->bind(StringsCollector::class, function ($app) {
-            $config = $app['config']['polyglot'];
+        $config = config('polyglot');
 
-            $collector = new StringsCollector(
-                config('app.name'),
-                base_path(),
-                $config['collector']['includes'],
-                $config['translator']['po'] .
-                DIRECTORY_SEPARATOR . $config['translator']['domain'] . '.pot'
-            );
+        $collector = new Extractor(
+            config('app.name'),
+            $sources
+        );
 
-            $collector
-                ->exclude($config['collector']['excludes'])
-                ->xgettext($config['executables']['xgettext']);
+        $collector
+            ->exclude($exclude)
+            ->xgettext($config['executables']['xgettext']);
 
-            return $collector;
-        });
+        return $collector;
     }
 }

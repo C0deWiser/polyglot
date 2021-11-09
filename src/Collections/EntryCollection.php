@@ -1,9 +1,10 @@
 <?php
 
-namespace Codewiser\Polyglot;
+namespace Codewiser\Polyglot\Collections;
 
 use Illuminate\Support\Str;
 use Sepia\PoParser\Catalog\Entry;
+use function collect;
 
 class EntryCollection extends \Illuminate\Support\Collection
 {
@@ -14,7 +15,7 @@ class EntryCollection extends \Illuminate\Support\Collection
         });
     }
 
-    public function dotKeyed():EntryCollection
+    public function dotKeyed(): EntryCollection
     {
         return $this->filter(function (Entry $entry) {
             return $this->hasDotSeparatedKey($entry->getMsgId());

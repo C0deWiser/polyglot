@@ -95,16 +95,14 @@ return [
     | and store collected strings in configurable folder.
     |
     */
-    'collector' => [
-        'includes' => [
-            app_path(),
-            //resource_path('views')
-        ],
-        'excludes' => [
-            storage_path()
-        ],
-        'storage' => resource_path('lang')
+
+    'sources' => [
+        app_path(),
+        resource_path('views')
     ],
+//    'exclude' => [],
+
+//    'domains' => [['domain' => 'example', ...], ...],
 
     /*
     |--------------------------------------------------------------------------
@@ -115,18 +113,11 @@ return [
     | translation strings that should be translated traditional way.
     |
     */
-    'translator' => [
-        'po' => resource_path('lang'),
-        'mo' => resource_path('lang'),
-
-        'domain' => 'messages',
-
-        'passthroughs' => [
-            'validation.',
-            'passwords.',
-            'auth.',
-            'pagination.',
-            'verify.'
-        ],
+    'passthroughs' => [
+        'validation.',
+        'passwords.',
+        'auth.',
+        'pagination.',
+        'verify.'
     ],
 ];

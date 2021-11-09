@@ -7,7 +7,7 @@ use Codewiser\Polyglot\Console\Commands\InstallCommand;
 use Codewiser\Polyglot\Console\Commands\PublishCommand;
 use Codewiser\Polyglot\Console\Commands\CollectCommand;
 use Codewiser\Polyglot\Contracts\ManipulatorInterface;
-use Codewiser\Polyglot\Http\Middleware\Authorize;
+use Codewiser\Polyglot\Manipulators\GettextManipulator;
 use Illuminate\Support\Facades\Route;
 
 class PolyglotServiceProvider extends \Illuminate\Translation\TranslationServiceProvider
@@ -100,6 +100,18 @@ class PolyglotServiceProvider extends \Illuminate\Translation\TranslationService
         } else {
             parent::register();
         }
+    }
+
+    /**
+     * Override the translation line loader.
+     *
+     * @return void
+     */
+    protected function registerLoader()
+    {
+        $this->app->singleton('translation.loader', function ($app) {
+            return new FileLoader($app['files'], $app['path.lang'], base_path(), storage_path('tmp'));
+        });
     }
 
     protected function registerPolyglot()

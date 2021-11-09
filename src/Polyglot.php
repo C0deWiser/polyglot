@@ -2,6 +2,7 @@
 
 namespace Codewiser\Polyglot;
 
+use Codewiser\Polyglot\Contracts\ManipulatorInterface;
 use Illuminate\Contracts\Translation\Loader;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -155,11 +156,6 @@ class Polyglot extends \Illuminate\Translation\Translator
         ];
     }
 
-    public static function collector(): StringsCollector
-    {
-        return app(StringsCollector::class);
-    }
-
     /**
      * Polyglot version.
      *
@@ -172,4 +168,23 @@ class Polyglot extends \Illuminate\Translation\Translator
         return (string)$data['version'];
     }
 
+    /**
+     * Get registered extractors.
+     *
+     * @return ExtractorsManager
+     */
+    public static function manager(): ExtractorsManager
+    {
+        return app(ExtractorsManager::class);
+    }
+
+    /**
+     * Get proper manipulator.
+     *
+     * @return ManipulatorInterface
+     */
+    public static function manipulator(): ManipulatorInterface
+    {
+        return app(ManipulatorInterface::class);
+    }
 }

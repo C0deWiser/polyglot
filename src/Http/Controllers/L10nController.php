@@ -2,9 +2,9 @@
 
 namespace Codewiser\Polyglot\Http\Controllers;
 
-use Codewiser\Polyglot\GettextManipulator;
+use Codewiser\Polyglot\Manipulators\GettextManipulator;
 use Codewiser\Polyglot\Polyglot;
-use Codewiser\Polyglot\StringsManipulator;
+use Codewiser\Polyglot\Manipulators\StringsManipulator;
 use Illuminate\Http\Request;
 use Sepia\PoParser\Catalog\Entry;
 

@@ -1,7 +1,12 @@
 <?php
 
-namespace Codewiser\Polyglot;
+namespace Codewiser\Polyglot\Manipulators;
 
+use Codewiser\Polyglot\Collections\EntryCollection;
+use Codewiser\Polyglot\Contracts;
+use Codewiser\Polyglot\FileLoader;
+use Codewiser\Polyglot\Manipulators\StringsManipulator;
+use Codewiser\Polyglot\Traits\Manipulator;
 use Illuminate\Support\Str;
 use Sepia\PoParser\Catalog\Catalog;
 use Sepia\PoParser\Catalog\Entry;
@@ -9,22 +14,11 @@ use Sepia\PoParser\Catalog\Header;
 use Sepia\PoParser\Parser;
 use Sepia\PoParser\PoCompiler;
 use Sepia\PoParser\SourceHandler\FileSystem;
+use function collect;
 
 class GettextManipulator implements Contracts\ManipulatorInterface
 {
-    /**
-     * Directory with .po files.
-     *
-     * @var string
-     */
-    protected string $storage;
-
-    /**
-     * Directory with .mo files.
-     *
-     * @var string
-     */
-    protected string $compiled;
+    use Manipulator;
 
     /**
      * StringsManipulator to work with passthroughs strings.
@@ -38,40 +32,20 @@ class GettextManipulator implements Contracts\ManipulatorInterface
      *
      * @var array
      */
-    protected array $passthroughs;
+    protected array $passthroughs = [];
 
-    protected string $msginit;
-    protected string $msgmerge;
-    protected string $msgfmt;
+    protected string $msginit = 'msginit';
+    protected string $msgmerge = 'msgmerge';
+    protected string $msgfmt = 'msgfmt';
 
-    protected string $domain;
-
-    public function __construct(string $storage, string $compiled, string $domain, StringsManipulator $manipulator)
+    public function __construct(array $locales, FileLoader $loader, StringsManipulator $manipulator)
     {
-        $this->storage = $storage;
-        $this->compiled = $compiled;
-        $this->domain = $domain;
+        $this->locales = $locales;
+        $this->loader = $loader;
         $this->stringsManipulator = $manipulator;
 
-        $this->passthroughs = [];
-        $this->msginit = 'msginit';
-        $this->msgfmt = 'msgfmt';
-        $this->msgmerge = 'msgmerge';
-    }
-
-    public function getStorage(): string
-    {
-        return $this->storage;
-    }
-
-    public function getLocales(): array
-    {
-        return $this->stringsManipulator->getLocales();
-    }
-
-    public function getDomain(): string
-    {
-        return $this->domain;
+        $this->fs = $loader->filesystem();
+        $this->storage = $loader->storage();
     }
 
     /**
@@ -91,16 +65,18 @@ class GettextManipulator implements Contracts\ManipulatorInterface
      */
     public function compile()
     {
-        foreach ($this->getLocales() as $locale) {
+        foreach ($this->getLocaleListing() as $localeDir) {
+            $locale = $this->fs->basename($localeDir);
 
-            $po = $this->getPortableObject($locale, 'LC_MESSAGES', $this->domain);
-            $mo = $this->getMachineObject($locale, 'LC_MESSAGES', $this->domain);
+            foreach ($this->getCategoryListing($locale) as $categoryDir) {
+                $category = $this->fs->basename($categoryDir);
 
-            if (file_exists($po)) {
-                if (!file_exists(dirname($mo))) {
-                    mkdir(dirname($mo), 0777, true);
+                foreach ($this->getPortableObjectListing($locale, $category) as $po) {
+                    $domain = $this->fs->name($po);
+
+                    $mo = $this->getMachineObject($locale, $category, $domain);
+                    $this->runMsgFmt($po, $mo);
                 }
-                $this->runMsgFmt($po, $mo);
             }
         }
     }
@@ -108,36 +84,44 @@ class GettextManipulator implements Contracts\ManipulatorInterface
     /**
      * @inheritDoc
      */
-    public function populate(string $pot)
+    public function populate(string $template)
     {
-        if (!file_exists($pot)) {
+        if (!$this->fs->exists($template)) {
             return;
         }
 
         // We should divide collected strings into two parts — legacy and gettext...
         // Then store legacy strings using StringCollector
-        $legacyPot = dirname($pot) . DIRECTORY_SEPARATOR . 'passthroughs_' . basename($pot);
-        $this->splitPortableObjectTemplate($pot, $legacyPot, $this->passthroughs);
+        $passthroughs = $this->fs->dirname($template) . DIRECTORY_SEPARATOR . 'passthroughs_' . $this->fs->basename($template);
+        $this->splitPortableObjectTemplate($template, $passthroughs, $this->passthroughs);
 
-        if (file_exists($legacyPot)) {
-            $this->stringsManipulator->populate($legacyPot);
-            unlink($legacyPot);
+        if ($this->fs->exists($passthroughs)) {
+            $this->stringsManipulator->populate($passthroughs);
+            $this->fs->delete($passthroughs);
         }
+
+        $domain = $this->fs->name($template);
+        $category = $this->fs->basename($this->fs->dirname($template));
 
         foreach ($this->getLocales() as $locale) {
-            $po = $this->getPortableObject($locale, 'LC_MESSAGES', $this->domain);
+            $po = $this->getPortableObject($locale, $category, $domain);
 
-            if (!file_exists($po)) {
+            if (!$this->fs->exists($po)) {
 
-                if (!file_exists(dirname($po))) {
-                    mkdir(dirname($po), 0777, true);
+                if (!$this->fs->exists($this->fs->dirname($po))) {
+                    $this->fs->makeDirectory($this->fs->dirname($po), 0777, true);
                 }
 
-                $this->runMsgInit($pot, $po, $locale);
+                $this->runMsgInit($template, $po, $locale);
             } else {
-                $this->runMsgMerge($pot, $po);
+                $this->runMsgMerge($template, $po);
             }
         }
+    }
+
+    public function getLocaleListing(): array
+    {
+        return $this->fs->glob($this->storage . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR);
     }
 
     /**
@@ -148,12 +132,8 @@ class GettextManipulator implements Contracts\ManipulatorInterface
      */
     public function getCategoryListing(string $locale): array
     {
-        return collect(glob($this->storage . DIRECTORY_SEPARATOR .
-            $locale . DIRECTORY_SEPARATOR . 'LC_*'))
-            ->map(function ($filename) {
-                return basename($filename);
-            })
-            ->toArray();
+        return glob($this->storage . DIRECTORY_SEPARATOR .
+            $locale . DIRECTORY_SEPARATOR . 'LC_*');
     }
 
     /**
@@ -195,7 +175,7 @@ class GettextManipulator implements Contracts\ManipulatorInterface
      */
     public function getMachineObject(string $locale, string $category, string $domain): string
     {
-        return $this->compiled . DIRECTORY_SEPARATOR .
+        return $this->storage . DIRECTORY_SEPARATOR .
             $locale . DIRECTORY_SEPARATOR .
             $category . DIRECTORY_SEPARATOR . $domain . '.mo';
     }
@@ -210,7 +190,10 @@ class GettextManipulator implements Contracts\ManipulatorInterface
      */
     protected function splitPortableObjectTemplate(string $sourcePot, string $legacyPot, array $passthrougs): void
     {
-        copy($sourcePot, $legacyPot);
+        if ($this->fs->exists($legacyPot)) {
+            $this->fs->delete($legacyPot);
+        }
+        $this->fs->copy($sourcePot, $legacyPot);
 
         try {
             $file = new FileSystem($sourcePot);

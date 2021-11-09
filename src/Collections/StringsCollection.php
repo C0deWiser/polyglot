@@ -1,6 +1,6 @@
 <?php
 
-namespace Codewiser\Polyglot;
+namespace Codewiser\Polyglot\Collections;
 
 use Illuminate\Support\Collection;
 

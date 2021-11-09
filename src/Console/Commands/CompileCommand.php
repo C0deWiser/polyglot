@@ -4,7 +4,7 @@
 namespace Codewiser\Polyglot\Console\Commands;
 
 
-use Codewiser\Polyglot\GettextManipulator;
+use Codewiser\Polyglot\Manipulators\GettextManipulator;
 use Illuminate\Console\Command;
 
 class CompileCommand extends Command
@@ -40,12 +40,13 @@ class CompileCommand extends Command
      */
     public function handle()
     {
-        $this->populator()->compile();
+
+        $this->manipulator()->compile();
 
         return 0;
     }
 
-    protected function populator(): GettextManipulator
+    protected function manipulator(): GettextManipulator
     {
         return app(GettextManipulator::class);
     }

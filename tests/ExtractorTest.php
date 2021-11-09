@@ -2,37 +2,11 @@
 
 namespace Tests;
 
-use Codewiser\Polyglot\StringsCollector;
-
-class StringsCollectorTest extends \PHPUnit\Framework\TestCase
+class ExtractorTest extends WithExtractor
 {
-    protected $pot = __DIR__ . '/resources/lang/messages.pot';
-    protected StringsCollector $collector;
-
-    protected function setUp(): void
-    {
-        $this->collector = new StringsCollector(
-            'unit-test',
-            __DIR__,
-            [__DIR__ . '/sources'],
-            $this->pot
-        );
-        $this->collector->exclude([__DIR__ . '/resources/lang']);
-
-        parent::setUp();
-    }
-
-    protected function tearDown(): void
-    {
-        parent::tearDown();
-
-//        if (file_exists($this->pot))
-//            unlink($this->pot);
-    }
-
     public function testListingPhpOnly()
     {
-        $listing = $this->collector
+        $listing = $this->extractor
             ->resourceListing(__DIR__ . '/sources/', '*.php')
             ->toArray();
 
@@ -44,7 +18,7 @@ class StringsCollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testListingJsOnly()
     {
-        $listing = $this->collector
+        $listing = $this->extractor
             ->resourceListing(__DIR__ . '/sources/', '*.js')
             ->toArray();
 
@@ -56,7 +30,7 @@ class StringsCollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testListingPhpExcluding()
     {
-        $listing = $this->collector
+        $listing = $this->extractor
             ->resourceListing(__DIR__ . '/sources/', '*.php', [__DIR__ . '/sources/php/first.php'])
             ->toArray();
 
@@ -68,7 +42,7 @@ class StringsCollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testListingJsExcluding()
     {
-        $listing = $this->collector
+        $listing = $this->extractor
             ->resourceListing(__DIR__ . '/sources/', '*.js', [__DIR__ . '/sources/js'])
             ->toArray();
 
@@ -78,16 +52,16 @@ class StringsCollectorTest extends \PHPUnit\Framework\TestCase
 
     }
 
-    public function testCollectStrings()
+    public function testExtracting()
     {
-        $this->collector->collect();
+        $this->extractor->extract();
 
-        $strings = $this->collector->getStrings(
-            $this->collector->getPortableObjectTemplate()
+        $strings = $this->extractor->getStrings(
+            $this->extractor->getPortableObjectTemplate()
         );
 
         $this->assertGreaterThan(0, $strings->count());
 
-        $this->assertTrue(file_exists($this->pot));
+        $this->assertTrue(file_exists($this->extractor->getPortableObjectTemplate()));
     }
 }

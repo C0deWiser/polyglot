@@ -5,7 +5,9 @@ namespace Codewiser\Polyglot\Console\Commands;
 
 
 use Codewiser\Polyglot\Contracts\ManipulatorInterface;
-use Codewiser\Polyglot\StringsCollector;
+use Codewiser\Polyglot\Extractor;
+use Codewiser\Polyglot\ExtractorsManager;
+use Codewiser\Polyglot\Polyglot;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Lang;
 
@@ -42,20 +44,12 @@ class CollectCommand extends Command
      */
     public function handle()
     {
-        $this->populator()->populate(
-            $this->collector()->collect()->getPortableObjectTemplate()
-        );
+        Polyglot::manager()->extractors()->each(function (Extractor $extractor) {
+            Polyglot::manipulator()->populate(
+                $extractor->extract()->getPortableObjectTemplate()
+            );
+        });
 
         return 0;
-    }
-
-    protected function collector(): StringsCollector
-    {
-        return app(StringsCollector::class);
-    }
-
-    protected function populator(): ManipulatorInterface
-    {
-        return app(ManipulatorInterface::class);
     }
 }
