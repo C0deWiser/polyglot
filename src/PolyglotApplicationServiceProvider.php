@@ -86,15 +86,28 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
     protected function registerManager()
     {
         $this->app->singleton(ExtractorsManager::class, function ($app) {
+            $config = $app['config']['polyglot'];
+
+            if ($config['mode'] == 'editor')
+                return null;
+
             $manager = new ExtractorsManager($app['translation.loader']);
 
-            $config = $app['config']['polyglot'];
+            if (isset($config['sources'])) {
+                // Single (default) extractor.
+                $manager->addExtractor(
+                    $this->getExtractor(
+                        (array)$config['sources'],
+                        isset($config['exclude']) ? (array)$config['exclude'] : []
+                    )
+                );
+            }
 
             if (isset($config['domains'])) {
                 // Multiple (configurable) extractors.
                 foreach ($config['domains'] as $domain) {
                     $extractor = $this->getExtractor(
-                        isset($domain['sources']) ? (array)$domain['sources'] : [],
+                        (array)$domain['sources'],
                         isset($domain['exclude']) ? (array)$domain['exclude'] : []
                     );
                     $extractor->setDomain($domain['domain']);
@@ -102,14 +115,6 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
 
                     $manager->addExtractor($extractor);
                 }
-            } else {
-                // Single (default) extractor.
-                $manager->addExtractor(
-                    $this->getExtractor(
-                        isset($config['sources']) ? (array)$config['sources'] : [],
-                        isset($config['exclude']) ? (array)$config['exclude'] : []
-                    )
-                );
             }
 
             return $manager;

@@ -1,4 +1,5 @@
 <script type="text/ecmascript-6">
+import Progress from "../../components/Progress";
 
 export default {
   /**
@@ -7,14 +8,16 @@ export default {
   data() {
     return {
       ready: false,
-      files: {}
+      files: [],
     };
   },
 
   /**
    * Components
    */
-  components: {},
+  components: {
+    Progress
+  },
 
   /**
    * Prepare the component.
@@ -54,8 +57,34 @@ export default {
 
             this.files = response.data;
 
+            this.prepareProgressBar();
+
             this.ready = true;
           });
+    },
+
+    prepareProgressBar() {
+      this.files.forEach(file => {
+        if (file.dir === false) {
+          let sum = 0;
+          file.progress = {
+            waiting: 0,
+            fuzzy: 0,
+            translated: 100
+          };
+          if (file.empty > 0) {
+            file.progress.waiting = (file.empty / file.strings) * 100;
+            sum += file.progress.waiting;
+          }
+          if (file.fuzzy && file.fuzzy > 0) {
+            file.progress.fuzzy = (file.fuzzy / file.strings) * 100
+            sum += file.progress.fuzzy;
+          }
+          file.progress.translated = 100 - sum;
+        }
+      });
+
+      $('[data-toggle="tooltip"]').tooltip();
     },
 
   }
@@ -66,7 +95,7 @@ export default {
   <div>
     <div class="card">
       <div class="card-header d-flex align-items-center justify-content-between">
-        <h5>L10n</h5>
+        <h5>Translations</h5>
       </div>
 
       <div v-if="!ready"
@@ -80,7 +109,7 @@ export default {
       </div>
 
 
-      <div v-if="ready && files.length == 0"
+      <div v-if="ready && files.length === 0"
            class="d-flex flex-column align-items-center justify-content-center card-bg-secondary p-5 bottom-radius">
         <span>There aren't any files.</span>
       </div>
@@ -88,26 +117,34 @@ export default {
       <table v-if="ready && files.length > 0" class="table table-hover table-sm mb-0">
         <thead>
         <tr>
-          <th colspan="4">Files</th>
-          <th>Strings</th>
+          <th>Files</th>
+          <th>Progress</th>
         </tr>
         </thead>
 
         <tbody>
         <tr v-for="file in files">
-          <td v-if="file.depth <= 1"></td>
-          <td v-if="file.depth <= 2"></td>
-          <td v-if="file.depth <= 3"></td>
-          <td :colspan="file.depth">
-            <a v-if="file.route" :href="file.route">{{ file.filename }}</a>
-            <span v-if="file.dir">{{ file.filename + '/' }}</span>
+          <td :style="'text-indent: ' + (file.level * 2) + 'em'">
+            <span v-if="file.dir">{{ file.filename }}/</span>
+            <span v-else>
+              <router-link v-if="file.category && file.domain"
+                           :to="{ name: 'L10n-po', params: { locale: file.locale, category: file.category, filename: file.filename }}">
+                {{ file.filename }}
+              </router-link>
+              <router-link v-else-if="file.namespace"
+                           :to="{ name: 'L10n-php', params: { locale: file.locale, filename: file.filename }}">
+                {{ file.filename }}
+              </router-link>
+              <router-link v-else
+                           :to="{ name: 'L10n-json', params: { filename: file.filename }}">
+                {{ file.filename }}
+              </router-link>
+              </span>
+
           </td>
-          <td v-if="!file.strings"></td>
-          <td v-if="file.strings">{{
-              file.strings +
-              (file.empty ? ' / untranslated ' + file.empty : '') +
-              (file.fuzzy ? ' / fuzzy ' + file.fuzzy : '')
-            }}</td>
+          <td>
+            <Progress v-if="file.stat" :stat="file.stat"></Progress>
+          </td>
         </tr>
         </tbody>
       </table>

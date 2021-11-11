@@ -8,14 +8,18 @@ return [
     |--------------------------------------------------------------------------
     |
     | This option is used to enable or disable some Polyglot functionality.
+    | Every next mode extends functionality of previous mode.
     |
-    | 'editor'      - use Polyglot as an editor; collect string manually.
-    | 'collector'   - use Polyglot for collecting string; use Translator for translating.
-    | 'translator'  — use Polyglot for collecting string and for translating too.
+    | 'editor'      - Polyglot provides online translation editor.
+    |
+    | 'collector'   - Polyglot may collect strings from source codes.
+    |
+    | 'translator'  — Polyglot replaces Translator service,
+    |                 bringing Gettext support to the Application.
     |
     */
 
-    'mode' => env('POLYGLOT_MODE', 'editor'),
+    'mode' => env('POLYGLOT_MODE', 'collector'),
 
     /*
     |--------------------------------------------------------------------------
@@ -23,10 +27,10 @@ return [
     |--------------------------------------------------------------------------
     |
     | The application locales determines the listing of locales that will be used
-    | by the translation service provider. This option is required to populate
-    | translation strings across locales.
+    | by Polyglot to populate collected translation strings across locales.
     |
     */
+
     'locales' => ['en'],
 
     /*
@@ -72,27 +76,16 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Gettext Executables Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Paths to gettext shell scripts.
-    |
-    */
-    'executables' => [
-        'xgettext' => env('XGETTEXT_EXECUTABLE', 'xgettext'),
-        'msginit' => env('MSGINIT_EXECUTABLE', 'msginit'),
-        'msgmerge' => env('MSGMERGE_EXECUTABLE', 'msgmerge'),
-        'msgfmt' => env('MSGFMT_EXECUTABLE', 'msgfmt'),
-        'msgcat' => env('MSGCAT_EXECUTABLE', 'msgcat')
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
     | Gettext Collector Configuration
     |--------------------------------------------------------------------------
     |
-    | Define resources to search translation strings in, exclude some resources
-    | and store collected strings in configurable folder.
+    | Define file system resources to search translation strings in,
+    | excluding some. Collector will scan configured resources
+    | and store strings into resource/lang folder.
+    |
+    | Working as a `collector` Polyglot will store collected strings
+    | into .json and .php files. As `translator` Polyglot will store
+    | collected strings into .po files (applicable to gettext).
     |
     */
 
@@ -102,15 +95,15 @@ return [
     ],
     'exclude' => [],
 
-//    'domains' => [['domain' => 'example', ...], ...],
-
     /*
     |--------------------------------------------------------------------------
-    | Gettext Translator Configuration
+    | Passthroughs Configuration
     |--------------------------------------------------------------------------
     |
-    | Define folders to keep gettext files, set default gettext domain and list
-    | translation strings that should be translated traditional way.
+    | When collecting strings as `translator` Polyglot may pass
+    | some collected strings into .php files, storing others to .po files.
+    |
+    | It is rational to leave standard Laravel translations as it is.
     |
     */
     'passthroughs' => [
@@ -119,5 +112,21 @@ return [
         'auth.',
         'pagination.',
         'verify.'
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Gettext Executables Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Paths to gettext binaries.
+    |
+    */
+    'executables' => [
+        'xgettext' => env('XGETTEXT_EXECUTABLE', 'xgettext'),
+        'msginit' => env('MSGINIT_EXECUTABLE', 'msginit'),
+        'msgmerge' => env('MSGMERGE_EXECUTABLE', 'msgmerge'),
+        'msgfmt' => env('MSGFMT_EXECUTABLE', 'msgfmt'),
+        'msgcat' => env('MSGCAT_EXECUTABLE', 'msgcat')
     ],
 ];

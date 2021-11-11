@@ -469,4 +469,20 @@ class Extractor
     {
         return $this->loader;
     }
+
+    /**
+     * @return array
+     */
+    public function getSources(): array
+    {
+        return $this->sources;
+    }
+
+    /**
+     * @return array
+     */
+    public function getExclude(): array
+    {
+        return $this->exclude;
+    }
 }

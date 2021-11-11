@@ -18,23 +18,20 @@ export default [
         name: 'L10n',
         component: require('./screens/L10n/index').default,
     },
-    //
-    // {
-    //     path: '/L10n/:locale',
-    //     component: require('./screens/L10n/locale').default,
-    //     children: [
-    //         {
-    //             path: ':namespace',
-    //             name: 'L10n-namespace',
-    //             component: require('./screens/L10n/namespace').default,
-    //             children: [
-    //                 {
-    //                     path: ':domain',
-    //                     name:'L10n-domain',
-    //                     component:require('./screens/L10n/domain').default
-    //                 }
-    //             ]
-    //         }
-    //     ],
-    // },
+    {
+        path: '/L10n/:filename',
+        name: 'L10n-json',
+        component: require('./screens/L10n/strings').default,
+    },
+    {
+        path: '/L10n/:locale/:filename',
+        name: 'L10n-php',
+        component: require('./screens/L10n/strings').default,
+    },
+    {
+        path: '/L10n/:locale/:category/:filename',
+        name: 'L10n-po',
+        component: require('./screens/L10n/strings').default,
+    },
+
 ];

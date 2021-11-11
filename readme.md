@@ -21,6 +21,8 @@
 
 Polyglot provides a beautiful translation editor and can extract translations strings from the application source codes.
 
+![Editor dashboard](docs/polyglot-editor-dashboard.png)
+
 With Polyglot you may be sure, that you application is fully localized.
 
 > Before digging into Polyglot you should familiarize yourself with [Gettext](https://www.gnu.org/software/gettext/).
@@ -122,7 +124,11 @@ To keep the assets up-to-date and avoid issues in future updates, you may add th
 
 ## Web editor
 
-@todo
+![File browser](docs/files.png)
+
+![Strings](docs/strings.png)
+
+![Editor](docs/string-editor.png)
 
 ## Strings Collector
 
@@ -212,19 +218,18 @@ In that case, all strings that begins with configured values, will be stored in 
 
 Sometimes, you may want to divide your application's translation strings into few domains, e.g. strings for frontend and strings for administrative panel.
 
-You may configure it that way:
+You may configure additional domains that way:
+
+    'sources' => [
+        app_path(),
+        resource_path('views')
+    ],
+    'exclude' => resource_path('views/admin')
 
     'domains' => [
       [
-        'domain' => 'frontend', 
-        'sources' => [
-            app_path(),
-            resource_path('views')
-        ],
-        'exclude' => resource_path('views/admin')
-      ],
-      [
         'domain' => 'admin', 
+        'category' => LC_MESSAGES,
         'sources' => [
             resource_path('views/admin')
             resource_path('js/admin')
@@ -233,6 +238,8 @@ You may configure it that way:
     ],
 
 After collecting strings, every locale in `resource/lang` will get two files: `frontend.po` and `admin.po`.
+
+> Multiple domain configuration extends base `sources` and `exclude` parameters, adding new domains to default one (named `messages`). If you want to disable default `messages` domain, just remove root `sources` parameter.
 
 By default, Polyglot will load into php memory the first configured domain. You may load next domain by accessing Laravel's `Lang` facade:
 
@@ -283,6 +290,8 @@ Particular version of ngettext.
 > Other directives, that allows to override current domain and category, are not supported.
 
 ### The Power of Gettext
+
+![Editor](docs/po-editor.png)
 
 Gettext can be very helpful for the translator. Use following recipes to get localization done well.
 

@@ -3,9 +3,11 @@
 namespace Codewiser\Polyglot\Manipulators;
 
 use Codewiser\Polyglot\Collections\EntryCollection;
+use Codewiser\Polyglot\Collections\FilesCollection;
 use Codewiser\Polyglot\Collections\StringsCollection;
 use Codewiser\Polyglot\Contracts\ManipulatorInterface;
 use Codewiser\Polyglot\Traits\Manipulator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Sepia\PoParser\Catalog\Entry;
 use Sepia\PoParser\Parser;
@@ -269,14 +271,22 @@ class StringsManipulator implements ManipulatorInterface
     public function getJsonStrings(string $locale): StringsCollection
     {
         $filename = $this->getJsonFile($locale);
+        $collection = new StringsCollection;
 
         if (!$this->fs->exists($filename)) {
-            return new StringsCollection;
+            return $collection;
         }
 
-        return StringsCollection::make(
-            json_decode($this->fs->get($filename), true)
-        );
+        $strings = json_decode($this->fs->get($filename), true);
+
+        foreach ($strings as $key => $value) {
+            $collection->add([
+                'key' => $key,
+                'value' => $value
+            ]);
+        }
+
+        return $collection;
     }
 
     /**
@@ -287,6 +297,9 @@ class StringsManipulator implements ManipulatorInterface
      */
     public function getJsonFile(string $locale): string
     {
+        // Sanitize, if they send filename
+        $locale = $this->fs->name($locale);
+
         return $this->storage . DIRECTORY_SEPARATOR . $locale . '.json';
     }
 
@@ -303,20 +316,25 @@ class StringsManipulator implements ManipulatorInterface
     public function getPhpStrings(string $locale, string $namespace): StringsCollection
     {
         $filename = $this->getPhpFile($locale, $namespace);
+        $collection = new StringsCollection;
 
         if (!$this->fs->exists($filename)) {
-            return new StringsCollection;
+            return $collection;
         }
 
         $data = include $filename;
 
         if (!is_array($data)) {
-            return new StringsCollection;
+            return $collection;
         }
 
-        return StringsCollection::make(
-            $this->flatten($data)
-        );
+        foreach ($this->flatten($data) as $key => $value) {
+            $collection->add([
+                'key' => $key,
+                'value' => $value
+            ]);
+        }
+        return $collection;
     }
 
     protected function flatten(array $rows): array
@@ -345,6 +363,10 @@ class StringsManipulator implements ManipulatorInterface
      */
     public function getPhpFile(string $locale, string $namespace): string
     {
+        // Sanitize, if they send filename
+        $locale = $this->fs->name($locale);
+        $namespace = $this->fs->name($namespace);
+
         return $this->storage . DIRECTORY_SEPARATOR .
             $locale . DIRECTORY_SEPARATOR . $namespace . '.php';
     }
@@ -359,5 +381,47 @@ class StringsManipulator implements ManipulatorInterface
     {
         return $this->fs->glob($this->storage . DIRECTORY_SEPARATOR .
             $locale . DIRECTORY_SEPARATOR . '*.php');
+    }
+
+    public function all(string $locale = null): StringsCollection
+    {
+        $strings = new StringsCollection();
+
+        $locales = $locale ? (array)$locale : $this->getLocales();
+
+        foreach ($locales as $locale) {
+
+            $strings = $strings->merge(
+                $this->getJsonStrings($locale)
+            );
+
+            foreach ($this->getPhpListing($locale) as $filename) {
+                $namespace = basename($filename, '.php');
+
+                $strings = $strings->merge(
+                    $this->getPhpStrings($locale, $namespace)
+                );
+            }
+        }
+
+        return $strings;
+    }
+
+    public function files(string $locale = null): FilesCollection
+    {
+        $locales = $locale ? (array)$locale : $this->getLocales();
+
+        $files = new FilesCollection();
+
+        foreach ($locales as $locale) {
+            if (($json = $this->getJsonFile($locale)) && file_exists($json)) {
+                $files->add($json);
+            }
+            $files = $files->merge(
+                $this->getPhpListing($locale)
+            );
+        }
+
+        return $files;
     }
 }

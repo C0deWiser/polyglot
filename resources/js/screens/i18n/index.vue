@@ -1,4 +1,7 @@
 <script type="text/ecmascript-6">
+
+import Progress from '../../components/Progress'
+
 export default {
   /**
    * The component's data.
@@ -8,6 +11,13 @@ export default {
       ready: false,
       info: {}
     };
+  },
+
+  /**
+   * Components
+   */
+  components: {
+    Progress
   },
 
   /**
@@ -46,6 +56,15 @@ export default {
           .then(response => {
             this.info = response.data;
 
+            if (!this.info.lastCollected)
+              this.info.lastCollected = 'Unknown';
+
+            if (!this.info.lastCompiled)
+              this.info.lastCompiled = 'Unknown';
+
+            if (!this.info.lastTranslated)
+              this.info.lastTranslated = 'Unknown';
+
             this.ready = true;
           });
     },
@@ -70,12 +89,23 @@ export default {
               <h4 class="mt-4 mb-0 text-capitalize">
                 {{ info.mode }}
               </h4>
+
+              <small class="text-muted d-block" v-if="info.mode==='editor'">
+                Polyglot provides online editor.
+              </small>
+              <small class="text-muted d-block" v-if="info.mode==='collector'">
+                Polyglot provides online editor and collects translation strings from source codes.
+              </small>
+              <small class="text-muted d-block" v-if="info.mode==='translator'">
+                Polyglot provides online editor, collects translation strings from source codes and fully supports
+                Gettext.
+              </small>
             </div>
           </div>
 
           <div class="w-50 border-right border-bottom">
             <div class="p-4">
-              <small class="text-uppercase">Supported Locales</small>
+              <small class="text-uppercase">Application Locales</small>
 
               <h4 class="mt-4 mb-0">
                 {{ info.locales.join(', ') }}
@@ -86,16 +116,26 @@ export default {
         </div>
       </div>
 
-      <div class="card-bg-secondary" v-if="info.passthroughs">
+      <div class="card-bg-secondary">
         <div class="d-flex">
 
-          <div class="w-100 border-right border-bottom">
+          <div class="w-50 border-right border-bottom">
             <div class="p-4">
-              <small class="text-uppercase">Passthroughs strings</small>
+              <small class="text-uppercase">Last translated</small>
 
               <h4 class="mt-4 mb-0">
-                {{ info.passthroughs.join(' ') }}
+                {{ info.lastTranslated }}
               </h4>
+
+            </div>
+          </div>
+
+          <div class="w-50 border-right border-bottom">
+            <div class="p-4">
+              <small class="text-uppercase">Translation progress</small>
+
+              <Progress class="mt-5 mb-0" :stat="info.stat"></Progress>
+
             </div>
           </div>
 
@@ -105,14 +145,25 @@ export default {
       <div class="card-bg-secondary">
         <div class="d-flex">
 
-          <div class="w-100 border-right border-bottom">
+          <div class="w-50 border-right border-bottom" v-if="info.ability.collect">
             <div class="p-4">
-              <small class="text-uppercase">Extractor</small>
+              <small class="text-uppercase">Last collected</small>
 
               <h4 class="mt-4 mb-0">
-                Domain: {{ info.domains[0].domain }}<br>
-                Sources: {{ info.domains[0].sources }}
+                {{ info.lastCollected }}
               </h4>
+
+            </div>
+          </div>
+
+          <div class="w-50 border-right border-bottom" v-if="info.ability.compile">
+            <div class="p-4">
+              <small class="text-uppercase">Last compiled</small>
+
+              <h4 class="mt-4 mb-0">
+                {{ info.lastCompiled }}
+              </h4>
+
             </div>
           </div>
 

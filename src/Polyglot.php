@@ -181,9 +181,9 @@ class Polyglot extends \Illuminate\Translation\Translator
     /**
      * Get registered extractors.
      *
-     * @return ExtractorsManager
+     * @return ExtractorsManager|null
      */
-    public static function manager(): ExtractorsManager
+    public static function manager(): ?ExtractorsManager
     {
         return app(ExtractorsManager::class);
     }
@@ -191,9 +191,9 @@ class Polyglot extends \Illuminate\Translation\Translator
     /**
      * Get proper manipulator.
      *
-     * @return ManipulatorInterface
+     * @return ManipulatorInterface|null
      */
-    public static function manipulator(): ManipulatorInterface
+    public static function manipulator(): ?ManipulatorInterface
     {
         return app(ManipulatorInterface::class);
     }

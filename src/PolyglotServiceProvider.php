@@ -69,10 +69,10 @@ class PolyglotServiceProvider extends \Illuminate\Translation\TranslationService
                 PublishCommand::class
             ];
 
-            if ($collector = app(ManipulatorInterface::class)) {
+            if (Polyglot::manager()) {
                 $commands[] = CollectCommand::class;
 
-                if ($collector instanceof GettextManipulator) {
+                if (Polyglot::manipulator() instanceof GettextManipulator) {
                     $commands[] = CompileCommand::class;
                 }
             }
@@ -123,9 +123,12 @@ class PolyglotServiceProvider extends \Illuminate\Translation\TranslationService
             $locale = $app['config']['app.locale'];
             $config = $app['config']['polyglot'];
 
-            if (isset($config['domains']) && $config['domains']) {
+            if (isset($config['sources'])) {
+                $domain = 'messages';
+            } elseif (isset($config['domains']) && $config['domains']) {
                 $domain = $config['domains'][0]['domain'];
             } else {
+                // Default domain for gettext
                 $domain = 'messages';
             }
 

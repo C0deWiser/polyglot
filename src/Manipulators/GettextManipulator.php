@@ -3,10 +3,11 @@
 namespace Codewiser\Polyglot\Manipulators;
 
 use Codewiser\Polyglot\Collections\EntryCollection;
+use Codewiser\Polyglot\Collections\FilesCollection;
 use Codewiser\Polyglot\Contracts;
 use Codewiser\Polyglot\FileLoader;
-use Codewiser\Polyglot\Manipulators\StringsManipulator;
 use Codewiser\Polyglot\Traits\Manipulator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Sepia\PoParser\Catalog\Catalog;
 use Sepia\PoParser\Catalog\Entry;
@@ -96,7 +97,7 @@ class GettextManipulator implements Contracts\ManipulatorInterface
         $this->splitPortableObjectTemplate($template, $passthroughs, $this->passthroughs);
 
         if ($this->fs->exists($passthroughs)) {
-            $this->stringsManipulator->populate($passthroughs);
+            $this->getPassthroughsManipulator()->populate($passthroughs);
             $this->fs->delete($passthroughs);
         }
 
@@ -132,6 +133,9 @@ class GettextManipulator implements Contracts\ManipulatorInterface
      */
     public function getCategoryListing(string $locale): array
     {
+        // Sanitize, if they send filename
+        $locale = $this->fs->name($locale);
+
         return glob($this->storage . DIRECTORY_SEPARATOR .
             $locale . DIRECTORY_SEPARATOR . 'LC_*');
     }
@@ -145,9 +149,29 @@ class GettextManipulator implements Contracts\ManipulatorInterface
      */
     public function getPortableObjectListing(string $locale, string $category): array
     {
+        // Sanitize, if they send filename
+        $category = $this->fs->name($category);
+
         return glob($this->storage . DIRECTORY_SEPARATOR .
             $locale . DIRECTORY_SEPARATOR .
             $category . DIRECTORY_SEPARATOR . '*.po');
+    }
+
+    /**
+     * Get existing .mo files for the given locale and category.
+     *
+     * @param string $locale
+     * @param string $category
+     * @return array
+     */
+    public function getMachineObjectListing(string $locale, string $category): array
+    {
+        // Sanitize, if they send filename
+        $category = $this->fs->name($category);
+
+        return glob($this->storage . DIRECTORY_SEPARATOR .
+            $locale . DIRECTORY_SEPARATOR .
+            $category . DIRECTORY_SEPARATOR . '*.mo');
     }
 
     /**
@@ -160,6 +184,11 @@ class GettextManipulator implements Contracts\ManipulatorInterface
      */
     public function getPortableObject(string $locale, string $category, string $domain): string
     {
+        // Sanitize, if they send filename
+        $locale = $this->fs->name($locale);
+        $category = $this->fs->name($category);
+        $domain = $this->fs->name($domain);
+
         return $this->storage . DIRECTORY_SEPARATOR .
             $locale . DIRECTORY_SEPARATOR .
             $category . DIRECTORY_SEPARATOR . $domain . '.po';
@@ -175,6 +204,11 @@ class GettextManipulator implements Contracts\ManipulatorInterface
      */
     public function getMachineObject(string $locale, string $category, string $domain): string
     {
+        // Sanitize, if they send filename
+        $locale = $this->fs->name($locale);
+        $category = $this->fs->name($category);
+        $domain = $this->fs->name($domain);
+
         return $this->storage . DIRECTORY_SEPARATOR .
             $locale . DIRECTORY_SEPARATOR .
             $category . DIRECTORY_SEPARATOR . $domain . '.mo';
@@ -275,7 +309,7 @@ class GettextManipulator implements Contracts\ManipulatorInterface
         }
         $entry->setFlags(array_unique($flags));
 
-        $entry->setTranslatorComments($data['comment']);
+        $entry->setTranslatorComments((array)$data['comment']);
 
         if (!$exists) {
             $catalog->addEntry($entry);
@@ -284,17 +318,19 @@ class GettextManipulator implements Contracts\ManipulatorInterface
         $file->save((new PoCompiler())->compile($catalog));
     }
 
-    public function updateHeader(string $locale, string $category, string $domain, $key, $value)
+    public function updateHeaders(string $locale, string $category, string $domain, array $headers)
     {
         $filename = $this->getPortableObject($locale, $category, $domain);
 
         if (file_exists($filename)) {
             $content = file_get_contents($filename);
-            $content = preg_replace(
-                '~^"' . $key . ':.*?"~mi',
-                '"' . $key . ': ' . $value . '\n"',
-                $content
-            );
+            foreach ($headers as $key => $value) {
+                $content = preg_replace(
+                    '~^"' . $key . ':.*?"~mi',
+                    '"' . $key . ': ' . $value . '\n"',
+                    $content
+                );
+            }
             file_put_contents($filename, $content);
         }
     }
@@ -353,11 +389,7 @@ class GettextManipulator implements Contracts\ManipulatorInterface
         return $this;
     }
 
-    /**
-     * @return Catalog
-     * @throws \Exception
-     */
-    protected function readPortableObject(string $locale, string $category, string $domain)
+    protected function readPortableObject(string $locale, string $category, string $domain): Catalog
     {
         $filename = $this->getPortableObject($locale, $category, $domain);
 
@@ -403,5 +435,63 @@ class GettextManipulator implements Contracts\ManipulatorInterface
         } catch (\Exception $e) {
             return new EntryCollection();
         }
+    }
+
+    public function getPassthroughsManipulator(): StringsManipulator
+    {
+        return $this->stringsManipulator;
+    }
+
+    public function all(string $locale = null): EntryCollection
+    {
+        $strings = new EntryCollection();
+
+        $locales = $locale ? (array)$locale : $this->getLocales();
+
+        foreach ($locales as $locale) {
+            foreach ($this->getCategoryListing($locale) as $category) {
+                foreach ($this->getPortableObjectListing($locale, $category) as $filename) {
+                    $strings = $strings->merge(
+                        $this->getStrings($locale, $category, $filename)
+                    );
+                }
+            }
+        }
+
+        return $strings;
+    }
+
+    public function files(string $locale = null): FilesCollection
+    {
+        $locales = $locale ? (array)$locale : $this->getLocales();
+
+        $files = new FilesCollection;
+
+        foreach ($locales as $locale) {
+            foreach ($this->getCategoryListing($locale) as $category) {
+                $files = $files->merge(
+                    $this->getPortableObjectListing($locale, $category)
+                );
+            }
+        }
+
+        return $files;
+    }
+
+    public function outputFiles(string $locale = null): FilesCollection
+    {
+        $locales = $locale ? (array)$locale : $this->getLocales();
+
+        $files = new FilesCollection;
+
+        foreach ($locales as $locale) {
+            foreach ($this->getCategoryListing($locale) as $category) {
+                $files = $files->merge(
+                    $this->getMachineObjectListing($locale, $category)
+                );
+            }
+        }
+
+        return $files;
     }
 }

@@ -22,6 +22,15 @@ svg.icon {
     height: 1rem;
 }
 
+.msg-flag {
+    margin-right: 5px;
+    vertical-align: sub;
+    fill: $primary;
+    &-fuzzy {
+        fill: $warning;
+    }
+}
+
 .header {
     border-bottom: solid 1px $header-border-color;
 
@@ -144,6 +153,30 @@ svg.icon {
     fill: $primary;
 }
 
+.stroke-text-color {
+    stroke: $body-color;
+}
+
+.stroke-danger {
+    stroke: $danger;
+}
+
+.stroke-warning {
+    stroke: $warning;
+}
+
+.stroke-info {
+    stroke: $info;
+}
+
+.stroke-success {
+    stroke: $success;
+}
+
+.stroke-primary {
+    stroke: $primary;
+}
+
 button:hover {
     .fill-primary {
         fill: #fff;
@@ -256,6 +289,7 @@ button:hover {
 .card table {
     td {
         vertical-align: middle !important;
+        transition: background-color .5s;
     }
 }
 

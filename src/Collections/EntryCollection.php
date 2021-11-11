@@ -2,11 +2,13 @@
 
 namespace Codewiser\Polyglot\Collections;
 
+use Codewiser\Polyglot\Contracts\StringsCollectionInterface;
+use Codewiser\Polyglot\Contracts\StringsStatisticsContract;
 use Illuminate\Support\Str;
 use Sepia\PoParser\Catalog\Entry;
 use function collect;
 
-class EntryCollection extends \Illuminate\Support\Collection
+class EntryCollection extends \Illuminate\Support\Collection implements StringsCollectionInterface
 {
     public function stringKeyed(): EntryCollection
     {
@@ -53,17 +55,63 @@ class EntryCollection extends \Illuminate\Support\Collection
         return $this
             ->filter(function (Entry $entry) {
                 if ($entry->isPlural()) {
-                    if (collect($entry->getMsgStrPlurals())->reject(function ($string) {
-                        return $string;
-                    })->isNotEmpty()) {
-                        return true;
-                    }
+                    // Has untranslated plurals
+                    return collect($entry->getMsgStrPlurals())
+                        ->reject(function ($string) {
+                            return $string;
+                        })
+                        ->isNotEmpty();
                 } else {
-                    if (!$entry->getMsgStr()) {
-                        return true;
-                    }
+                    return !$entry->getMsgStr();
                 }
-                return false;
+            });
+    }
+
+    public function translated(): StringsCollectionInterface
+    {
+        return $this
+            ->filter(function (Entry $entry) {
+                if ($entry->isPlural()) {
+                    // Has no untranslated plurals
+                    return collect($entry->getMsgStrPlurals())
+                        ->reject(function ($string) {
+                            return $string;
+                        })
+                        ->isEmpty();
+                } else {
+                    return (bool)$entry->getMsgStr();
+                }
+            });
+    }
+
+    public function statistics(): StringsStatisticsContract
+    {
+        return new StringsStatistics($this);
+    }
+
+    public function api(): StringsCollectionInterface
+    {
+        return $this
+            ->map(function (Entry $entry) {
+                $row = [];
+                $row['msgid'] = $entry->getMsgId();
+
+                if ($entry->isPlural()) {
+                    $row['msgid_plural'] = $entry->getMsgIdPlural();
+                    $row['msgstr'] = $entry->getMsgStrPlurals();
+                } else {
+                    $row['msgstr'] = $entry->getMsgStr();
+                }
+
+                $row['context'] = $entry->getMsgCtxt();
+
+                $row['flags'] = $entry->getFlags();
+                $row['fuzzy'] = $entry->isFuzzy();
+                $row['reference'] = $entry->getReference();
+                $row['developer_comments'] = $entry->getDeveloperComments();
+                $row['comment'] = implode('. ', $entry->getTranslatorComments());
+
+                return $row;
             });
     }
 }

@@ -2,6 +2,8 @@
 
 namespace Codewiser\Polyglot\Contracts;
 
+use Codewiser\Polyglot\Collections\FilesCollection;
+use Illuminate\Support\Collection;
 use Sepia\PoParser\Catalog\Entry;
 
 interface ManipulatorInterface
@@ -15,9 +17,25 @@ interface ManipulatorInterface
     public function populate(string $template);
 
     /**
-     * Get lost of supported locales.
+     * Get list of supported locales.
      *
      * @return array
      */
     public function getLocales(): array;
+
+    /**
+     * Get all strings (for given local).
+     *
+     * @param string|null $locale
+     * @return StringsCollectionInterface
+     */
+    public function all(string $locale = null): StringsCollectionInterface;
+
+    /**
+     * Get manipulator's file listing.
+     *
+     * @param string|null $locale
+     * @return FilesCollection
+     */
+    public function files(string $locale = null): FilesCollection;
 }

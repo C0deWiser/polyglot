@@ -2,8 +2,15 @@
 
 namespace Codewiser\Polyglot\Http\Controllers;
 
+use Codewiser\Polyglot\Contracts\ManipulatorInterface;
+use Codewiser\Polyglot\Extractor;
+use Codewiser\Polyglot\ExtractorsManager;
+use Codewiser\Polyglot\Manipulators\GettextManipulator;
+use Codewiser\Polyglot\Polyglot;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Lang;
 
 class i18nController extends Controller
 {
@@ -11,30 +18,80 @@ class i18nController extends Controller
     {
         $config = config('polyglot');
 
+        $manager = Polyglot::manager();
+        $manipulator = Polyglot::manipulator();
+
         $data = [
             'mode' => $config['mode'],
-            'locales' => $config['locales']
+            'locales' => $config['locales'],
+            'ability' => [
+                'collect' => false,
+                'compile' => false,
+            ]
         ];
 
-        $domains = [];
+        if ($manager) {
+            $data['ability']['collect'] = true;
 
-        if (isset($config['domains'])) {
-            $domains = $config['domains'];
-        } else {
-            $domain = [
-                'domain' => 'messages',
-                'sources' => $config['sources'],
-            ];
-            if (isset($config['exclude']) && $config['exclude']) {
-                $domain['exclude'] = $config['exclude'];
-            }
-            $domains[] = $domain;
+            $data['lastCollected'] = $manager->extractors()
+                ->max(function (Extractor $extractor) {
+                    return file_exists($extractor->getPortableObjectTemplate()) ?
+                        filemtime($extractor->getPortableObjectTemplate()) :
+                        0;
+                });
+            $data['lastCollected'] = $data['lastCollected'] ?
+                Carbon::createFromTimestamp($data['lastCollected'])->diffForHumans() : 0;
+
+            $data['domains'] = $manager->extractors()
+                ->map(function (Extractor $extractor) {
+                    return [
+                        'domain' => $extractor->getDomain(),
+                        'sources' => $extractor->getSources(),
+                        'exclude' => $extractor->getExclude()
+                    ];
+                });
         }
 
-        $data['domains'] = $domains;
-        $data['passthroughs'] = $config['passthroughs'];
+        if ($manipulator instanceof GettextManipulator) {
+
+            $data['ability']['compile'] = true;
+
+            $data['lastCompiled'] = $manipulator->outputFiles()
+                ->max(function ($filename) {
+                    return file_exists($filename) ?
+                        filemtime($filename) :
+                        0;
+                });
+            $data['lastCompiled'] = $data['lastCompiled'] ?
+                Carbon::createFromTimestamp($data['lastCompiled'])->diffForHumans() : 0;
+        }
+
+        /** @var GettextManipulator $gettext */
+        $gettext = app(GettextManipulator::class);
+        $data['stat'] = $this->progress($gettext);
+
+        $data['lastTranslated'] = $gettext->files()
+            ->merge($gettext->getPassthroughsManipulator()->files())
+            ->max(function ($filename) {
+                return file_exists($filename) ?
+                    filemtime($filename) :
+                    0;
+            });
+        $data['lastTranslated'] = $data['lastTranslated'] ?
+            Carbon::createFromTimestamp($data['lastTranslated'])->diffForHumans() : 0;
 
         return response()->json($data);
+    }
+
+    protected function progress(GettextManipulator $manipulator): array
+    {
+        $statistics = $manipulator->all()->statistics();
+
+        $statistics->add(
+            $manipulator->getPassthroughsManipulator()->all()
+        );
+
+        return $statistics->toArray();
     }
 
     public function collect()
