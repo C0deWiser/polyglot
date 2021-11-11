@@ -17,11 +17,31 @@ interface ManipulatorInterface
     public function populate(string $template);
 
     /**
-     * Get list of supported locales.
-     *
+     * Get list of supported locales. It is initially configured in config/polyglot.php
      * @return array
      */
     public function getLocales(): array;
+
+    /**
+     * Set new list of locales to populate collected strings through.
+     *
+     * @param array $locales
+     */
+    public function setLocales(array $locales): void;
+
+    /**
+     * Get dir that keeps collected strings. It is resources/lang by default.
+     *
+     * @return string
+     */
+    public function getStorage(): string;
+
+    /**
+     * Set dir to keep collected strings.
+     *
+     * @param string $storage
+     */
+    public function setStorage(string $storage): void;
 
     /**
      * Get all strings (for given local).

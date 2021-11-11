@@ -11,7 +11,7 @@
 - [Strings Collector](#strings-collector)
 - [Gettext Translator](#gettext-translator)
   - [Compatability with Laravel Translator](#compatability-with-laravel-translator)
-  - [Multiple domains](#multiple-domains)
+  - [Multiple Text Domains](#multiple-text-domains)
   - [Using Gettext in JavaScript](#using-gettext-in-javascript)
 - [About Gettext](#about-gettext)
   - [Supported Directives](#supported-directives)
@@ -163,11 +163,11 @@ You only left to translate files.
 
 ## Gettext Translator
 
-As Laravel Translator may hold strings in different files (that we call namespace), so Gettext may hold strings in different files (that is called domains). The idea is alike, but there are a lot of difference.
+As Laravel Translator may hold strings in different files (that we call namespace), so Gettext may hold strings in different files (that is called text domains). The idea is alike, but there are a lot of difference.
 
 Gettext may split strings by categories, described by php constants `LC_MESSAGES`, `LC_MONETARY`, `LC_TIME` and so on.
 
-By default, Polyglot stores collected strings on `messages` domain in `LC_MESSAGES`category.
+By default, Polyglot stores collected strings in `messages` text domain and `LC_MESSAGES`category.
 
 So, if you have configured Polyglot mode to `translator`, after you run `polyglot:collect` Artisan command, your application's `resourse/lang` folder may look like:
 
@@ -214,11 +214,11 @@ Sometimes, you may want to keep existing translations as it is, and use `po` onl
 
 In that case, all strings that begins with configured values, will be stored in `php` files, following Laravel Translator style.
 
-### Multiple Domains
+### Multiple Text Domains
 
-Sometimes, you may want to divide your application's translation strings into few domains, e.g. strings for frontend and strings for administrative panel.
+Sometimes, you may want to divide your application's translation strings into few text domains, e.g. strings for frontend and strings for administrative panel.
 
-You may configure additional domains that way:
+You may configure additional text domains that way:
 
     'sources' => [
         app_path(),
@@ -226,31 +226,32 @@ You may configure additional domains that way:
     ],
     'exclude' => resource_path('views/admin')
 
-    'domains' => [
+    'text_domains' => [
       [
-        'domain' => 'admin', 
+        'text_domains' => 'admin', 
         'category' => LC_MESSAGES,
         'sources' => [
             resource_path('views/admin')
             resource_path('js/admin')
-        ]
+        ],
+        'exclude' => []
       ],
     ],
 
 After collecting strings, every locale in `resource/lang` will get two files: `frontend.po` and `admin.po`.
 
-> Multiple domain configuration extends base `sources` and `exclude` parameters, adding new domains to default one (named `messages`). If you want to disable default `messages` domain, just remove root `sources` parameter.
+> Multiple text domain configuration extends base `sources` and `exclude` parameters, adding new text domains to default one (named `messages`). If you want to disable default `messages` text domains, just remove root `sources` parameter.
 
-By default, Polyglot will load into php memory the first configured domain. You may load next domain by accessing Laravel's `Lang` facade:
+By default, Polyglot will load into php memory the first configured text domain. You may load next text domain by accessing Laravel's `Lang` facade:
 
-    Lang::setDomain('admin');
+    Lang::setTextDomain('admin');
 
 ### Using Gettext in JavaScript
 
 @todo   
 experimental
 
-Gettext does collect strings from JavaScript (and from Vue, but with some problems...). It is enough, if developer will define custom JavaScript functions: `gettext`, `ngettext` etc — Polyglot will reconize them.
+Gettext does collect strings from JavaScript (and from Vue, but with some problems...). It is enough, if developer will define custom JavaScript functions: `gettext`, `ngettext` etc. — Polyglot will recognize them.
 
 Then loading you JavaScript app, just deliver the array of strings from back to front of your app.
 
@@ -271,7 +272,7 @@ Then loading you JavaScript app, just deliver the array of strings from back to 
 
 Polyglot supports the following Gettext directives.
 
-Lookup a message in the current domain:
+Lookup a message in the current text domain:
 
     gettext(string $message): string
 
@@ -287,7 +288,7 @@ Particular version of ngettext.
   
     npgettext(string $context, string $singular, string $plural, int $count): string
 
-> Other directives, that allows to override current domain and category, are not supported.
+> Other directives, that allows to override current text domain and category are also supported.
 
 ### The Power of Gettext
 
@@ -324,7 +325,7 @@ The developer may explicitly define the message context.
     gettext('May');
     pgettext('Month', 'May');
 
-Here we have two messages with equal `msgid` but with defferent `msgctxt` that is actually a part of string key.
+Here we have two messages with equal `msgid` but with different `msgctxt` that is actually a part of string key.
 
     msgid "May"
     msgstr ""
@@ -343,7 +344,7 @@ While editing strings, translator may left one or many comments. This comments m
 
 #### Fuzzy strings
 
-Both Gettext (while parsing source codes) and a translataor may mark string as fuzzy. It means that a string, previously situated on that place, was changed, so current translation might no longer be appropriate.
+Both Gettext (while parsing source codes) and a translator may mark string as fuzzy. It means that a string, previously situated on that place, was changed, so current translation might no longer be appropriate.
 
     #, fuzzy
     msgid "May"

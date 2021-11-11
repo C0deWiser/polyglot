@@ -85,20 +85,26 @@ class StringsManipulator implements ManipulatorInterface
         foreach ($this->locales as $locale) {
 
             // Json strings
-            $strings = $entries->stringKeyed()
+            $strings = $entries->jsonStrings()
                 ->mapWithKeys(function (Entry $entry) use ($locale) {
+                    // Build proper key for plurals
                     list($key, $value) = $this->keyValue($entry);
                     return [$key => $value];
                 })
                 ->toArray();
 
-            $strings = $this->getJsonStrings($locale)->toArray() + $strings;
+            $strings = $this->getJsonStrings($locale)
+                    // Rebuild back to plain
+                    ->mapWithKeys(function ($value) {
+                        return [$value['key'] => $value['value']];
+                    })
+                    ->toArray() + $strings;
 
             // Save
             $this->saveJson($locale, $strings);
 
             // Php strings
-            $entries->dotKeyed()
+            $entries->phpStrings()
                 // Group by filename (aka namespace)
                 ->mapToGroups(function (Entry $entry) use ($entries) {
                     $path = $entries->hasDotSeparatedKey($entry->getMsgId());
@@ -108,7 +114,12 @@ class StringsManipulator implements ManipulatorInterface
                 // Merge with current
                 ->each(function (EntryCollection $entries, $namespace) use ($locale) {
                     $flatten = array_fill_keys($entries->toArray(), '');
-                    $flatten = $this->getPhpStrings($locale, $namespace)->toArray() + $flatten;
+                    $flatten = $this->getPhpStrings($locale, $namespace)
+                            // Rebuild back to plain
+                            ->mapWithKeys(function ($value) {
+                                return [$value['key'] => $value['value']];
+                            })
+                            ->toArray() + $flatten;
 
                     $merged = [];
 

@@ -127,7 +127,7 @@ export default {
           <td :style="'text-indent: ' + (file.level * 2) + 'em'">
             <span v-if="file.dir">{{ file.filename }}/</span>
             <span v-else>
-              <router-link v-if="file.category && file.domain"
+              <router-link v-if="file.category && file.text_domain"
                            :to="{ name: 'L10n-po', params: { locale: file.locale, category: file.category, filename: file.filename }}">
                 {{ file.filename }}
               </router-link>

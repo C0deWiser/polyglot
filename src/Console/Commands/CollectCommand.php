@@ -18,7 +18,7 @@ class CollectCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'polyglot:collect';
+    protected $signature = 'polyglot:collect {--text_domain=} {--output=}';
 
     /**
      * The console command description.
@@ -44,8 +44,21 @@ class CollectCommand extends Command
      */
     public function handle()
     {
-        Polyglot::manager()->extractors()->each(function (Extractor $extractor) {
-            Polyglot::manipulator()->populate(
+        if ($text_domain = $this->option('text_domain')) {
+            $extractors = collect()->add(
+                Polyglot::manager()->getExtractor($text_domain, LC_MESSAGES)
+            );
+        } else {
+            $extractors = Polyglot::manager()->extractors();
+        }
+
+        $manipulator = Polyglot::manipulator();
+        if ($output = $this->option('output')) {
+            $manipulator->setStorage($output);
+        }
+
+        $extractors->each(function (Extractor $extractor) use ($manipulator) {
+            $manipulator->populate(
                 $extractor->extract()->getPortableObjectTemplate()
             );
         });

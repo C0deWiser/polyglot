@@ -46,11 +46,11 @@ class Extractor
     protected string $xgettext = 'xgettext';
 
     /**
-     * Default domain for xgettext.
+     * Default text domain for xgettext.
      *
      * @var string
      */
-    protected string $domain = 'messages';
+    protected string $text_domain = 'messages';
 
     /**
      * Default category for xgettext.
@@ -96,15 +96,15 @@ class Extractor
         return $this;
     }
 
-    public function setDomain(string $domain): Extractor
+    public function setTextDomain(string $text_domain): Extractor
     {
-        $this->domain = $domain;
+        $this->text_domain = $text_domain;
         return $this;
     }
 
-    public function getDomain(): string
+    public function getTextDomain(): string
     {
-        return $this->domain;
+        return $this->text_domain;
     }
 
     /**
@@ -129,7 +129,7 @@ class Extractor
         return $this->loader->tmpPath() . DIRECTORY_SEPARATOR .
             'templates' . DIRECTORY_SEPARATOR .
             $this->categoryName($this->category) . DIRECTORY_SEPARATOR .
-            $this->domain . '.pot';
+            $this->text_domain . '.pot';
     }
 
     /**
@@ -239,20 +239,20 @@ class Extractor
             '--keyword=trans',
 
             '--keyword=gettext',
-//            '--keyword=dgettext:2',
-//            '--keyword=dcgettext:2',
+            '--keyword=dgettext:2',
+            '--keyword=dcgettext:2',
 
             '--keyword=ngettext:1,2',
-//            '--keyword=dngettext:2,3',
-//            '--keyword=dcngettext:2,3',
+            '--keyword=dngettext:2,3',
+            '--keyword=dcngettext:2,3',
 
             '--keyword=pgettext:1c,2',
-//            '--keyword=dpgettext:2c,3',
-//            '--keyword=dcpgettext:2c,3',
+            '--keyword=dpgettext:2c,3',
+            '--keyword=dcpgettext:2c,3',
 
             '--keyword=npgettext:1c,2,3',
-//            '--keyword=dnpgettext:2c,3,4',
-//            '--keyword=dcnpgettext:2c,3,4'
+            '--keyword=dnpgettext:2c,3,4',
+            '--keyword=dcnpgettext:2c,3,4'
         ];
 
         if ($this->fs->exists($target)) {

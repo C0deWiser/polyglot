@@ -7,7 +7,6 @@ use Codewiser\Polyglot\Collections\FilesCollection;
 use Codewiser\Polyglot\Contracts;
 use Codewiser\Polyglot\FileLoader;
 use Codewiser\Polyglot\Traits\Manipulator;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Sepia\PoParser\Catalog\Catalog;
 use Sepia\PoParser\Catalog\Entry;
@@ -73,9 +72,9 @@ class GettextManipulator implements Contracts\ManipulatorInterface
                 $category = $this->fs->basename($categoryDir);
 
                 foreach ($this->getPortableObjectListing($locale, $category) as $po) {
-                    $domain = $this->fs->name($po);
+                    $text_domain = $this->fs->name($po);
 
-                    $mo = $this->getMachineObject($locale, $category, $domain);
+                    $mo = $this->getMachineObject($locale, $category, $text_domain);
                     $this->runMsgFmt($po, $mo);
                 }
             }
@@ -101,11 +100,11 @@ class GettextManipulator implements Contracts\ManipulatorInterface
             $this->fs->delete($passthroughs);
         }
 
-        $domain = $this->fs->name($template);
+        $text_domain = $this->fs->name($template);
         $category = $this->fs->basename($this->fs->dirname($template));
 
         foreach ($this->getLocales() as $locale) {
-            $po = $this->getPortableObject($locale, $category, $domain);
+            $po = $this->getPortableObject($locale, $category, $text_domain);
 
             if (!$this->fs->exists($po)) {
 
@@ -179,19 +178,19 @@ class GettextManipulator implements Contracts\ManipulatorInterface
      *
      * @param string $locale
      * @param string $category
-     * @param string $domain
+     * @param string $text_domain
      * @return string
      */
-    public function getPortableObject(string $locale, string $category, string $domain): string
+    public function getPortableObject(string $locale, string $category, string $text_domain): string
     {
         // Sanitize, if they send filename
         $locale = $this->fs->name($locale);
         $category = $this->fs->name($category);
-        $domain = $this->fs->name($domain);
+        $text_domain = $this->fs->name($text_domain);
 
         return $this->storage . DIRECTORY_SEPARATOR .
             $locale . DIRECTORY_SEPARATOR .
-            $category . DIRECTORY_SEPARATOR . $domain . '.po';
+            $category . DIRECTORY_SEPARATOR . $text_domain . '.po';
     }
 
     /**
@@ -199,19 +198,19 @@ class GettextManipulator implements Contracts\ManipulatorInterface
      *
      * @param string $locale
      * @param string $category
-     * @param string $domain
+     * @param string $text_domain
      * @return string
      */
-    public function getMachineObject(string $locale, string $category, string $domain): string
+    public function getMachineObject(string $locale, string $category, string $text_domain): string
     {
         // Sanitize, if they send filename
         $locale = $this->fs->name($locale);
         $category = $this->fs->name($category);
-        $domain = $this->fs->name($domain);
+        $text_domain = $this->fs->name($text_domain);
 
         return $this->storage . DIRECTORY_SEPARATOR .
             $locale . DIRECTORY_SEPARATOR .
-            $category . DIRECTORY_SEPARATOR . $domain . '.mo';
+            $category . DIRECTORY_SEPARATOR . $text_domain . '.mo';
     }
 
     /**
@@ -260,23 +259,23 @@ class GettextManipulator implements Contracts\ManipulatorInterface
         }
     }
 
-    public function get(string $locale, string $category, string $domain, string $msgid, string $context = null): ?Entry
+    public function get(string $locale, string $category, string $text_domain, string $msgid, string $context = null): ?Entry
     {
         try {
-            return $this->readPortableObject($locale, $category, $domain)
+            return $this->readPortableObject($locale, $category, $text_domain)
                 ->getEntry($msgid, $context ?: null);
         } catch (\Exception $e) {
             return null;
         }
     }
 
-    public function put(string $locale, string $category, string $domain, array $data)
+    public function put(string $locale, string $category, string $text_domain, array $data)
     {
-        $filename = $this->getPortableObject($locale, $category, $domain);
+        $filename = $this->getPortableObject($locale, $category, $text_domain);
 
         $file = new FileSystem($filename);
 
-        $catalog = $this->readPortableObject($locale, $category, $domain);
+        $catalog = $this->readPortableObject($locale, $category, $text_domain);
 
         $entry = $catalog->getEntry($data['msgid'], @$data['context'] ? $data['context'] : null);
         if (!$entry) {
@@ -318,9 +317,9 @@ class GettextManipulator implements Contracts\ManipulatorInterface
         $file->save((new PoCompiler())->compile($catalog));
     }
 
-    public function updateHeaders(string $locale, string $category, string $domain, array $headers)
+    public function updateHeaders(string $locale, string $category, string $text_domain, array $headers)
     {
-        $filename = $this->getPortableObject($locale, $category, $domain);
+        $filename = $this->getPortableObject($locale, $category, $text_domain);
 
         if (file_exists($filename)) {
             $content = file_get_contents($filename);
@@ -389,29 +388,29 @@ class GettextManipulator implements Contracts\ManipulatorInterface
         return $this;
     }
 
-    protected function readPortableObject(string $locale, string $category, string $domain): Catalog
+    protected function readPortableObject(string $locale, string $category, string $text_domain): Catalog
     {
-        $filename = $this->getPortableObject($locale, $category, $domain);
+        $filename = $this->getPortableObject($locale, $category, $text_domain);
 
         $parser = new Parser(new FileSystem($filename));
 
         return $parser->parse();
     }
 
-    public function getHeader(string $locale, string $category, string $domain): ?Header
+    public function getHeader(string $locale, string $category, string $text_domain): ?Header
     {
         try {
-            return $this->readPortableObject($locale, $category, $domain)
+            return $this->readPortableObject($locale, $category, $text_domain)
                 ->getHeader();
         } catch (\Exception $e) {
             return null;
         }
     }
 
-    public function getHeaders(string $locale, string $category, string $domain): array
+    public function getHeaders(string $locale, string $category, string $text_domain): array
     {
         try {
-            $header = $this->getHeader($locale, $category, $domain);
+            $header = $this->getHeader($locale, $category, $text_domain);
 
             return collect($header->asArray())
                 ->mapWithKeys(function (string $string) {
@@ -424,11 +423,11 @@ class GettextManipulator implements Contracts\ManipulatorInterface
         }
     }
 
-    public function getStrings(string $locale, string $category, string $domain): EntryCollection
+    public function getStrings(string $locale, string $category, string $text_domain): EntryCollection
     {
         try {
             return EntryCollection::make(
-                $this->readPortableObject($locale, $category, $domain)
+                $this->readPortableObject($locale, $category, $text_domain)
                     ->getEntries()
             );
 

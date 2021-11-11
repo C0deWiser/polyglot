@@ -3,7 +3,7 @@
     "description": "Localize Laravel applications",
     "keywords": ["gettext", "trans", "laravel", "localization", "i18n", "L10n", "parse"],
     "license": "MIT",
-    "version": "0.2.3",
+    "version": "0.2.4",
     "authors": [
         {
             "name": "pm",

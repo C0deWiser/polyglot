@@ -10,14 +10,14 @@ use function collect;
 
 class EntryCollection extends \Illuminate\Support\Collection implements StringsCollectionInterface
 {
-    public function stringKeyed(): EntryCollection
+    public function jsonStrings(): EntryCollection
     {
         return $this->filter(function (Entry $entry) {
             return !$this->hasDotSeparatedKey($entry->getMsgId());
         });
     }
 
-    public function dotKeyed(): EntryCollection
+    public function phpStrings(): EntryCollection
     {
         return $this->filter(function (Entry $entry) {
             return $this->hasDotSeparatedKey($entry->getMsgId());

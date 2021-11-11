@@ -45,7 +45,7 @@ class i18nController extends Controller
             $data['domains'] = $manager->extractors()
                 ->map(function (Extractor $extractor) {
                     return [
-                        'domain' => $extractor->getDomain(),
+                        'domain' => $extractor->getTextDomain(),
                         'sources' => $extractor->getSources(),
                         'exclude' => $extractor->getExclude()
                     ];

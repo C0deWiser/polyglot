@@ -45,9 +45,9 @@ class L10nController extends Controller
                 $output['a/' . $locale . '/' . $category] = ['filename' => $category, 'depth' => 2, 'dir' => true, 'level' => 2];
 
                 foreach ($this->gettext->getPortableObjectListing($locale, $category) as $filename) {
-                    $domain = basename($filename, '.po');
-                    $output['a/' . $locale . '/' . $category . '/' . $domain] =
-                        $this->statPo($locale, $category, $domain) + ['depth' => 1, 'dir' => false, 'level' => 3];
+                    $text_domain = basename($filename, '.po');
+                    $output['a/' . $locale . '/' . $category . '/' . $text_domain] =
+                        $this->statPo($locale, $category, $text_domain) + ['depth' => 1, 'dir' => false, 'level' => 3];
                 }
             }
         }
@@ -143,13 +143,13 @@ class L10nController extends Controller
 
     public function getPo(string $locale, string $category, string $filename)
     {
-        $domain = $this->validatePo($locale, $category, $filename);
+        $text_domain = $this->validatePo($locale, $category, $filename);
 
         $output = [
             'headers' => $this->gettext
-                ->getHeaders($locale, $category, $domain),
+                ->getHeaders($locale, $category, $text_domain),
             'strings' => $this->gettext
-                ->getStrings($locale, $category, $domain)
+                ->getStrings($locale, $category, $text_domain)
                 ->api()->values()
         ];
 
@@ -158,7 +158,7 @@ class L10nController extends Controller
 
     public function postPo(Request $request, string $locale, string $category, string $filename)
     {
-        $domain = $this->validatePo($locale, $category, $filename);
+        $text_domain = $this->validatePo($locale, $category, $filename);
 
         $rules = [
             'msgid' => 'required|string',
@@ -169,7 +169,7 @@ class L10nController extends Controller
         ];
 
         $entry = $this->gettext->get(
-            $locale, $category, $domain,
+            $locale, $category, $text_domain,
             $request->get('msgid'),
             $request->get('context')
         );
@@ -177,13 +177,13 @@ class L10nController extends Controller
         if (($entry && $entry->isPlural()) || (!$entry && $request->has('msgid_plural'))) {
             $rules['msgid_plural'] = 'required|string';
             $rules['msgstr'] = 'array|size:' . $this->gettext
-                    ->getHeader($locale, $category, $domain)
+                    ->getHeader($locale, $category, $text_domain)
                     ->getPluralFormsCount();
         }
 
         $validated = $request->validate($rules);
 
-        $this->gettext->put($locale, $category, $domain, $validated);
+        $this->gettext->put($locale, $category, $text_domain, $validated);
 
         $headers = [
             'X-Generator' => 'Polyglot ' . Polyglot::version(),
@@ -194,19 +194,19 @@ class L10nController extends Controller
             $headers['Last-Translator'] = "{$user->name} <{$user->email}>";
         }
 
-        $this->gettext->updateHeaders($locale, $category, $domain, $headers);
+        $this->gettext->updateHeaders($locale, $category, $text_domain, $headers);
     }
 
-    protected function statPo(string $locale, string $category, string $domain): ?array
+    protected function statPo(string $locale, string $category, string $text_domain): ?array
     {
-        $filename = $this->gettext->getPortableObject($locale, $category, $domain);
+        $filename = $this->gettext->getPortableObject($locale, $category, $text_domain);
         if (file_exists($filename)) {
             $output = [];
             $output['locale'] = $locale;
             $output['category'] = $category;
-            $output['domain'] = $domain;
+            $output['text_domain'] = $text_domain;
             $output['filename'] = basename($filename);
-            $output['stat'] = $this->gettext->getStrings($locale, $category, $domain)->statistics()->toArray();
+            $output['stat'] = $this->gettext->getStrings($locale, $category, $text_domain)->statistics()->toArray();
         } else {
             $output = null;
         }

@@ -23,14 +23,14 @@ class ExtractorsManager
     {
         $extractor->setLoader($this->loader);
 
-        $this->extractors[$extractor->getDomain() . '/' . $extractor->getCategory()] = $extractor;
+        $this->extractors[$extractor->getTextDomain() . '/' . $extractor->getCategory()] = $extractor;
 
         return $this;
     }
 
-    public function getExtractor(string $domain, int $category): ?Extractor
+    public function getExtractor(string $text_domain, int $category): ?Extractor
     {
-        return $this->extractors[$domain . '/' . $category] ?? null;
+        return $this->extractors[$text_domain . '/' . $category] ?? null;
     }
 
     /**

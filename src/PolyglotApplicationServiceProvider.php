@@ -103,15 +103,15 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
                 );
             }
 
-            if (isset($config['domains'])) {
+            if (isset($config['text_domains'])) {
                 // Multiple (configurable) extractors.
-                foreach ($config['domains'] as $domain) {
+                foreach ($config['text_domains'] as $text_domain) {
                     $extractor = $this->getExtractor(
-                        (array)$domain['sources'],
-                        isset($domain['exclude']) ? (array)$domain['exclude'] : []
+                        (array)$text_domain['sources'],
+                        isset($text_domain['exclude']) ? (array)$text_domain['exclude'] : []
                     );
-                    $extractor->setDomain($domain['domain']);
-                    $extractor->setCategory($domain['category'] ?? LC_MESSAGES);
+                    $extractor->setTextDomain($text_domain['text_domain']);
+                    $extractor->setCategory($text_domain['category'] ?? LC_MESSAGES);
 
                     $manager->addExtractor($extractor);
                 }

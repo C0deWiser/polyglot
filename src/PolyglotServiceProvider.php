@@ -124,18 +124,18 @@ class PolyglotServiceProvider extends \Illuminate\Translation\TranslationService
             $config = $app['config']['polyglot'];
 
             if (isset($config['sources'])) {
-                $domain = 'messages';
-            } elseif (isset($config['domains']) && $config['domains']) {
-                $domain = $config['domains'][0]['domain'];
+                $text_domain = 'messages';
+            } elseif (isset($config['text_domains']) && $config['text_domains']) {
+                $text_domain = $config['text_domains'][0]['text_domain'];
             } else {
-                // Default domain for gettext
-                $domain = 'messages';
+                // Default text_domain for gettext
+                $text_domain = 'messages';
             }
 
             $trans = new Polyglot(
                 $loader,
                 $locale,
-                $domain,
+                $text_domain,
                 $config['passthroughs']
             );
 

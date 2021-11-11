@@ -18,7 +18,7 @@ class Polyglot extends \Illuminate\Translation\Translator
      *
      * @var string
      */
-    protected string $domain;
+    protected string $text_domain;
 
     /**
      * List of supported locales;
@@ -37,9 +37,9 @@ class Polyglot extends \Illuminate\Translation\Translator
      */
     protected array $passthroughs;
 
-    public function __construct(Loader $loader, $locale, string $domain, array $passthroughs)
+    public function __construct(Loader $loader, $locale, string $text_domain, array $passthroughs)
     {
-        $this->domain = $domain;
+        $this->text_domain = $text_domain;
         $this->passthroughs = $passthroughs;
 
         parent::__construct($loader, $locale);
@@ -53,9 +53,9 @@ class Polyglot extends \Illuminate\Translation\Translator
         $this->loadTranslations();
     }
 
-    public function setDomain(string $domain)
+    public function setTextDomain(string $text_domain)
     {
-        $this->domain = $domain;
+        $this->text_domain = $text_domain;
         $this->loadTranslations();
     }
 
@@ -126,13 +126,13 @@ class Polyglot extends \Illuminate\Translation\Translator
      */
     protected function loadTranslations()
     {
-        if ($this->loaded_domain != $this->domain) {
+        if ($this->loaded_domain != $this->text_domain) {
 
-            textdomain($this->domain);
-            bindtextdomain($this->domain, $this->loader->storage());
-            bind_textdomain_codeset($this->domain, 'UTF-8');
+            textdomain($this->text_domain);
+            bindtextdomain($this->text_domain, $this->loader->storage());
+            bind_textdomain_codeset($this->text_domain, 'UTF-8');
 
-            $this->loaded_domain = $this->domain;
+            $this->loaded_domain = $this->text_domain;
         }
     }
 
@@ -198,31 +198,31 @@ class Polyglot extends \Illuminate\Translation\Translator
         return app(ManipulatorInterface::class);
     }
 
-    public function all($locale, $domain = null, $category = 'LC_MESSAGES'): Collection
+    public function all($locale, $text_domain = null, $category = 'LC_MESSAGES'): Collection
     {
         $manipulator = self::manipulator();
 
-        if ($domain && $manipulator instanceof GettextManipulator) {
-            return $manipulator->getStrings($locale, $domain, $category);
+        if ($text_domain && $manipulator instanceof GettextManipulator) {
+            return $manipulator->getStrings($locale, $category, $text_domain);
         }
 
         if ($manipulator instanceof StringsManipulator) {
             $strings = $manipulator->getJsonStrings($locale);
 
-            if ($domain) {
+            if ($text_domain) {
                 $strings->merge(
-                    $manipulator->getPhpStrings($locale, $domain)
-                        ->mapWithKeys(function ($value, $key) use ($domain) {
-                            return [$domain . '.' . $key => $value];
+                    $manipulator->getPhpStrings($locale, $text_domain)
+                        ->mapWithKeys(function ($value, $key) use ($text_domain) {
+                            return [$text_domain . '.' . $key => $value];
                         })
                 );
             } else {
                 foreach ($manipulator->getPhpListing($locale) as $filename) {
-                    $domain = basename($filename, '.php');
+                    $text_domain = basename($filename, '.php');
                     $strings->merge(
-                        $manipulator->getPhpStrings($locale, $domain)
-                            ->mapWithKeys(function ($value, $key) use ($domain) {
-                                return [$domain . '.' . $key => $value];
+                        $manipulator->getPhpStrings($locale, $text_domain)
+                            ->mapWithKeys(function ($value, $key) use ($text_domain) {
+                                return [$text_domain . '.' . $key => $value];
                             })
                     );
                 }
