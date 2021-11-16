@@ -1,9 +1,9 @@
 {
     "name": "codewiser/polyglot",
-    "description": "Translation strings parser and translations web editor for Laravel applications",
+    "description": "Translation strings parser and web editor for Laravel applications",
     "keywords": ["gettext", "trans", "laravel", "localization", "i18n", "L10n", "parse"],
     "license": "MIT",
-    "version": "0.2.6",
+    "version": "0.2.7",
     "authors": [
         {
             "name": "pm",
@@ -15,7 +15,7 @@
         "ext-gettext": "*",
         "ext-json": "*",
         "laravel/framework": "^8.0",
-        "sepia/po-parser": "dev-master"
+        "sepia/po-parser": "^6.0"
     },
     "autoload": {
         "psr-4": {
