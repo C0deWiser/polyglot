@@ -18,6 +18,13 @@ class Polyglot extends \Illuminate\Translation\Translator
     protected string $loaded_domain = '';
     protected string $current_locale = '';
 
+    public function __construct(Loader $loader, $locale, $text_domain)
+    {
+        $this->text_domain = $text_domain;
+
+        parent::__construct($loader, $locale);
+    }
+
     /**
      * When application sets locale we will set up gettext.
      *

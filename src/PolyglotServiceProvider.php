@@ -106,19 +106,11 @@ class PolyglotServiceProvider extends \Illuminate\Translation\TranslationService
             $locale = $app['config']['app.locale'];
             $config = $app['config']['polyglot'];
 
-            // Default text_domain for gettext
-            $text_domain = 'messages';
+            $text_domain = @$config['xgettext'][0]['text_domain'] ?? 'messages';
 
-            if (isset($config['xgettext']) && $config['xgettext']) {
-                $text_domain = @$config['xgettext'][0]['text_domain'] ?? 'messages';
-            }
-
-            $trans = new Polyglot($loader, $locale);
+            $trans = new Polyglot($loader, $locale, $text_domain);
 
             $trans->setFallback($app['config']['app.fallback_locale']);
-
-            // To look for .mo files
-            $trans->setTextDomain($text_domain);
 
             return $trans;
         });
