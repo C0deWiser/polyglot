@@ -286,6 +286,51 @@ button:hover {
     background: $new-entries-bg;
 }
 
+blockquote {
+    &.msg-id,
+    &.msg-id-plural {
+        height: auto;
+        white-space: pre;
+    }
+}
+
+.msg-id-plural {
+    .msg-id {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+    .msg-id-plural {
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+    }
+}
+
+.msgid-str-plural {
+    &.list-group {
+        .list-group-item {
+            textarea {
+                border-radius: 0;
+                position: relative;
+                &:focus {
+                    z-index: 1;
+                }
+            }
+            &:first-child {
+                textarea {
+                    border-top-left-radius: 0.25rem;
+                    border-top-right-radius: 0.25rem;
+                }
+            }
+            &:last-child {
+                textarea {
+                    border-bottom-left-radius: 0.25rem;
+                    border-bottom-right-radius: 0.25rem;
+                }
+            }
+        }
+    }
+}
+
 .card table {
     td {
         vertical-align: middle !important;

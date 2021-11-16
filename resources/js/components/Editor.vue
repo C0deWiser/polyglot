@@ -70,36 +70,42 @@ export default {
 
             <div class="form-group float-right" v-if="poeditor">
               <div class="custom-control custom-switch">
-                <input type="checkbox" class="custom-control-input" id="fuzzy" v-model="row.fuzzy" :disabled="row.obsolete">
+                <input type="checkbox" class="custom-control-input" id="fuzzy" v-model="row.fuzzy"
+                       :disabled="row.obsolete">
                 <label class="custom-control-label" for="fuzzy">Fuzzy</label>
               </div>
             </div>
 
-            <div class="form-group" v-if="poeditor && row.context">
+            <div class="form-group" v-if="row.context">
               <label>Message Context</label>
               <small class="form-text text-muted">{{ row.context }}</small>
             </div>
 
-            <div class="form-group">
-              <label>{{ poeditor && row.msgid_plural ? 'Single' : 'String' }}</label>
-              <blockquote class="form-control bg-secondary" style="height: auto">{{ row.msgid }}</blockquote>
+            <div class="form-group" v-if="!row.msgid_plural">
+              <label>String</label>
+              <blockquote class="form-control bg-secondary msg-id">{{ row.msgid }}</blockquote>
             </div>
 
-            <div class="form-group" v-if="poeditor && row.msgid_plural">
-              <label>Plural</label>
-              <blockquote class="form-control bg-secondary">{{ row.msgid_plural }}</blockquote>
+            <div class="form-group msg-id-plural" v-if="row.msgid_plural">
+              <label>Plural Strings</label>
+              <blockquote class="form-control bg-secondary mb-0 msg-id">{{ row.msgid }}</blockquote>
+              <blockquote class="form-control bg-secondary msg-id-plural">{{ row.msgid_plural }}</blockquote>
             </div>
 
             <div class="form-group" v-if="!row.msgid_plural">
               <label for="msg_str">Translation</label>
-              <textarea class="form-control msg_str" id="msg_str"
-                     v-model="row.msgstr" :disabled="row.obsolete"></textarea>
+              <textarea class="form-control msg-str" id="msg_str"
+                        v-model="row.msgstr" :disabled="row.obsolete"></textarea>
             </div>
 
-            <div class="form-group" v-if="poeditor && row.msgid_plural" v-for="(plural, key) in row.msgstr">
-              <label>Translation[{{ key }}]</label>
-              <textarea class="form-control msg_str"
-                     v-model="row.msgstr[key]" :disabled="row.obsolete"></textarea>
+            <div class="form-group" v-if="row.msgid_plural">
+              <label>Plural Translations</label>
+              <div class="list-group msgid-str-plural">
+                <li class="list-group-item p-0" v-for="(plural, key) in row.msgstr">
+                <textarea class="form-control msg_str border-0"
+                          v-model="row.msgstr[key]" :disabled="row.obsolete"></textarea>
+                </li>
+              </div>
             </div>
 
 
