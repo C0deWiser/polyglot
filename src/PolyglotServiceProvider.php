@@ -39,7 +39,7 @@ class PolyglotServiceProvider extends \Illuminate\Translation\TranslationService
             ], 'polyglot-config');
 
             $this->publishes([
-                __DIR__.'/../resources/lang' => resource_path('lang/vendor/polyglot'),
+                __DIR__ . '/../resources/lang' => resource_path('lang/vendor/polyglot'),
             ], 'polyglot-translations');
         }
     }
@@ -89,24 +89,12 @@ class PolyglotServiceProvider extends \Illuminate\Translation\TranslationService
 
         $this->mergeConfigFrom(__DIR__ . '/../config/polyglot.php', 'polyglot');
 
-        if (config('polyglot.mode') == 'translator') {
+        if (config('polyglot.enabled')) {
             // Replace Translator with Polyglot
             $this->registerPolyglot();
         } else {
             parent::register();
         }
-    }
-
-    /**
-     * Override the translation line loader.
-     *
-     * @return void
-     */
-    protected function registerLoader()
-    {
-        $this->app->singleton('translation.loader', function ($app) {
-            return new FileLoader($app['files'], $app['path.lang'], base_path(), storage_path('tmp'));
-        });
     }
 
     protected function registerPolyglot()
@@ -118,23 +106,19 @@ class PolyglotServiceProvider extends \Illuminate\Translation\TranslationService
             $locale = $app['config']['app.locale'];
             $config = $app['config']['polyglot'];
 
-            if (isset($config['sources'])) {
-                $text_domain = 'messages';
-            } elseif (isset($config['text_domains']) && $config['text_domains']) {
-                $text_domain = $config['text_domains'][0]['text_domain'];
-            } else {
-                // Default text_domain for gettext
-                $text_domain = 'messages';
+            // Default text_domain for gettext
+            $text_domain = 'messages';
+
+            if (isset($config['xgettext']) && $config['xgettext']) {
+                $text_domain = @$config['xgettext'][0]['text_domain'] ?? 'messages';
             }
 
-            $trans = new Polyglot(
-                $loader,
-                $locale,
-                $text_domain,
-                $config['passthroughs']
-            );
+            $trans = new Polyglot($loader, $locale);
 
             $trans->setFallback($app['config']['app.fallback_locale']);
+
+            // To look for .mo files
+            $trans->setTextDomain($text_domain);
 
             return $trans;
         });

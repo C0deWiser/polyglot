@@ -19,21 +19,6 @@ class Polyglot extends \Illuminate\Translation\Translator
     protected string $current_locale = '';
 
     /**
-     * Translate this strings using Translator service.
-     *
-     * @var array
-     */
-    protected array $passthroughs;
-
-    public function __construct(Loader $loader, $locale, string $text_domain, array $passthroughs)
-    {
-        $this->text_domain = $text_domain;
-        $this->passthroughs = $passthroughs;
-
-        parent::__construct($loader, $locale);
-    }
-
-    /**
      * When application sets locale we will set up gettext.
      *
      * @param string $locale
@@ -42,10 +27,8 @@ class Polyglot extends \Illuminate\Translation\Translator
     {
         parent::setLocale($locale);
 
-        if (config('polyglot.mode') == 'translator') {
-            $this->putEnvironment($locale);
-            $this->loadTranslations();
-        }
+        $this->putEnvironment($locale);
+        $this->loadTranslations();
     }
 
     /**
@@ -124,17 +107,6 @@ class Polyglot extends \Illuminate\Translation\Translator
     }
 
     /**
-     * Check if key configured to be translated by Translator.
-     *
-     * @param string $key
-     * @return bool
-     */
-    protected function shouldPassThrough(string $key): bool
-    {
-        return Str::startsWith($key, $this->passthroughs);
-    }
-
-    /**
      * Configure environment to gettext load proper files.
      *
      * @param string $locale
@@ -158,7 +130,7 @@ class Polyglot extends \Illuminate\Translation\Translator
         if ($this->loaded_domain != $this->text_domain) {
 
             textdomain($this->text_domain);
-            bindtextdomain($this->text_domain, $this->loader->storage());
+            bindtextdomain($this->text_domain, resource_path('lang'));
             bind_textdomain_codeset($this->text_domain, 'UTF-8');
 
             $this->loaded_domain = $this->text_domain;
@@ -210,9 +182,9 @@ class Polyglot extends \Illuminate\Translation\Translator
     /**
      * Get registered extractors.
      *
-     * @return ExtractorsManager|null
+     * @return ExtractorsManager
      */
-    public static function manager(): ?ExtractorsManager
+    public static function manager(): ExtractorsManager
     {
         return app(ExtractorsManager::class);
     }
