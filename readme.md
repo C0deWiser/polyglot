@@ -79,7 +79,11 @@ After collecting strings, Polyglot will populate collected strings through every
 
 ### Dashboard Authorization
 
-Polyglot exposes a dashboard at the /polyglot URI. By default, you will only be able to access this dashboard in the local environment. However, within your `app/Providers/PolyglotServiceProvider.php` file, there is an authorization gate definition. This authorization gate controls access to Polyglot in non-local environments. You are free to modify this gate as needed to restrict access to your Polyglot installation.
+Polyglot exposes a dashboard at the /polyglot URI. By default, you will only be able to access this dashboard in the local environment. 
+
+> It is not recommended to use Polyglot in non-local environments, as Polyglot modifies files in `resources/lang`.
+
+However, within your `app/Providers/PolyglotServiceProvider.php` file, there is an authorization gate definition. This authorization gate controls access to Polyglot in non-local environments. You are free to modify this gate as needed to restrict access to your Polyglot installation.
 
     /**
      * Register the Polyglot gate.
