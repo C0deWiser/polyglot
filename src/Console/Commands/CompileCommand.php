@@ -45,7 +45,7 @@ class CompileCommand extends Command
     public function handle()
     {
 
-        $lang_path = new DirectoryHandler(lang_path());
+        $lang_path = new DirectoryHandler(resource_path('lang'));
         /** @var XgettextCompiler $compiler */
         $compiler = app(XgettextCompiler::class);
 

@@ -14,7 +14,7 @@ class i18nController extends Controller
     {
         $config = config('polyglot');
 
-        $lang_path = new DirectoryHandler(lang_path());
+        $lang_path = new DirectoryHandler(resource_path('lang'));
 
         $data = [
             'enabled' => $config['enabled'],
