@@ -6,9 +6,6 @@ use Codewiser\Polyglot\Console\Commands\CompileCommand;
 use Codewiser\Polyglot\Console\Commands\InstallCommand;
 use Codewiser\Polyglot\Console\Commands\PublishCommand;
 use Codewiser\Polyglot\Console\Commands\CollectCommand;
-use Codewiser\Polyglot\Contracts\ManipulatorInterface;
-use Codewiser\Polyglot\Manipulators\GettextManipulator;
-use Illuminate\Support\Facades\Route;
 
 class PolyglotServiceProvider extends \Illuminate\Translation\TranslationServiceProvider
 {
@@ -40,6 +37,10 @@ class PolyglotServiceProvider extends \Illuminate\Translation\TranslationService
             $this->publishes([
                 __DIR__ . '/../config/polyglot.php' => config_path('polyglot.php'),
             ], 'polyglot-config');
+
+            $this->publishes([
+                __DIR__.'/../resources/lang' => resource_path('lang/vendor/polyglot'),
+            ], 'polyglot-translations');
         }
     }
 
@@ -66,16 +67,10 @@ class PolyglotServiceProvider extends \Illuminate\Translation\TranslationService
 
             $commands = [
                 InstallCommand::class,
-                PublishCommand::class
+                PublishCommand::class,
+                CollectCommand::class,
+                CompileCommand::class,
             ];
-
-            if (Polyglot::manager()) {
-                $commands[] = CollectCommand::class;
-
-                if (Polyglot::manipulator() instanceof GettextManipulator) {
-                    $commands[] = CompileCommand::class;
-                }
-            }
 
             $this->commands($commands);
         }
@@ -139,7 +134,6 @@ class PolyglotServiceProvider extends \Illuminate\Translation\TranslationService
                 $config['passthroughs']
             );
 
-            $trans->setLocales($config['locales']);
             $trans->setFallback($app['config']['app.fallback_locale']);
 
             return $trans;

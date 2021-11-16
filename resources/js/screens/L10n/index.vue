@@ -1,14 +1,21 @@
 <script type="text/ecmascript-6">
-import Progress from "../../components/Progress";
+
+import AddressLine from '../../components/AddressLine';
+import FileBrowser from '../../components/FileBrowser';
+import FileViewer from "../../components/FileViewer";
 
 export default {
+  props: ["hash"],
+
   /**
    * The component's data.
    */
   data() {
     return {
       ready: false,
+      path: {},
       files: [],
+      strings: [],
     };
   },
 
@@ -16,7 +23,9 @@ export default {
    * Components
    */
   components: {
-    Progress
+    AddressLine,
+    FileBrowser,
+    FileViewer
   },
 
   /**
@@ -52,12 +61,16 @@ export default {
      */
     loadFiles() {
 
-      this.$http.get(Polyglot.basePath + '/api/L10n')
+      //this.ready = false;
+
+      this.$http.get(Polyglot.basePath + '/api/L10n/' + this.hash)
           .then(response => {
 
-            this.files = response.data;
+            this.path = response.data.path;
+            this.files = response.data.files;
+            this.strings = response.data.strings;
 
-            this.prepareProgressBar();
+            //this.prepareProgressBar();
 
             this.ready = true;
           });
@@ -108,46 +121,17 @@ export default {
         <span>Loading...</span>
       </div>
 
+      <div v-if="ready && path" class="card-body pb-0 pt-0">
+        <AddressLine :path="path"></AddressLine>
+      </div>
 
-      <div v-if="ready && files.length === 0"
+      <div v-if="ready && files && files.length === 0"
            class="d-flex flex-column align-items-center justify-content-center card-bg-secondary p-5 bottom-radius">
         <span>There aren't any files.</span>
       </div>
 
-      <table v-if="ready && files.length > 0" class="table table-hover table-sm mb-0">
-        <thead>
-        <tr>
-          <th>Files</th>
-          <th>Progress</th>
-        </tr>
-        </thead>
-
-        <tbody>
-        <tr v-for="file in files">
-          <td :style="'text-indent: ' + (file.level * 2) + 'em'">
-            <span v-if="file.dir">{{ file.filename }}/</span>
-            <span v-else>
-              <router-link v-if="file.category && file.text_domain"
-                           :to="{ name: 'L10n-po', params: { locale: file.locale, category: file.category, filename: file.filename }}">
-                {{ file.filename }}
-              </router-link>
-              <router-link v-else-if="file.namespace"
-                           :to="{ name: 'L10n-php', params: { locale: file.locale, filename: file.filename }}">
-                {{ file.filename }}
-              </router-link>
-              <router-link v-else
-                           :to="{ name: 'L10n-json', params: { filename: file.filename }}">
-                {{ file.filename }}
-              </router-link>
-              </span>
-
-          </td>
-          <td>
-            <Progress v-if="file.stat" :stat="file.stat"></Progress>
-          </td>
-        </tr>
-        </tbody>
-      </table>
+      <FileBrowser v-if="ready && files && files.length > 0" :files="files"></FileBrowser>
+      <FileViewer v-if="ready && strings && strings.length > 0" :strings="strings" :info="path"></FileViewer>
 
     </div>
 

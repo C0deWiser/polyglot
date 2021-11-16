@@ -4,22 +4,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Polyglot mode
+    | Polyglot Switch
     |--------------------------------------------------------------------------
     |
-    | This option is used to enable or disable some Polyglot functionality.
-    | Every next mode extends functionality of previous mode.
+    | Disabled Polyglot provides Artisan console command to extract translation
+    | strings and web panel to manage translations.
     |
-    | 'editor'      - Polyglot provides online translation editor.
-    |
-    | 'collector'   - Polyglot may collect strings from source codes.
-    |
-    | 'translator'  — Polyglot replaces Translator service,
-    |                 bringing Gettext support to the Application.
+    | Enabled Polyglot replaces Laravel Translator service, bringing Gettext
+    | support to the Application. With full backward compatability.
     |
     */
 
-    'mode' => env('POLYGLOT_MODE', 'collector'),
+    'enabled' => env('POLYGLOT_ENABLED', false),
 
     /*
     |--------------------------------------------------------------------------
@@ -32,6 +28,66 @@ return [
     */
 
     'locales' => ['en'],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Polyglot Extractor Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Extractor parses source codes, finding translation strings.
+    |
+    | 'xgettext`    - extracts translation strings from source codes
+    |                 using the power of xgettext utility.
+    |
+    */
+
+    'extractor' => 'xgettext',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Polyglot Producer Configuration
+    |--------------------------------------------------------------------------
+    |
+    | After extracting, producer populates extracted strings through every
+    | configured locale.
+    |
+    | Even if you use Polyglot as Translator of your application, always
+    | produce dot.key strings using 'array' driver to respect legacy
+    | of Laravel Translator.
+    |
+    | 'array'       - stores extracted 'dot.key' strings into .php files
+    | 'json'        - stores extracted 'natural' strings into .json file
+    | 'gettext'     - stores extracted 'natural' strings into .po files
+    |
+    */
+
+    'producer' => [
+        'strings' => 'json',
+        'keys' => 'array'
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Xgettext Extractor Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Gettext groups translations into 'text domains', so we need to configure
+    | at least one. For every text domain configure source files and folders
+    | to parse and optionally exclude some files and folders from being parsed.
+    |
+    */
+
+    'xgettext' => [
+        [
+            'text_domain' => 'messages',
+            'category' => LC_MESSAGES,
+            'sources' => [
+                app_path(),
+                resource_path('views')
+            ],
+            'exclude' => [],
+        ]
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -76,52 +132,13 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Gettext Collector Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Define file system resources to search translation strings in,
-    | excluding some. Collector will scan configured resources
-    | and store strings into resource/lang folder.
-    |
-    | Working as a `collector` Polyglot will store collected strings
-    | into .json and .php files. As `translator` Polyglot will store
-    | collected strings into .po files (applicable to gettext).
-    |
-    */
-
-    'sources' => [
-        app_path(),
-        resource_path('views')
-    ],
-    'exclude' => [],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Passthroughs Configuration
-    |--------------------------------------------------------------------------
-    |
-    | When collecting strings as `translator` Polyglot may pass
-    | some collected strings into .php files, storing others to .po files.
-    |
-    | It is rational to leave standard Laravel translations as it is.
-    |
-    */
-    'passthroughs' => [
-        'validation.',
-        'passwords.',
-        'auth.',
-        'pagination.',
-        'verify.'
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
     | Gettext Executables Configuration
     |--------------------------------------------------------------------------
     |
     | Paths to gettext binaries.
     |
     */
+
     'executables' => [
         'xgettext' => env('XGETTEXT_EXECUTABLE', 'xgettext'),
         'msginit' => env('MSGINIT_EXECUTABLE', 'msginit'),

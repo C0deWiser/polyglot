@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import Base from './base';
 import axios from 'axios';
+import qs from 'qs';
 import Routes from './routes';
 import VueRouter from 'vue-router';
 import VueJsonPretty from 'vue-json-pretty';
@@ -38,6 +39,10 @@ const router = new VueRouter({
     routes: Routes,
     mode: 'history',
     base: routerBasePath,
+    stringifyQuery  : query => {
+        let result = qs.stringify(query)
+        return result ? ('?' + result) : ''
+    },
 });
 
 Vue.component('vue-json-pretty', VueJsonPretty);

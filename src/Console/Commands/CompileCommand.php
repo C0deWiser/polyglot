@@ -4,8 +4,12 @@
 namespace Codewiser\Polyglot\Console\Commands;
 
 
-use Codewiser\Polyglot\Manipulators\GettextManipulator;
+use Codewiser\Polyglot\FileSystem\DirectoryHandler;
+use Codewiser\Polyglot\FileSystem\PoFileHandler;
+use Codewiser\Polyglot\Xgettext\XgettextCompiler;
 use Illuminate\Console\Command;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Str;
 
 class CompileCommand extends Command
 {
@@ -41,13 +45,22 @@ class CompileCommand extends Command
     public function handle()
     {
 
-        $this->manipulator()->compile();
+        $lang_path = new DirectoryHandler(lang_path());
+        /** @var XgettextCompiler $compiler */
+        $compiler = app(XgettextCompiler::class);
+
+        $this->line('Compiling...');
+
+        $lang_path->allFiles()->po()
+            ->each(function (PoFileHandler $po) use ($compiler) {
+                $mo = Str::replaceLast('.po', '.mo', $po->filename());
+                $compiler->setSource($po);
+                $compiler->setTarget($mo);
+                $compiler->compile();
+
+                $this->info($po->filename());
+            });
 
         return 0;
-    }
-
-    protected function manipulator(): GettextManipulator
-    {
-        return app(GettextManipulator::class);
     }
 }

@@ -2,9 +2,16 @@
 
 namespace Codewiser\Polyglot;
 
-use Codewiser\Polyglot\Contracts\ManipulatorInterface;
-use Codewiser\Polyglot\Manipulators\GettextManipulator;
-use Codewiser\Polyglot\Manipulators\StringsManipulator;
+use Codewiser\Polyglot\FileSystem\Contracts\FinderContract;
+use Codewiser\Polyglot\Contracts\SeparatorContract;
+use Codewiser\Polyglot\FileSystem\Finder;
+use Codewiser\Polyglot\Producers\ProducerOfJson;
+use Codewiser\Polyglot\Producers\ProducerOfPhp;
+use Codewiser\Polyglot\Producers\ProducerOfPo;
+use Codewiser\Polyglot\Xgettext\XgettextCompiler;
+use Codewiser\Polyglot\Xgettext\XgettextExtractor;
+use Codewiser\Polyglot\Xgettext\XgettextSeparator;
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -24,6 +31,12 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
         // So we load resources in here.
         $this->registerRoutes();
         $this->registerResources();
+        $this->loadTranslations();
+    }
+
+    protected function loadTranslations()
+    {
+        $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', 'polyglot');
     }
 
     /**
@@ -77,111 +90,120 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__ . '/../config/polyglot.php', 'polyglot');
 
-        $this->registerManager();
-        $this->registerStringsManipulator();
-        $this->registerGettextManipulator();
-        $this->registerManipulator();
+        $this->registerExtractor();
+        $this->registerFinder();
+        $this->registerCompiler();
     }
 
-    protected function registerManager()
+    protected function registerFinder()
+    {
+        $this->app->singleton(FinderContract::class, function ($app) {
+            return new Finder(lang_path(), new Filesystem());
+        });
+    }
+
+    protected function getProducer($of, $app)
+    {
+        $config = $app['config']['polyglot'];
+
+        $producer = null;
+
+        switch ($of) {
+            case 'keys':
+                switch ($config['producer']['keys']) {
+                    case 'array':
+                        $producer = new ProducerOfPhp();
+                        break;
+                }
+                break;
+            case 'strings':
+                switch ($config['producer']['strings']) {
+                    case 'json':
+                        $producer = new ProducerOfJson();
+                        break;
+                    case 'gettext':
+                        $producer = new ProducerOfPo();
+                        $producer->setMsgInitExecutable($config['executables']['msginit']);
+                        $producer->setMsgMergeExecutable($config['executables']['msgmerge']);
+                        break;
+                }
+                break;
+        }
+
+        if ($producer) {
+            $producer->setFilesystem(new Filesystem());
+            $producer->setStorage(lang_path());
+            $producer->setLocales($config['locales']);
+        }
+
+        return $producer;
+    }
+
+    protected function getSeparator($app): SeparatorContract
+    {
+        switch ($app['config']['polyglot']['extractor']) {
+            case 'xgettext':
+                $separator = new XgettextSeparator();
+                $separator->setFilesystem(new Filesystem);
+                $separator->setBasePath(app_path());
+                $separator->setTempPath($this->getTempPath());
+                return $separator;
+        }
+    }
+
+    protected function registerExtractor()
     {
         $this->app->singleton(ExtractorsManager::class, function ($app) {
             $config = $app['config']['polyglot'];
 
-            if ($config['mode'] == 'editor')
-                return null;
+            $manager = new ExtractorsManager();
 
-            $manager = new ExtractorsManager($app['translation.loader']);
-
-            if (isset($config['sources'])) {
-                // Single (default) extractor.
-                $manager->addExtractor(
-                    $this->getExtractor(
-                        (array)$config['sources'],
-                        isset($config['exclude']) ? (array)$config['exclude'] : []
-                    )
-                );
+            switch ($config['extractor']) {
+                case 'xgettext':
+                    foreach ($config['xgettext'] as $text_domain) {
+                        $manager->addExtractor($this->getExtractor($config, $text_domain));
+                    }
+                    break;
             }
 
-            if (isset($config['text_domains'])) {
-                // Multiple (configurable) extractors.
-                foreach ($config['text_domains'] as $text_domain) {
-                    $extractor = $this->getExtractor(
-                        (array)$text_domain['sources'],
-                        isset($text_domain['exclude']) ? (array)$text_domain['exclude'] : []
-                    );
-                    $extractor->setTextDomain($text_domain['text_domain']);
-                    $extractor->setCategory($text_domain['category'] ?? LC_MESSAGES);
-
-                    $manager->addExtractor($extractor);
-                }
-            }
+            $manager->setSeparator($this->getSeparator($app));
+            $manager->setProducersOfKeys($this->getProducer('keys', $app));
+            $manager->setProducerOfStrings($this->getProducer('strings', $app));
 
             return $manager;
         });
     }
 
-    protected function registerManipulator()
+    protected function registerCompiler()
     {
-        $this->app->bind(ManipulatorInterface::class, function ($app) {
-            $config = $app['config']['polyglot'];
-            switch ($config['mode']) {
-                case 'translator':
-                    return app(GettextManipulator::class);
-                case 'collector':
-                    return app(StringsManipulator::class);
-                default:
-                    return null;
-            }
+        $this->app->singleton(XgettextCompiler::class, function ($app) {
+            $compiler = new XgettextCompiler();
+            $compiler->setFilesystem(new Filesystem);
+            return $compiler;
         });
     }
 
-    protected function registerStringsManipulator()
+    protected function getExtractor(array $polyglot_config, array $text_domain_config): XgettextExtractor
     {
-        $this->app->bind(StringsManipulator::class, function ($app) {
-            $config = $app['config']['polyglot'];
-
-            return new StringsManipulator(
-                $config['locales'],
-                $app['translation.loader']
-            );
-        });
-    }
-
-    protected function registerGettextManipulator()
-    {
-        $this->app->bind(GettextManipulator::class, function ($app) {
-            $config = $app['config']['polyglot'];
-
-            $manipulator = new GettextManipulator(
-                $config['locales'],
-                $app['translation.loader'],
-                app(StringsManipulator::class)
-            );
-
-            $manipulator
-                ->msginit($config['executables']['msginit'])
-                ->msgmerge($config['executables']['msgmerge'])
-                ->msgfmt($config['executables']['msgfmt'])
-                ->setPassthroughs($config['passthroughs']);
-
-            return $manipulator;
-        });
-    }
-
-    protected function getExtractor(array $sources, array $exclude): Extractor
-    {
-        $config = config('polyglot');
-
-        $collector = new Extractor(
+        $extractor = new XgettextExtractor(
             config('app.name'),
-            $sources
+            $text_domain_config['text_domain'] ?? 'messages',
+            $text_domain_config['category'] ?? LC_MESSAGES
         );
 
-        $collector
-            ->exclude($exclude)
-            ->xgettext($config['executables']['xgettext']);
+        $extractor->setFilesystem(new Filesystem);
+        $extractor->setBasePath(app_path());
+        $extractor->setTempPath($this->getTempPath());
+        $extractor->setSources((array)$text_domain_config['sources']);
+        $extractor->setExclude((array)$text_domain_config['exclude'] ?? []);
+        $extractor->setExecutable($polyglot_config['executables']['xgettext']);
 
-        return $collector;
+        return $extractor;
+    }
+
+    protected function getTempPath(): string
+    {
+
+        return storage_path('temp');
     }
 }

@@ -4,12 +4,11 @@
 namespace Codewiser\Polyglot\Console\Commands;
 
 
-use Codewiser\Polyglot\Contracts\ManipulatorInterface;
-use Codewiser\Polyglot\Extractor;
-use Codewiser\Polyglot\ExtractorsManager;
+use Codewiser\Polyglot\FileSystem\Contracts\FileHandlerContract;
+use Codewiser\Polyglot\FileSystem\FileHandler;
 use Codewiser\Polyglot\Polyglot;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\Str;
 
 class CollectCommand extends Command
 {
@@ -18,7 +17,10 @@ class CollectCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'polyglot:collect {--text_domain=} {--output=}';
+    protected $signature = 'polyglot:collect 
+                            {--D|domain= : The only text domain to collect} 
+                            {--O|output= : Save collected strings to this dir instead of default} 
+                            ';
 
     /**
      * The console command description.
@@ -44,24 +46,59 @@ class CollectCommand extends Command
      */
     public function handle()
     {
-        if ($text_domain = $this->option('text_domain')) {
-            $extractors = collect()->add(
-                Polyglot::manager()->getExtractor($text_domain, LC_MESSAGES)
-            );
-        } else {
-            $extractors = Polyglot::manager()->extractors();
+        $manager = Polyglot::manager();
+
+        if ($text_domain = $this->option('domain')) {
+            // Left only one text domain
+            $manager->setExtractors([
+                $manager->getExtractor($text_domain, LC_MESSAGES)
+            ]);
         }
 
-        $manipulator = Polyglot::manipulator();
         if ($output = $this->option('output')) {
-            $manipulator->setStorage($output);
+            $manager->getProducersOfKeys()->setStorage($output);
+            $manager->getProducersOfStrings()->setStorage($output);
         }
 
-        $extractors->each(function (Extractor $extractor) use ($manipulator) {
-            $manipulator->populate(
-                $extractor->extract()->getPortableObjectTemplate()
-            );
-        });
+        foreach ($manager->extractors() as $extractor) {
+
+            $this->newLine();
+
+            $this->line('Sources');
+            foreach ($extractor->getSources() as $source) {
+                $this->info('          ' . Str::replace(base_path(), '', $source));
+            }
+            if ($extractor->getExclude()) {
+                $this->line('Excluding');
+                foreach ($extractor->getExclude() as $exclude) {
+                    $this->info('          ' . Str::replace(base_path(), '', $exclude));
+                }
+            }
+
+            $extracted = $extractor->extract();
+            $this->newLine();
+            $this->info('Collected ' . Str::replace(base_path(), '', $extracted->filename()));
+
+            $separator = $manager->getSeparator();
+            $separator->setSource($extracted);
+            $separator->separate();
+
+            $producerOfKeys = $manager->getProducersOfKeys();
+            $producerOfKeys->setSource($separator->getExtractedKeys());
+            $producerOfKeys->produce();
+
+            $producerOfStrings = $manager->getProducersOfStrings();
+            $producerOfStrings->setSource($separator->getExtractedStrings());
+            $producerOfStrings->produce();
+
+            $this->newLine();
+
+            $producerOfKeys->getPopulated()->merge(
+                $producerOfStrings->getPopulated()
+            )->each(function (FileHandlerContract $produced) {
+                $this->info('Produced  ' . Str::replace(base_path(), '', $produced->filename()));
+            });
+        }
 
         return 0;
     }

@@ -2,14 +2,37 @@
 
 namespace Codewiser\Polyglot\Collections;
 
-use Codewiser\Polyglot\Contracts\StringsCollectionInterface;
-use Codewiser\Polyglot\Contracts\StringsStatisticsContract;
+use Codewiser\Polyglot\Contracts\EntryCollectionContract;
+use Codewiser\Polyglot\Contracts\StatisticsContract;
+use Codewiser\Polyglot\Polyglot;
+use Codewiser\Polyglot\Statistics;
 use Illuminate\Support\Str;
 use Sepia\PoParser\Catalog\Entry;
 use function collect;
 
-class EntryCollection extends \Illuminate\Support\Collection implements StringsCollectionInterface
+/**
+ * Collection of Gettext PO entries.
+ */
+class EntryCollection extends \Illuminate\Support\Collection implements EntryCollectionContract
 {
+    /**
+     * @param Entry $entry
+     * @return Entry|null
+     */
+    public function exists(Entry $entry): ?Entry
+    {
+        return $this->first(function (Entry $item) use ($entry) {
+            return
+                $entry->getMsgId() == $item->getMsgId() &&
+                $entry->getMsgCtxt() == $item->getMsgCtxt();
+
+        });
+    }
+
+    /**
+     * @return EntryCollection
+     * @deprecated
+     */
     public function jsonStrings(): EntryCollection
     {
         return $this->filter(function (Entry $entry) {
@@ -17,6 +40,10 @@ class EntryCollection extends \Illuminate\Support\Collection implements StringsC
         });
     }
 
+    /**
+     * @return EntryCollection
+     * @deprecated
+     */
     public function phpStrings(): EntryCollection
     {
         return $this->filter(function (Entry $entry) {
@@ -29,14 +56,18 @@ class EntryCollection extends \Illuminate\Support\Collection implements StringsC
      *
      * @param string $msgid
      * @return array|null
+     * @deprecated
      */
     public function hasDotSeparatedKey(string $msgid): ?array
     {
-        if (preg_match('~^\S*$~', $msgid)
-            && (Str::lower($msgid) === $msgid)
-            && ($key = explode('.', $msgid))
-            && (count($key) > 1)) {
-            return $key;
+        if (Polyglot::isDotSeparatedKey($msgid)) {
+            $keys = explode('::', $msgid);
+
+            if (count($keys) == 2) {
+                $keys = $keys[1];
+            }
+
+            return explode('.', $keys);
         } else {
             return null;
         }
@@ -67,7 +98,7 @@ class EntryCollection extends \Illuminate\Support\Collection implements StringsC
             });
     }
 
-    public function translated(): StringsCollectionInterface
+    public function translated(): EntryCollectionContract
     {
         return $this
             ->filter(function (Entry $entry) {
@@ -84,12 +115,12 @@ class EntryCollection extends \Illuminate\Support\Collection implements StringsC
             });
     }
 
-    public function statistics(): StringsStatisticsContract
+    public function statistics(): StatisticsContract
     {
-        return new StringsStatistics($this);
+        return new Statistics($this);
     }
 
-    public function api(): StringsCollectionInterface
+    public function api(): EntryCollectionContract
     {
         return $this
             ->map(function (Entry $entry) {
@@ -112,6 +143,7 @@ class EntryCollection extends \Illuminate\Support\Collection implements StringsC
                 $row['comment'] = implode('. ', $entry->getTranslatorComments());
 
                 return $row;
-            });
+            })
+            ->values();
     }
 }

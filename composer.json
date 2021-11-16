@@ -1,9 +1,9 @@
 {
     "name": "codewiser/polyglot",
-    "description": "Localize Laravel applications",
+    "description": "Translation strings parser and translations web editor for Laravel applications",
     "keywords": ["gettext", "trans", "laravel", "localization", "i18n", "L10n", "parse"],
     "license": "MIT",
-    "version": "0.2.4",
+    "version": "0.2.5",
     "authors": [
         {
             "name": "pm",
@@ -22,7 +22,7 @@
             "Codewiser\\Polyglot\\": "src"
         },
         "files" : [
-            "src/helper.php"
+            "src/pgettext.php"
         ]
     },
     "autoload-dev": {

@@ -2,14 +2,9 @@
 
 namespace Codewiser\Polyglot;
 
-use Codewiser\Polyglot\Contracts\ManipulatorInterface;
-use Codewiser\Polyglot\Manipulators\GettextManipulator;
-use Codewiser\Polyglot\Manipulators\StringsManipulator;
 use Illuminate\Contracts\Translation\Loader;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
-use Sepia\PoParser\Catalog\Entry;
 
 class Polyglot extends \Illuminate\Translation\Translator
 {
@@ -19,13 +14,6 @@ class Polyglot extends \Illuminate\Translation\Translator
      * @var string
      */
     protected string $text_domain;
-
-    /**
-     * List of supported locales;
-     *
-     * @var array
-     */
-    protected array $locales;
 
     protected string $loaded_domain = '';
     protected string $current_locale = '';
@@ -45,24 +33,51 @@ class Polyglot extends \Illuminate\Translation\Translator
         parent::__construct($loader, $locale);
     }
 
+    /**
+     * When application sets locale we will set up gettext.
+     *
+     * @param string $locale
+     */
     public function setLocale($locale)
     {
         parent::setLocale($locale);
 
-        $this->putEnvironment($locale);
-        $this->loadTranslations();
+        if (config('polyglot.mode') == 'translator') {
+            $this->putEnvironment($locale);
+            $this->loadTranslations();
+        }
     }
 
+    /**
+     * Changing text domain will reconfigure gettext.
+     *
+     * @param string $text_domain
+     */
     public function setTextDomain(string $text_domain)
     {
         $this->text_domain = $text_domain;
         $this->loadTranslations();
     }
 
+    /**
+     * Check if key suitable for php lang file.
+     * Pattern is [namespace::]group.key[.dot.separated]
+     *
+     * @param string $key
+     * @return bool
+     */
+    public static function isDotSeparatedKey(string $key): bool
+    {
+        return preg_match('~^(\w+::)?(\w+\.)+\w+$~i', $key);
+    }
+
     public function get($key, array $replace = [], $locale = null, $fallback = true)
     {
-        if ($this->shouldPassThrough($key)) {
-            return parent::get($key, $replace, $locale, $fallback);
+        $value = parent::get($key, $replace, $locale, $fallback);
+
+        if ($value != $key) {
+            // Parent has translated the key.
+            return $value;
         }
 
         if ($locale) {
@@ -82,8 +97,11 @@ class Polyglot extends \Illuminate\Translation\Translator
 
     public function choice($key, $number, array $replace = [], $locale = null)
     {
-        if ($this->shouldPassThrough($key)) {
-            return parent::choice($key, $number, $replace, $locale);
+        $value = parent::choice($key, $number, $replace, $locale);
+
+        if ($value != $key) {
+            // Parent has translated the key.
+            return $value;
         }
 
         if ($locale) {
@@ -105,11 +123,22 @@ class Polyglot extends \Illuminate\Translation\Translator
         return $this->makeReplacements($string, $replace);
     }
 
+    /**
+     * Check if key configured to be translated by Translator.
+     *
+     * @param string $key
+     * @return bool
+     */
     protected function shouldPassThrough(string $key): bool
     {
         return Str::startsWith($key, $this->passthroughs);
     }
 
+    /**
+     * Configure environment to gettext load proper files.
+     *
+     * @param string $locale
+     */
     protected function putEnvironment(string $locale)
     {
         if ($this->current_locale != $locale) {
@@ -189,64 +218,32 @@ class Polyglot extends \Illuminate\Translation\Translator
     }
 
     /**
-     * Get proper manipulator.
-     *
-     * @return ManipulatorInterface|null
-     */
-    public static function manipulator(): ?ManipulatorInterface
-    {
-        return app(ManipulatorInterface::class);
-    }
-
-    public function all($locale, $text_domain = null, $category = 'LC_MESSAGES'): Collection
-    {
-        $manipulator = self::manipulator();
-
-        if ($text_domain && $manipulator instanceof GettextManipulator) {
-            return $manipulator->getStrings($locale, $category, $text_domain);
-        }
-
-        if ($manipulator instanceof StringsManipulator) {
-            $strings = $manipulator->getJsonStrings($locale);
-
-            if ($text_domain) {
-                $strings->merge(
-                    $manipulator->getPhpStrings($locale, $text_domain)
-                        ->mapWithKeys(function ($value, $key) use ($text_domain) {
-                            return [$text_domain . '.' . $key => $value];
-                        })
-                );
-            } else {
-                foreach ($manipulator->getPhpListing($locale) as $filename) {
-                    $text_domain = basename($filename, '.php');
-                    $strings->merge(
-                        $manipulator->getPhpStrings($locale, $text_domain)
-                            ->mapWithKeys(function ($value, $key) use ($text_domain) {
-                                return [$text_domain . '.' . $key => $value];
-                            })
-                    );
-                }
-            }
-
-            return $strings;
-        }
-
-        return new Collection();
-    }
-
-    /**
      * @return array
      */
-    public function getLocales(): array
+    public static function getLocales(): array
     {
-        return $this->locales;
+        return config('polyglot.locales');
     }
 
-    /**
-     * @param array $locales
-     */
-    public function setLocales(array $locales): void
+    public static function getCategoryName(int $category): string
     {
-        $this->locales = $locales;
+        switch ($category) {
+            case LC_CTYPE:
+                return 'LC_CTYPE';
+            case LC_NUMERIC:
+                return 'LC_NUMERIC';
+            case LC_TIME:
+                return 'LC_TIME';
+            case LC_COLLATE:
+                return 'LC_COLLATE';
+            case LC_MONETARY:
+                return 'LC_MONETARY';
+            case LC_MESSAGES:
+                return 'LC_MESSAGES';
+            case LC_ALL:
+                return 'LC_ALL';
+            default:
+                return 'UNKNOWN';
+        }
     }
 }
