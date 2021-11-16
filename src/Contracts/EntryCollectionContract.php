@@ -54,4 +54,11 @@ interface EntryCollectionContract
      * @return EntryCollectionContract|Entry[]
      */
     public function fuzzy(): EntryCollectionContract;
+
+    /**
+     * Get obsolete strings.
+     *
+     * @return EntryCollectionContract|Entry[]
+     */
+    public function obsolete(): EntryCollectionContract;
 }

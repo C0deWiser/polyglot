@@ -58,6 +58,16 @@ export default {
         <form @submit.prevent="$emit('submit', row)" @reset="$emit('close')" v-if="row">
           <div class="modal-body">
 
+            <div v-if="row.obsolete" class="alert alert-dark" role="alert">
+              This translation string is removed from source code and marked as obsolete.
+              Do not spend you time for it.
+            </div>
+
+            <div v-if="row.fuzzy" class="alert alert-warning" role="alert">
+              This translation string might not be a correct translation (anymore).
+              Check if the translation requires further modification, or is acceptable as is.
+            </div>
+
             <div class="form-group float-right" v-if="poeditor">
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="fuzzy" v-model="row.fuzzy">
@@ -72,7 +82,7 @@ export default {
 
             <div class="form-group">
               <label>{{ poeditor && row.msgid_plural ? 'Single' : 'String' }}</label>
-              <blockquote class="form-control bg-secondary">{{ row.msgid }}</blockquote>
+              <blockquote class="form-control bg-secondary" style="height: auto">{{ row.msgid }}</blockquote>
             </div>
 
             <div class="form-group" v-if="poeditor && row.msgid_plural">

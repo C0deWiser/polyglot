@@ -30,52 +30,22 @@ class EntryCollection extends \Illuminate\Support\Collection implements EntryCol
     }
 
     /**
-     * @return EntryCollection
-     * @deprecated
-     */
-    public function jsonStrings(): EntryCollection
-    {
-        return $this->filter(function (Entry $entry) {
-            return !$this->hasDotSeparatedKey($entry->getMsgId());
-        });
-    }
-
-    /**
-     * @return EntryCollection
-     * @deprecated
-     */
-    public function phpStrings(): EntryCollection
-    {
-        return $this->filter(function (Entry $entry) {
-            return $this->hasDotSeparatedKey($entry->getMsgId());
-        });
-    }
-
-    /**
-     * Check if given entry has dot.separated.key.
+     * Get not obsolete records.
      *
-     * @param string $msgid
-     * @return array|null
-     * @deprecated
+     * @return EntryCollection
      */
-    public function hasDotSeparatedKey(string $msgid): ?array
+    public function active(): EntryCollection
     {
-        if (Polyglot::isDotSeparatedKey($msgid)) {
-            $keys = explode('::', $msgid);
-
-            if (count($keys) == 2) {
-                $keys = $keys[1];
-            }
-
-            return explode('.', $keys);
-        } else {
-            return null;
-        }
+        return $this
+            ->reject(function (Entry $entry) {
+                return $entry->isObsolete();
+            });
     }
 
     public function fuzzy(): EntryCollection
     {
         return $this
+            ->active()
             ->filter(function (Entry $entry) {
                 return $entry->isFuzzy();
             });
@@ -84,6 +54,7 @@ class EntryCollection extends \Illuminate\Support\Collection implements EntryCol
     public function untranslated(): EntryCollection
     {
         return $this
+            ->active()
             ->filter(function (Entry $entry) {
                 if ($entry->isPlural()) {
                     // Has untranslated plurals
@@ -101,6 +72,7 @@ class EntryCollection extends \Illuminate\Support\Collection implements EntryCol
     public function translated(): EntryCollectionContract
     {
         return $this
+            ->active()
             ->filter(function (Entry $entry) {
                 if ($entry->isPlural()) {
                     // Has no untranslated plurals
@@ -123,6 +95,46 @@ class EntryCollection extends \Illuminate\Support\Collection implements EntryCol
     public function api(): EntryCollectionContract
     {
         return $this
+            ->sort(function (Entry $left, Entry $right) {
+                // Untranslated
+                // Fuzzy
+                // Translated
+                // Obsolete
+                // Alphabet
+
+                $leftIsTranslated = $left->isPlural() ?
+                    collect($left->getMsgStrPlurals())->reject()->isEmpty() :
+                    $left->getMsgStr();
+
+                $rightIsTranslated = $right->isPlural() ?
+                    collect($right->getMsgStrPlurals())->reject()->isEmpty() :
+                    $right->getMsgStr();
+
+                if ($left->isObsolete() && $right->isObsolete()) {
+                    if (!$leftIsTranslated) return -1;
+                    if (!$rightIsTranslated) return 1;
+                    return strcasecmp($left->getMsgId(), $right->getMsgId());
+                }
+                // Obsolete is on the bottom
+                if ($left->isObsolete()) return 1;
+                if ($right->isObsolete()) return -1;
+
+                if (!$leftIsTranslated && !$rightIsTranslated) {
+                    return strcasecmp($left->getMsgId(), $right->getMsgId());
+                }
+                if ($left->isFuzzy() && $right->isFuzzy()) {
+                    return strcasecmp($left->getMsgId(), $right->getMsgId());
+                }
+                // Untranslated on the top
+                if (!$leftIsTranslated) return -1;
+                if (!$rightIsTranslated) return 1;
+
+
+                if ($left->isFuzzy()) return -1;
+                if ($right->isFuzzy()) return 1;
+
+                return strcasecmp($left->getMsgId(), $right->getMsgId());
+            })
             ->map(function (Entry $entry) {
                 $row = [];
                 $row['msgid'] = $entry->getMsgId();
@@ -138,6 +150,7 @@ class EntryCollection extends \Illuminate\Support\Collection implements EntryCol
 
                 $row['flags'] = $entry->getFlags();
                 $row['fuzzy'] = $entry->isFuzzy();
+                $row['obsolete'] = $entry->isObsolete();
                 $row['reference'] = $entry->getReference();
                 $row['developer_comments'] = $entry->getDeveloperComments();
                 $row['comment'] = implode('. ', $entry->getTranslatorComments());
@@ -145,5 +158,13 @@ class EntryCollection extends \Illuminate\Support\Collection implements EntryCol
                 return $row;
             })
             ->values();
+    }
+
+    public function obsolete(): EntryCollectionContract
+    {
+        return $this
+            ->filter(function (Entry $entry) {
+                return $entry->isObsolete();
+            });
     }
 }

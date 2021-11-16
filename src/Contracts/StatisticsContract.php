@@ -43,6 +43,13 @@ interface StatisticsContract extends Arrayable
     public function fuzzy(): int;
 
     /**
+     * Get obsolete strings count.
+     *
+     * @return int
+     */
+    public function obsolete(): int;
+
+    /**
      * Get translation progress (0...1).
      *
      * @return float

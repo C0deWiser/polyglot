@@ -8,6 +8,7 @@ use Codewiser\Polyglot\FileSystem\PoFileHandler;
 use Codewiser\Polyglot\Polyglot;
 use Codewiser\Polyglot\Traits\AsSeparator;
 use Codewiser\Polyglot\Traits\FilesystemSetup;
+use Illuminate\Support\Str;
 use Sepia\PoParser\Parser;
 use Sepia\PoParser\PoCompiler;
 use Sepia\PoParser\SourceHandler\FileSystem;
@@ -70,16 +71,15 @@ class XgettextSeparator implements SeparatorContract
 
     protected function getDotSeparatedFilename(): PoFileHandler
     {
-        $filename = $this->temporize(
-            $this->source->parent() .
-            DIRECTORY_SEPARATOR . class_basename(__METHOD__) .
-            DIRECTORY_SEPARATOR . $this->source->basename()
-        );
-
-        return new PoFileHandler($filename);
+        return $this->getFilename(class_basename(__CLASS__) . DIRECTORY_SEPARATOR . 'dotkeys');
     }
 
     protected function getNaturalStringsFilename(): PoFileHandler
+    {
+        return $this->getFilename(class_basename(__CLASS__) . DIRECTORY_SEPARATOR . 'natural');
+    }
+
+    protected function getFilename(string $sub_path):PoFileHandler
     {
         // We should keep dir structure
         // .../LC_MESSAGES/messages.pot
@@ -89,8 +89,8 @@ class XgettextSeparator implements SeparatorContract
         $category = basename($this->source->parent());
 
         $filename = $this->temporize(
-            $this->source->parent() .
-            DIRECTORY_SEPARATOR . class_basename(__METHOD__) .
+            $this->source->parent()->parent()->parent() .
+            DIRECTORY_SEPARATOR . $sub_path .
             DIRECTORY_SEPARATOR . $category .
             DIRECTORY_SEPARATOR . $this->source->basename()
         );

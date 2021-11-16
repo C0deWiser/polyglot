@@ -38,7 +38,8 @@ trait FilesystemSetup
      */
     protected function temporize($filename): FileContract
     {
-        $relativePathToFile = Str::replace($this->base_path, '', $filename);
-        return new FileHandler($this->temp_path . $relativePathToFile);
+        $filename = Str::replace($this->base_path, '', $filename);
+        $filename = Str::replace($this->temp_path, '', $filename);
+        return new FileHandler($this->temp_path . $filename);
     }
 }

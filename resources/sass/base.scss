@@ -290,6 +290,9 @@ button:hover {
     td {
         vertical-align: middle !important;
         transition: background-color .5s;
+        .msg-id {
+            line-break: anywhere;
+        }
     }
 }
 

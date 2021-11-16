@@ -43,11 +43,7 @@ class Statistics implements StatisticsContract
 
     public function total(): int
     {
-        $count = 0;
-        foreach ($this->strings as $strings) {
-            $count += $strings->count();
-        }
-        return $count;
+        return $this->translated() + $this->untranslated();
     }
 
     public function translated(): int
@@ -73,6 +69,15 @@ class Statistics implements StatisticsContract
         $count = 0;
         foreach ($this->strings as $strings) {
             $count += $strings->fuzzy()->count();
+        }
+        return $count;
+    }
+
+    public function obsolete(): int
+    {
+        $count = 0;
+        foreach ($this->strings as $strings) {
+            $count += $strings->obsolete()->count();
         }
         return $count;
     }
