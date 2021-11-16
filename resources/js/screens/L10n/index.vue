@@ -108,7 +108,7 @@ export default {
   <div>
     <div class="card">
       <div class="card-header d-flex align-items-center justify-content-between">
-        <h5>Translations</h5>
+        <h5>L10n</h5>
       </div>
 
       <div v-if="!ready"

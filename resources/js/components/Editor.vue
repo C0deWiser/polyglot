@@ -70,7 +70,7 @@ export default {
 
             <div class="form-group float-right" v-if="poeditor">
               <div class="custom-control custom-switch">
-                <input type="checkbox" class="custom-control-input" id="fuzzy" v-model="row.fuzzy">
+                <input type="checkbox" class="custom-control-input" id="fuzzy" v-model="row.fuzzy" :disabled="row.obsolete">
                 <label class="custom-control-label" for="fuzzy">Fuzzy</label>
               </div>
             </div>
@@ -93,20 +93,20 @@ export default {
             <div class="form-group" v-if="!row.msgid_plural">
               <label for="msg_str">Translation</label>
               <textarea class="form-control msg_str" id="msg_str"
-                     v-model="row.msgstr"></textarea>
+                     v-model="row.msgstr" :disabled="row.obsolete"></textarea>
             </div>
 
             <div class="form-group" v-if="poeditor && row.msgid_plural" v-for="(plural, key) in row.msgstr">
               <label>Translation[{{ key }}]</label>
               <textarea class="form-control msg_str"
-                     v-model="row.msgstr[key]"></textarea>
+                     v-model="row.msgstr[key]" :disabled="row.obsolete"></textarea>
             </div>
 
 
             <div class="form-group" v-if="poeditor">
               <label for="trans_comm">Translator comment</label>
               <textarea class="form-control" id="trans_comm"
-                        v-model="row.comment">
+                        v-model="row.comment" :disabled="row.obsolete">
                 </textarea>
             </div>
 
@@ -122,7 +122,7 @@ export default {
 
             <div class="modal-footer">
               <button type="reset" class="btn btn-secondary">Close</button>
-              <button type="submit" class="btn btn-primary">Save changes</button>
+              <button type="submit" class="btn btn-primary" :disabled="row.obsolete">Save changes</button>
             </div>
 
           </div>

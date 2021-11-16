@@ -192,7 +192,7 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
         );
 
         $extractor->setFilesystem(new Filesystem);
-        $extractor->setBasePath(app_path());
+        $extractor->setBasePath(base_path());
         $extractor->setTempPath($this->getTempPath());
         $extractor->setSources((array)$text_domain_config['sources']);
         $extractor->setExclude((array)$text_domain_config['exclude'] ?? []);
