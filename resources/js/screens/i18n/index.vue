@@ -60,6 +60,19 @@ export default {
 
           <div class="w-50 border-right border-bottom">
             <div class="p-4">
+              <small class="text-uppercase">Working mode</small>
+
+              <h4 v-if="info.enabled" class="mt-4 mb-0 text-capitalize">Translation Service</h4>
+              <h4 v-if="!info.enabled" class="mt-4 mb-0 text-capitalize">Translation Editor</h4>
+
+              <small class="mb-0" v-if="info.enabled">Polyglot provides Translation Service with Gettext
+                support</small>
+              <small class="mb-0" v-if="!info.enabled">Polyglot works as online Translation Editor</small>
+            </div>
+          </div>
+
+          <div class="w-50 border-right border-bottom">
+            <div class="p-4">
               <small class="text-uppercase">Application Locales</small>
 
               <h4 class="mt-4 mb-0">
@@ -68,18 +81,6 @@ export default {
             </div>
           </div>
 
-          <div class="w-50 border-right border-bottom">
-            <div class="p-4">
-              <small class="text-uppercase">Working mode</small>
-
-              <h4 v-if="info.enabled" class="mt-4 mb-0 text-capitalize">Translation Service</h4>
-              <h4 v-if="!info.enabled" class="mt-4 mb-0 text-capitalize">Translation Editor</h4>
-
-              <small class="mb-0" v-if="info.enabled">Polyglot works as Translation Service Provider with Gettext
-                support</small>
-              <small class="mb-0" v-if="!info.enabled">Polyglot works as online Translation Editor</small>
-            </div>
-          </div>
         </div>
 
       </div>

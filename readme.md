@@ -3,8 +3,9 @@
 - [Introduction](#introduction)
 - [Installation](#installation)
 - [Configuration](#configuration)
-  - [Working Modes](#working-modes)
-  - [Source Codes](#source-codes)
+  - [Working Mode](#working-mode)
+  - [Collecting Strings](#collecting-strings)
+  - [Application Locales](#application-locales)
   - [Dashboard Authorization](#dashboard-authorization)
 - [Upgrading Polyglot](#upgrading-polyglot)
 - [Web Editor](#web-editor)
@@ -12,7 +13,6 @@
 - [Gettext Translator](#gettext-translator)
   - [Compatability with Laravel Translator](#compatability-with-laravel-translator)
   - [Multiple Text Domains](#multiple-text-domains)
-  - [Using Gettext in JavaScript](#using-gettext-in-javascript)
 - [About Gettext](#about-gettext)
   - [Supported Directives](#supported-directives)
   - [Markup Hints](#the-power-of-gettext)
@@ -21,7 +21,7 @@
 
 Polyglot provides a beautiful translation editor and can extract translations strings from the application source codes.
 
-![Editor dashboard](docs/polyglot-editor-dashboard.png)
+![Editor dashboard](docs/pg-dashboard.png)
 
 With Polyglot you may be sure, that you application is fully localized.
 
@@ -41,46 +41,41 @@ After installing Polyglot, publish its assets using the `polyglot:install` Artis
 
 ## Configuration
 
-After publishing Polyglot's assets, its primary configuration file will be located at `config/polyglot.php`. This configuration file allows you to configure Polyglot working modes. Each configuration option includes a description of its purpose, so be sure to thoroughly explore this file.
+After publishing Polyglot's assets, its primary configuration file will be located at `config/polyglot.php`. This configuration file allows you to configure Polyglot working mode. Each configuration option includes a description of its purpose, so be sure to thoroughly explore this file.
 
-### Working modes
+### Working mode
 
-    'mode' => env('POLYGLOT_MODE', 'editor'),
+    'enabled' => env('POLYGLOT_ENABLED', false),
 
-Polyglot supports three working modes:
+If `disabled`, Polyglot provides only passive services — translation files editor and Artisan command for collecting translation strings from the source codes.
 
-* `editor`
-  
-    Polyglot works only as translation online editor.
+When `enabled`, Polyglot replaces Laravel Translation Service bringing Gettext support to the application.
 
-* `collector`
+Polyglot extends Laravel Translator and tries to translate strings using parent service. If Laravel Translator doesn't translate the string, Polyglot utilizes Gettext to find the translation.
 
-    Polyglot may find and extract translation strings from the application source codes.
+### Collecting strings
 
-    Collected strings will be placed into `resource/lang` directory, modifying existing files. 
+Polyglot extracts strings from application's source codes using `xgettext` utility. So, the only extractor driver is
 
-* `translator`
+    'extractor' => 'xgettext',
 
-  Polyglot replaces Laravel Translation Service, bringing all Gettext power to your application. With full backward compatability, however.
+The `xgettext` extractor should be properly configured. At least one group of source codes should be defined.
 
-### Source codes
-
-Polyglot scans files and folders, that are configured in `sources` property. It may be as a folder, as a single file, or an array with any filesystem resources.
-
-    'sources' => [
-        app_path(),
-        resource_path('views')
+    'xgettext' => [
+        [
+            'sources' => [
+                app_path(),
+                resource_path('views')
+            ],
+            'exclude' => [],
+        ]
     ],
 
-Meanwhile, you may exclude some resources from being scanned.
-
-    'exclude' => resource_path('views/auth'),
+### Application locales
 
 After collecting strings, Polyglot will populate collected strings through every configured locale.
 
     'locales' => ['en_US', 'en_GB', 'it', 'es'],
-
-> Other configurable settings will be described below.
 
 ### Dashboard Authorization
 
@@ -124,15 +119,15 @@ To keep the assets up-to-date and avoid issues in future updates, you may add th
 
 ## Web editor
 
-![File browser](docs/files.png)
+![File browser](docs/pg-files.png)
 
-![Strings](docs/strings.png)
+![Strings](docs/pg-strings.png)
 
-![Editor](docs/string-editor.png)
+![Editor](docs/pg-editor.png)
 
 ## Strings Collector
 
-Once you have configured mode to `collector` in your application's `config/polyglot.php` configuration file, you may collect strings using the polyglot Artisan command. This single command will collect all translation strings from the configured sources:
+Once you have configured `xgettext` in your application's `config/polyglot.php` configuration file, you may collect strings using the polyglot Artisan command. This single command will collect all translation strings from the configured sources:
 
     php artisan polyglot:collect
   
@@ -167,9 +162,9 @@ As Laravel Translator may hold strings in different files (that we call namespac
 
 Gettext may split strings by categories, described by php constants `LC_MESSAGES`, `LC_MONETARY`, `LC_TIME` and so on.
 
-By default, Polyglot stores collected strings in `messages` text domain and `LC_MESSAGES`category.
+By default, Gettext stores collected strings in `messages` text domain and `LC_MESSAGES`category.
 
-So, if you have configured Polyglot mode to `translator`, after you run `polyglot:collect` Artisan command, your application's `resourse/lang` folder may look like:
+So, if you enable Polyglot, after you run `polyglot:collect` Artisan command, your application's `resourse/lang` folder may look like:
 
     resources/
       lang/
@@ -202,33 +197,23 @@ Meanwhile, you may use Gettext directives, such as `gettext`, `ngettext` and oth
 
 They are all understandable by Polyglot.
 
-Sometimes, you may want to keep existing translations as it is, and use `po` only for new strings. You may configure the array of translation keys, that should be stored into `php` files, not in `po`:
-
-    'passthroughs' => [
-        'validation.',
-        'passwords.',
-        'auth.',
-        'pagination.',
-        'verify.'
-    ],
-
-In that case, all strings that begins with configured values, will be stored in `php` files, following Laravel Translator style.
-
 ### Multiple Text Domains
 
 Sometimes, you may want to divide your application's translation strings into few text domains, e.g. strings for frontend and strings for administrative panel.
 
 You may configure additional text domains that way:
 
-    'sources' => [
-        app_path(),
-        resource_path('views')
-    ],
-    'exclude' => resource_path('views/admin')
-
-    'text_domains' => [
+    'xgettext' => [
       [
-        'text_domains' => 'admin', 
+        'text_domain' => 'frontend',
+        'sources' => [
+            app_path(),
+            resource_path('views')
+        ],
+        'exclude' => resource_path('views/admin')
+      ],
+      [
+        'text_domain' => 'admin', 
         'category' => LC_MESSAGES,
         'sources' => [
             resource_path('views/admin')
@@ -240,31 +225,11 @@ You may configure additional text domains that way:
 
 After collecting strings, every locale in `resource/lang` will get two files: `frontend.po` and `admin.po`.
 
-> Multiple text domain configuration extends base `sources` and `exclude` parameters, adding new text domains to default one (named `messages`). If you want to disable default `messages` text domains, just remove root `sources` parameter.
+> Default value for `text_domain` is string `messages`. Default value for `category` is constant `LC_MESSAGES`.
 
 By default, Polyglot will load into php memory the first configured text domain. You may load next text domain by accessing Laravel's `Lang` facade:
 
     Lang::setTextDomain('admin');
-
-### Using Gettext in JavaScript
-
-@todo   
-experimental
-
-Gettext does collect strings from JavaScript (and from Vue, but with some problems...). It is enough, if developer will define custom JavaScript functions: `gettext`, `ngettext` etc. — Polyglot will recognize them.
-
-Then loading you JavaScript app, just deliver the array of strings from back to front of your app.
-
-    use Illuminate\Http\Request;
-    use Illuminate\Support\Facades\Lang;
-    
-    public function translations(Request $request)
-    {
-        return Lang::all(
-            $request->get('locale'),
-            $request->get('domain'),
-        );
-    }
 
 ## About Gettext
 
@@ -292,7 +257,7 @@ Particular version of ngettext.
 
 ### The Power of Gettext
 
-![Editor](docs/po-editor.png)
+![Editor](docs/pg-poeditor.png)
 
 Gettext can be very helpful for the translator. Use following recipes to get localization done well.
 
@@ -312,7 +277,7 @@ Gettext may extract developer comment, that might be helpful for translator.
     msgid "Hello world"
     msgstr ""
 
-Originated from source code:
+That is originated from such source code:
 
     // The message will be shown at test page only.
     echo gettext('Hello world');
