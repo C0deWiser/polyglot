@@ -47,7 +47,7 @@ After publishing Polyglot's assets, its primary configuration file will be locat
 
     'enabled' => env('POLYGLOT_ENABLED', false),
 
-If `disabled`, Polyglot provides only passive services — translation files editor and Artisan command for collecting translation strings from the source codes.
+If `disabled`, Polyglot provides only passive services — translations editor and Artisan command for collecting translation strings from the application's source codes.
 
 When `enabled`, Polyglot replaces Laravel Translation Service bringing Gettext support to the application.
 

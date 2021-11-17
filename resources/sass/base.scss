@@ -294,6 +294,13 @@ blockquote {
     }
 }
 
+.file-browser {
+    .file-browser-resource {
+        vertical-align: middle;
+        margin-left: 0.25em;
+    }
+}
+
 .msg-id-plural {
     .msg-id {
         border-bottom-left-radius: 0;

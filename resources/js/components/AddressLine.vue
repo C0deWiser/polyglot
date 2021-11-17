@@ -43,19 +43,19 @@ export default {
       this.current = '';
       let parents = [];
 
-      this.path.relative.split('/').forEach(parent => {
-        parents.push(
-            (parents.length ? (parents.slice(-1) + '/') : '') + parent
-        )
-      });
+      if (this.path.relative) {
+        this.path.relative.split('/').forEach(parent => {
+          parents.push(
+              (parents.length ? (parents.slice(-1) + '/') : '') + parent
+          )
+        });
+      }
 
       parents.forEach(path => {
         this.parents.push({name: path.split('/').pop(), path: path})
       });
 
-      this.current = this.parents.pop();
-
-
+      this.current = this.parents.length ? this.parents.pop() : '';
     }
   },
 }
