@@ -3,19 +3,19 @@
 - [Introduction](#introduction)
 - [Installation](#installation)
 - [Configuration](#configuration)
-  - [Working Mode](#working-mode)
-  - [Collecting Strings](#collecting-strings)
-  - [Application Locales](#application-locales)
-  - [Dashboard Authorization](#dashboard-authorization)
+    - [Working Mode](#working-mode)
+    - [Collecting Strings](#collecting-strings)
+    - [Application Locales](#application-locales)
+    - [Dashboard Authorization](#dashboard-authorization)
 - [Upgrading Polyglot](#upgrading-polyglot)
 - [Web Editor](#web-editor)
 - [Strings Collector](#strings-collector)
 - [Gettext Translator](#gettext-translator)
-  - [Compatability with Laravel Translator](#compatability-with-laravel-translator)
-  - [Multiple Text Domains](#multiple-text-domains)
+    - [Compatability with Laravel Translator](#compatability-with-laravel-translator)
+    - [Multiple Text Domains](#multiple-text-domains)
 - [About Gettext](#about-gettext)
-  - [Supported Directives](#supported-directives)
-  - [Markup Hints](#the-power-of-gettext)
+    - [Supported Directives](#supported-directives)
+    - [Markup Hints](#the-power-of-gettext)
 
 ## Introduction
 
@@ -33,11 +33,15 @@ Install [Gettext](https://www.gnu.org/software/gettext/) on your server and make
 
 You may install Polyglot into your project using the Composer package manager:
 
-    composer require codewiser/polyglot
+```shell
+composer require codewiser/polyglot
+```
 
 After installing Polyglot, publish its assets using the `polyglot:install` Artisan command:
 
-    php artisan polyglot:install
+```shell
+php artisan polyglot:install
+```
 
 ## Configuration
 
@@ -45,7 +49,9 @@ After publishing Polyglot's assets, its primary configuration file will be locat
 
 ### Working mode
 
-    'enabled' => env('POLYGLOT_ENABLED', false),
+```php
+'enabled' => env('POLYGLOT_ENABLED', false),
+```
 
 If `disabled`, Polyglot provides only passive services — translations editor and Artisan command for collecting translation strings from the application's source codes.
 
@@ -57,49 +63,56 @@ Polyglot extends Laravel Translator and tries to translate strings using parent 
 
 Polyglot extracts strings from application's source codes using `xgettext` utility. So, the only extractor driver is
 
-    'extractor' => 'xgettext',
+```php
+'extractor' => 'xgettext',
+```
 
 The `xgettext` extractor should be properly configured. At least one group of source codes should be defined.
 
-    'xgettext' => [
-        [
-            'sources' => [
-                app_path(),
-                resource_path('views')
-            ],
-            'exclude' => [],
-        ]
-    ],
-
+```php
+'xgettext' => [
+    [
+        'sources' => [
+            app_path(),
+            resource_path('views')
+        ],
+        'exclude' => [],
+    ]
+],
+```
 ### Application locales
 
 After collecting strings, Polyglot will populate collected strings through every configured locale.
 
-    'locales' => ['en_US', 'en_GB', 'it', 'es'],
+```phpregexp
+'locales' => ['en_US', 'en_GB', 'it', 'es'],
+```
 
 ### Dashboard Authorization
 
-Polyglot exposes a dashboard at the /polyglot URI. By default, you will only be able to access this dashboard in the local environment. 
+Polyglot exposes a dashboard at the /polyglot URI. By default, you will only be able to access this dashboard in the local environment.
 
 > It is not recommended to use Polyglot in non-local environments, as Polyglot modifies files in `resources/lang`.
 
 However, within your `app/Providers/PolyglotServiceProvider.php` file, there is an authorization gate definition. This authorization gate controls access to Polyglot in non-local environments. You are free to modify this gate as needed to restrict access to your Polyglot installation.
 
-    /**
-     * Register the Polyglot gate.
-     *
-     * This gate determines who can access Polyglot in non-local environments.
-     *
-     * @return void
-     */
-    protected function gate()
-    {
-        Gate::define('viewPolyglot', function ($user) {
-            return in_array($user->email, [
-                'username@example.com',
-            ]);
-        });
-    }
+```php
+/**
+ * Register the Polyglot gate.
+ *
+ * This gate determines who can access Polyglot in non-local environments.
+ *
+ * @return void
+ */
+protected function gate()
+{
+    Gate::define('viewPolyglot', function ($user) {
+        return in_array($user->email, [
+            'username@example.com',
+        ]);
+    });
+}
+```
 
 #### Alternative Authentication Strategies
 
@@ -109,17 +122,21 @@ Remember that Laravel automatically injects the authenticated user into the gate
 
 When upgrading to any new Polyglot version, you should re-publish Polyglot's assets:
 
-    php artisan polyglot:publish
+```shell
+php artisan polyglot:publish
+```
 
 To keep the assets up-to-date and avoid issues in future updates, you may add the `polyglot:publish` command to the `post-update-cmd` scripts in your application's `composer.json` file:
 
-    {
-        "scripts": {
-            "post-update-cmd": [
-                "@php artisan polyglot:publish --ansi"
-            ]
-        }
+```json
+{
+    "scripts": {
+        "post-update-cmd": [
+            "@php artisan polyglot:publish --ansi"
+        ]
     }
+}
+```
 
 ## Web editor
 
@@ -133,8 +150,10 @@ To keep the assets up-to-date and avoid issues in future updates, you may add th
 
 Once you have configured `xgettext` in your application's `config/polyglot.php` configuration file, you may collect strings using the polyglot Artisan command. This single command will collect all translation strings from the configured sources:
 
-    php artisan polyglot:collect
-  
+```shell
+php artisan polyglot:collect
+```
+
 Polyglot uses `xgettext` to collect translation strings, understanding even `trans`, `trans_choice`, `@trans` and other Laravel specific directives.
 
 After collecting strings your application's `resourse/lang` folder may look like:
@@ -187,7 +206,9 @@ So, if you enable Polyglot, after you run `polyglot:collect` Artisan command, yo
 
 Generated files contains collected string, that you might want to translate. After you have finished translation you should compile all `po` files to `mo` format, that is understandable by Gettext. Use Artisan command to compile.
 
-    php artisan polyglot:compile
+```shell
+php artisan polyglot:compile
+```
 
 Beside every `po` file will appear `mo` file.
 
@@ -207,25 +228,27 @@ Sometimes, you may want to divide your application's translation strings into fe
 
 You may configure additional text domains that way:
 
-    'xgettext' => [
-      [
-        'text_domain' => 'frontend',
-        'sources' => [
-            app_path(),
-            resource_path('views')
-        ],
-        'exclude' => resource_path('views/admin')
-      ],
-      [
-        'text_domain' => 'admin', 
-        'category' => LC_MESSAGES,
-        'sources' => [
-            resource_path('views/admin')
-            resource_path('js/admin')
-        ],
-        'exclude' => []
-      ],
+```php
+'xgettext' => [
+  [
+    'text_domain' => 'frontend',
+    'sources' => [
+        app_path(),
+        resource_path('views')
     ],
+    'exclude' => resource_path('views/admin')
+  ],
+  [
+    'text_domain' => 'admin', 
+    'category' => LC_MESSAGES,
+    'sources' => [
+        resource_path('views/admin')
+        resource_path('js/admin')
+    ],
+    'exclude' => []
+  ],
+],
+```
 
 After collecting strings, every locale in `resource/lang` will get two files: `frontend.po` and `admin.po`.
 
@@ -233,7 +256,9 @@ After collecting strings, every locale in `resource/lang` will get two files: `f
 
 By default, Polyglot will load into php memory the first configured text domain. You may load next text domain by accessing Laravel's `Lang` facade:
 
-    Lang::setTextDomain('admin');
+```php
+Lang::setTextDomain('admin');
+```
 
 ## About Gettext
 
@@ -243,19 +268,27 @@ Polyglot supports the following Gettext directives.
 
 Lookup a message in the current text domain:
 
-    gettext(string $message): string
+```php
+gettext(string $message): string
+```
 
 Plural version of gettext:
 
-    ngettext(string $singular, string $plural, int $count): string
+```php
+ngettext(string $singular, string $plural, int $count): string
+```
 
 Particular version of gettext allows to define context:
 
-    pgettext(string $context, string $message): string
+```php
+pgettext(string $context, string $message): string
+```
 
 Particular version of ngettext.
-  
-    npgettext(string $context, string $singular, string $plural, int $count): string
+
+```php
+npgettext(string $context, string $singular, string $plural, int $count): string
+```
 
 > Other directives, that allows to override current text domain and category are also supported.
 
@@ -281,11 +314,12 @@ Gettext may extract developer comment, that might be helpful for translator.
     msgid "Hello world"
     msgstr ""
 
-That is originated from such source code:
+That was originated from such source code:
 
-    // The message will be shown at test page only.
-    echo gettext('Hello world');
-
+```php
+// The message will be shown at test page only.
+echo gettext('Hello world');
+```
 
 #### Message context
 
