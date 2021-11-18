@@ -25,9 +25,13 @@ return [
     | The application locales determines the listing of locales that will be used
     | by Polyglot to populate collected translation strings across locales.
     |
+    | To avoid server specific issues use locale names applicable to
+    | https://www.php.net/manual/ru/function.setlocale.php function.
+    |
+    |
     */
 
-    'locales' => ['en'],
+    'locales' => ['en_US'],
 
     /*
     |--------------------------------------------------------------------------

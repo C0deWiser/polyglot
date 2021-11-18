@@ -110,7 +110,7 @@ class Polyglot extends \Illuminate\Translation\Translator
     /**
      * Configure environment to gettext load proper files.
      *
-     * @param string $locale
+     * @param string $locale lang[_country_region[.code_page]]
      */
     protected function putEnvironment(string $locale)
     {
@@ -118,6 +118,7 @@ class Polyglot extends \Illuminate\Translation\Translator
             $this->current_locale = $locale;
 
             putenv('LANG=' . $locale);
+            setLocale(LC_ALL, $locale);
         }
     }
 
