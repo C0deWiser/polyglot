@@ -8,7 +8,8 @@ use Codewiser\Polyglot\FileSystem\Finder;
 use Codewiser\Polyglot\Producers\ProducerOfJson;
 use Codewiser\Polyglot\Producers\ProducerOfPhp;
 use Codewiser\Polyglot\Producers\ProducerOfPo;
-use Codewiser\Polyglot\Xgettext\XgettextCompiler;
+use Codewiser\Polyglot\Xgettext\JsonCompiler;
+use Codewiser\Polyglot\Xgettext\MoCompiler;
 use Codewiser\Polyglot\Xgettext\XgettextExtractor;
 use Codewiser\Polyglot\Xgettext\XgettextSeparator;
 use Illuminate\Filesystem\Filesystem;
@@ -150,7 +151,22 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
                 return $separator;
         }
     }
+    protected function registerCompiler()
+    {
+        $this->app->singleton(CompilerManager::class, function ($app) {
+            $manager = new CompilerManager();
 
+            $compiler = new MoCompiler();
+            $compiler->setFilesystem(new Filesystem);
+            $manager->addCompiler('gettext', $compiler);
+
+            $compiler = new JsonCompiler();
+            $compiler->setFilesystem(new Filesystem);
+            $manager->addCompiler('javascript', $compiler);
+
+            return $manager;
+        });
+    }
     protected function registerExtractor()
     {
         $this->app->singleton(ExtractorsManager::class, function ($app) {
@@ -174,14 +190,7 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
         });
     }
 
-    protected function registerCompiler()
-    {
-        $this->app->singleton(XgettextCompiler::class, function ($app) {
-            $compiler = new XgettextCompiler();
-            $compiler->setFilesystem(new Filesystem);
-            return $compiler;
-        });
-    }
+
 
     protected function getExtractor(array $polyglot_config, array $text_domain_config): XgettextExtractor
     {

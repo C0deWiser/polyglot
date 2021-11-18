@@ -22,7 +22,7 @@ class i18nController extends Controller
             'stat' => $lang_path->allFiles()->statistics()->toArray()
         ];
 
-        $lastCollected = Polyglot::manager()->getExtracted()->lastModified();
+        $lastCollected = Polyglot::extractors()->getExtracted()->lastModified();
         $lastTranslated = $lang_path->allFiles()->translatable()->lastModified();
         $lastCompiled = $lang_path->allFiles()->mo()->lastModified();
 

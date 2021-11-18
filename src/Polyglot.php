@@ -191,9 +191,19 @@ class Polyglot extends \Illuminate\Translation\Translator
      *
      * @return ExtractorsManager
      */
-    public static function manager(): ExtractorsManager
+    public static function extractors(): ExtractorsManager
     {
         return app(ExtractorsManager::class);
+    }
+
+    /**
+     * Get registered compilers.
+     *
+     * @return CompilerManager
+     */
+    public static function compilers(): CompilerManager
+    {
+        return app(CompilerManager::class);
     }
 
     /**

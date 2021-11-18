@@ -2,10 +2,11 @@
 
 namespace Codewiser\Polyglot\Xgettext;
 
+use Codewiser\Polyglot\Contracts\CompilerContract;
 use Codewiser\Polyglot\FileSystem\PoFileHandler;
 use Codewiser\Polyglot\Traits\FilesystemSetup;
 
-class XgettextCompiler
+class MoCompiler implements CompilerContract
 {
     use FilesystemSetup;
 
@@ -19,17 +20,17 @@ class XgettextCompiler
     protected string $msgfmt = 'msgfmt';
 
     /**
-     * @param string $source
+     * @param $source
      */
-    public function setSource(string $source): void
+    public function setSource($source): void
     {
         $this->source = new PoFileHandler($source);
     }
 
     /**
-     * @param string $target
+     * @param $target
      */
-    public function setTarget(string $target): void
+    public function setTarget($target): void
     {
         $this->target = $target;
     }

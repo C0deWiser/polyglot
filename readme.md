@@ -181,7 +181,7 @@ You only left to translate files.
 
 ## Gettext Translator
 
-As Laravel Translator may hold strings in different files (that we call namespace), so Gettext may hold strings in different files (that is called text domains). The idea is alike, but there are a lot of difference.
+As Laravel Translator may hold strings in different files (known as groups), so Gettext may hold strings in different files (known as text domains). The idea is alike, but there are a lot of difference.
 
 Gettext may split strings by categories, described by php constants `LC_MESSAGES`, `LC_MONETARY`, `LC_TIME` and so on.
 
@@ -234,18 +234,18 @@ You may configure additional text domains that way:
     'text_domain' => 'frontend',
     'sources' => [
         app_path(),
-        resource_path('views')
+        resource_path('views'),
     ],
-    'exclude' => resource_path('views/admin')
+    'exclude' => resource_path('views/admin'),
   ],
   [
     'text_domain' => 'admin', 
     'category' => LC_MESSAGES,
     'sources' => [
-        resource_path('views/admin')
-        resource_path('js/admin')
+        resource_path('views/admin'),
+        resource_path('js/admin'),
     ],
-    'exclude' => []
+    'exclude' => [],
   ],
 ],
 ```

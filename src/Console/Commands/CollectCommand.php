@@ -5,7 +5,6 @@ namespace Codewiser\Polyglot\Console\Commands;
 
 
 use Codewiser\Polyglot\FileSystem\Contracts\FileHandlerContract;
-use Codewiser\Polyglot\FileSystem\FileHandler;
 use Codewiser\Polyglot\Polyglot;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
@@ -46,7 +45,7 @@ class CollectCommand extends Command
      */
     public function handle()
     {
-        $manager = Polyglot::manager();
+        $manager = Polyglot::extractors();
 
         if ($text_domain = $this->option('domain')) {
             // Left only one text domain
