@@ -63,11 +63,8 @@ class Polyglot extends \Illuminate\Translation\Translator
 
     public function get($key, array $replace = [], $locale = null, $fallback = true)
     {
-        $value = parent::get($key, $replace, $locale, $fallback);
-
-        if ($value != $key) {
-            // Parent has translated the key.
-            return $value;
+        if (self::isDotSeparatedKey($key)) {
+            return parent::get($key, $replace, $locale, $fallback);
         }
 
         if ($locale) {
@@ -87,11 +84,8 @@ class Polyglot extends \Illuminate\Translation\Translator
 
     public function choice($key, $number, array $replace = [], $locale = null)
     {
-        $value = parent::choice($key, $number, $replace, $locale);
-
-        if ($value != $key) {
-            // Parent has translated the key.
-            return $value;
+        if (self::isDotSeparatedKey($key)) {
+            return parent::choice($key, $number, $replace, $locale);
         }
 
         if ($locale) {
