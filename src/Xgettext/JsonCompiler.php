@@ -33,13 +33,14 @@ class JsonCompiler implements CompilerContract
     {
         $this->target->parent()->ensureDirectoryExists();
 
-        if ($this->source instanceof JsonFileHandler ||
-            $this->source instanceof PhpFileHandler) {
-            $entries = $this->source->allEntries()
-                ->mapWithKeys(function (Entry $entry) {
-                    return [$entry->getMsgId() => $entry->getMsgStr()];
-                })
-                ->toArray();
+        if ($this->source instanceof JsonFileHandler) {
+            $entries = json_decode($this->source->getContent(), true);
+
+            $this->target->putContent(json_encode($entries));
+        }
+
+        if ($this->source instanceof PhpFileHandler) {
+            $entries = include($this->source);
 
             $this->target->putContent(json_encode($entries));
         }
