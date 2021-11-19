@@ -288,6 +288,7 @@ button:hover {
 
 blockquote {
     &.msgid,
+    &.msgid-single,
     &.msgid-plural {
         height: auto;
         white-space: pre;
@@ -316,7 +317,7 @@ blockquote {
 }
 
 .form-group-msgid {
-    .msgid {
+    .msgid-single {
         border-bottom-left-radius: 0;
         border-bottom-right-radius: 0;
     }
@@ -359,7 +360,7 @@ blockquote {
     td {
         vertical-align: middle !important;
         transition: background-color .5s;
-        .msg-id {
+        .msg-id, .msg-str {
             line-break: anywhere;
         }
     }

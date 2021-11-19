@@ -117,9 +117,9 @@ export default {
                             <label v-if="row.msgid_plural">Plural Strings</label>
                             <label v-else>String</label>
 
-                            <blockquote v-if="row.msgid_plural" class="form-control bg-secondary user-select-all mb-0 msgid">{{ row.msgid }}</blockquote>
+                            <blockquote v-if="row.msgid_plural" class="form-control bg-secondary user-select-all mb-0 msgid-single">{{ row.msgid }}</blockquote>
                             <blockquote v-if="row.msgid_plural" class="form-control bg-secondary user-select-all msgid-plural">{{ row.msgid_plural }}</blockquote>
-                            <blockquote v-else class="form-control bg-secondary user-select-all">{{ row.msgid }}</blockquote>
+                            <blockquote v-else class="form-control bg-secondary user-select-all msgid">{{ row.msgid }}</blockquote>
                         </div>
 
                         <div class="form-group form-group-msgstr">
