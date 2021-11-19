@@ -111,22 +111,15 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
 
         switch ($of) {
             case 'keys':
-                switch ($config['producer']['keys']) {
-                    case 'array':
-                        $producer = new ProducerOfPhp();
-                        break;
-                }
+                $producer = new ProducerOfPhp();
                 break;
             case 'strings':
-                switch ($config['producer']['strings']) {
-                    case 'json':
-                        $producer = new ProducerOfJson();
-                        break;
-                    case 'gettext':
-                        $producer = new ProducerOfPo();
-                        $producer->setMsgInitExecutable($config['executables']['msginit']);
-                        $producer->setMsgMergeExecutable($config['executables']['msgmerge']);
-                        break;
+                if ($config['enabled']) {
+                    $producer = new ProducerOfPo();
+                    $producer->setMsgInitExecutable($config['executables']['msginit']);
+                    $producer->setMsgMergeExecutable($config['executables']['msgmerge']);
+                } else {
+                    $producer = new ProducerOfJson();
                 }
                 break;
         }

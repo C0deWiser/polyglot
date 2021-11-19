@@ -2,6 +2,7 @@
 
 namespace Codewiser\Polyglot;
 
+use Countable;
 use Illuminate\Contracts\Translation\Loader;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -63,7 +64,8 @@ class Polyglot extends \Illuminate\Translation\Translator
 
     public function get($key, array $replace = [], $locale = null, $fallback = true)
     {
-        if (self::isDotSeparatedKey($key)) {
+        if (parent::get($key, [], $locale, $fallback) != $key) {
+            // Parent successfully translate given key
             return parent::get($key, $replace, $locale, $fallback);
         }
 
@@ -84,7 +86,10 @@ class Polyglot extends \Illuminate\Translation\Translator
 
     public function choice($key, $number, array $replace = [], $locale = null)
     {
-        if (self::isDotSeparatedKey($key)) {
+        // Replacing built-in placeholder
+        $immutableKey = Str::replace(':count', 'count', $key);
+        if (parent::choice($immutableKey, $number, [], $locale) != $key) {
+            // Parent successfully translate given key
             return parent::choice($key, $number, $replace, $locale);
         }
 
@@ -97,12 +102,19 @@ class Polyglot extends \Illuminate\Translation\Translator
         $msg_id = array_shift($plurals);
         $msg_id_plural = $plurals ? array_shift($plurals) : $msg_id;
 
+        if (is_array($number) || $number instanceof Countable) {
+            $number = count($number);
+        }
+
         $string = ngettext($msg_id, $msg_id_plural, $number);
 
         if ($locale) {
             // Restore
             $this->putEnvironment($this->getLocale());
         }
+
+        // Built-in placeholder
+        $replace['count'] = $number;
 
         return $this->makeReplacements($string, $replace);
     }

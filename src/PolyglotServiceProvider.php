@@ -6,6 +6,7 @@ use Codewiser\Polyglot\Console\Commands\CompileCommand;
 use Codewiser\Polyglot\Console\Commands\InstallCommand;
 use Codewiser\Polyglot\Console\Commands\PublishCommand;
 use Codewiser\Polyglot\Console\Commands\CollectCommand;
+use Illuminate\Support\Facades\Route;
 
 class PolyglotServiceProvider extends \Illuminate\Translation\TranslationServiceProvider
 {

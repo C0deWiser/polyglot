@@ -82,10 +82,29 @@ The `xgettext` extractor should be properly configured. At least one group of so
 ```
 ### Application locales
 
-After collecting strings, Polyglot will populate collected strings through every configured locale.
+After collecting strings, Polyglot will populate collected strings through every configured locale. Use locale names as described in https://www.php.net/manual/ru/function.setlocale.php function.
 
-```phpregexp
-'locales' => ['en_US', 'en_GB', 'it', 'es'],
+```php
+'locales' => ['en_US', 'en_GB', 'it_IT', 'es_ES'],
+```
+
+You may access this list using `Polyglot` facade.
+
+```php
+use Codewiser\Polyglot\Polyglot;
+
+$supported_locales = Polyglot::getLocales();
+```
+
+You may configure array of locales with explicit keys and use it for building user interface or something...
+
+```php
+'locales' => [
+    'American English' => 'en_US', 
+    'British English' => 'en_GB', 
+    'Italiano' => 'it_IT', 
+    'Español' => 'es_ES'
+],
 ```
 
 ### Dashboard Authorization
@@ -160,7 +179,7 @@ After collecting strings your application's `resourse/lang` folder may look like
 
     resources/
       lang/
-        es/
+        es_ES/
           auth.php
           passwords.php
         en_GB/
@@ -169,13 +188,13 @@ After collecting strings your application's `resourse/lang` folder may look like
         en_US/
           auth.php
           passwords.php
-        it/
+        it_IT/
           auth.php
           passwords.php
-        es.json
+        es_ES.json
         en_GB.json
         en_US.json
-        it.json
+        it_IT.json
 
 You only left to translate files.
 
@@ -191,7 +210,7 @@ So, if you enable Polyglot, after you run `polyglot:collect` Artisan command, yo
 
     resources/
       lang/
-        es/
+        es_ES/
           LC_MESSAGES/
             messages.po
         en_GB/
@@ -200,7 +219,7 @@ So, if you enable Polyglot, after you run `polyglot:collect` Artisan command, yo
         en_US/
           LC_MESSAGES/
             messages.po
-        it/
+        it_IT/
           LC_MESSAGES/
             messages.po
 

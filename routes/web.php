@@ -10,25 +10,11 @@ Route::prefix('api')->group(function () {
     Route::post('i18n/collect', [i18nController::class, 'collect']);
     Route::post('i18n/compile', [i18nController::class, 'compile']);
 
-    // Get translations catalog
-//    Route::get('L10n', [L10nController::class, 'index']);
     Route::get('L10n/{path?}', [L10nController::class, 'get'])
         ->where('path', '(.*)');
 
     Route::post('L10n/{path?}', [L10nController::class, 'post'])
         ->where('path', '(.*)');
-
-    // Get and post json values
-//    Route::get('L10n/{filename}', [L10nController::class, 'getJson']);
-//    Route::post('L10n/{filename}', [L10nController::class, 'postJson']);
-
-    // Get and post php array values
-//    Route::get('L10n/{locale}/{filename}', [L10nController::class, 'getPhp']);
-//    Route::post('L10n/{locale}/{filename}', [L10nController::class, 'postPhp']);
-
-    // Get and post gettext values
-//    Route::get('L10n/{locale}/{category}/{filename}', [L10nController::class, 'getPo']);
-//    Route::post('L10n/{locale}/{category}/{filename}', [L10nController::class, 'postPo']);
 });
 
 // Catch-all Route...

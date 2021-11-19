@@ -287,10 +287,15 @@ button:hover {
 }
 
 blockquote {
-    &.msg-id,
-    &.msg-id-plural {
+    &.msgid,
+    &.msgid-plural {
         height: auto;
         white-space: pre;
+    }
+
+    &.developer-comments {
+        white-space: pre;
+        font-family: monospace;
     }
 }
 
@@ -301,19 +306,31 @@ blockquote {
     }
 }
 
-.msg-id-plural {
-    .msg-id {
+.loading {
+    opacity: .25;
+    transition: opacity 2s;
+}
+.submitting {
+    opacity: .5;
+    transition: opacity 2s;
+}
+
+.form-group-msgid {
+    .msgid {
         border-bottom-left-radius: 0;
         border-bottom-right-radius: 0;
     }
-    .msg-id-plural {
+    .msgid-plural {
         border-top-left-radius: 0;
         border-top-right-radius: 0;
     }
 }
 
-.msgid-str-plural {
-    &.list-group {
+.form-group-msgstr {
+    .copy {
+        cursor: pointer;
+    }
+    .list-group {
         .list-group-item {
             textarea {
                 border-radius: 0;

@@ -49,30 +49,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Polyglot Producer Configuration
-    |--------------------------------------------------------------------------
-    |
-    | After extracting, producer populates extracted strings through every
-    | configured locale.
-    |
-    | Use 'gettext' producer only with Polyglot enabled.
-    |
-    | Even if you enable Polyglot in your application, always produce dot.key
-    | strings using 'array' producer to respect legacy of Laravel Translator.
-    |
-    | 'array'       - stores extracted 'dot.key' strings into .php files
-    | 'json'        - stores extracted 'natural' strings into .json files
-    | 'gettext'     - stores extracted 'natural' strings into .po files
-    |
-    */
-
-    'producer' => [
-        'strings' => 'json',
-        'keys' => 'array'
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
     | Xgettext Extractor Configuration
     |--------------------------------------------------------------------------
     |
@@ -84,8 +60,6 @@ return [
 
     'xgettext' => [
         [
-            'text_domain' => 'messages',
-            'category' => LC_MESSAGES,
             'sources' => [
                 app_path(),
                 resource_path('views')
