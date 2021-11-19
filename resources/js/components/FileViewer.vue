@@ -30,7 +30,7 @@ export default {
             })
             .on('shown.bs.modal', '#editor', event => {
                 setTimeout(() => {
-                    $('#editor .msg_str').first().focus();
+                    $('#editor textarea.msgstr').first().focus();
                     $("#editor textarea").each(function () {
                         this.setAttribute("style", "height:" + (this.scrollHeight) + "px;overflow-y:hidden;");
                     });

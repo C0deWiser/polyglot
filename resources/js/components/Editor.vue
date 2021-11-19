@@ -131,23 +131,25 @@ export default {
 
                             <ul class="list-group" v-if="row.msgid_plural">
                                 <li class="list-group-item p-0">
-                                    <textarea class="form-control border-0" v-model="single" :disabled="row.obsolete"></textarea>
+                                    <textarea class="form-control border-0 msgstr" v-model="single" :disabled="row.obsolete"></textarea>
                                 </li>
                                 <li class="list-group-item p-0">
-                                    <textarea class="form-control border-0" v-model="plural" :disabled="row.obsolete"></textarea>
+                                    <textarea class="form-control border-0 msgstr" v-model="plural" :disabled="row.obsolete"></textarea>
                                 </li>
                                 <li class="list-group-item p-0" v-for="(plural, key) in row.msgstr" v-if="key > 1">
-                                    <textarea class="form-control border-0"
+                                    <textarea class="form-control border-0 msgstr"
                                               v-model="row.msgstr[key]" :disabled="row.obsolete"></textarea>
                                 </li>
                             </ul>
-                            <textarea v-else class="form-control"
+                            <textarea v-else class="form-control msgstr"
                                       v-model="row.msgstr" :disabled="row.obsolete"></textarea>
                         </div>
 
                         <div class="form-group" v-if="row.developer_comments && row.developer_comments.length">
                             <label>Developer Comments</label>
-                            <blockquote class="developer-comments text-muted small">/*<div v-for="comment in row.developer_comments"> * {{ comment }}</div> */</blockquote>
+                            <blockquote class="developer-comments text-muted small">
+                                <div v-for="comment in row.developer_comments" class="developer-comment">{{ comment }}</div>
+                            </blockquote>
                         </div>
 
                         <div class="form-group" v-if="poeditor">
