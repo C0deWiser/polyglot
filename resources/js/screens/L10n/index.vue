@@ -17,7 +17,9 @@ export default {
             path: {},
             files: [],
             strings: [],
-            error: undefined
+            error: undefined,
+            search: '',
+            filtered: [],
         };
     },
 
@@ -39,6 +41,8 @@ export default {
         this.loadFiles();
     },
 
+    computed: {
+    },
 
     /**
      * Watch these properties for changes.
@@ -46,6 +50,22 @@ export default {
     watch: {
         '$route'() {
             this.loadFiles();
+        },
+        search() {
+            let filtered = [];
+
+            if (this.search) {
+                this.strings.forEach((row => {
+                    console.info(row.msgid, row.msgid.search(this.search));
+                    let regexp = new RegExp(this.search, 'i');
+                    if (row.msgid.search(regexp) > -1) {
+                        filtered.push(row);
+                    }
+                }));
+                this.filtered = filtered;
+            } else {
+                this.filtered = this.strings;
+            }
         }
     },
 
@@ -63,6 +83,7 @@ export default {
                     this.path = response.data.path;
                     this.files = response.data.files;
                     this.strings = response.data.strings;
+                    this.filtered = this.strings;
 
                     this.error = undefined;
                     this.ready = true;
@@ -84,6 +105,9 @@ export default {
         <div class="card">
             <div class="card-header d-flex align-items-center justify-content-between">
                 <h5>L10n</h5>
+
+                <input type="text" class="form-control" placeholder="Search" style="width:200px"
+                       v-model="search" v-if="ready && strings && strings.length > 0">
             </div>
 
             <div v-if="!ready"
@@ -110,7 +134,7 @@ export default {
             <FileBrowser v-if="ready && files && files.length > 0" :files="files"
                          :class="{'loading':loading===true}"></FileBrowser>
 
-            <FileViewer v-if="ready && strings && strings.length > 0" :strings="strings" :info="path"
+            <FileViewer v-if="ready && strings && strings.length > 0" :strings="filtered" :info="path"
                         :class="{'loading':loading===true}"></FileViewer>
 
         </div>

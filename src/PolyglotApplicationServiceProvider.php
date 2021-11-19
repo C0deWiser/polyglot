@@ -32,12 +32,6 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
         // So we load resources in here.
         $this->registerRoutes();
         $this->registerResources();
-        $this->loadTranslations();
-    }
-
-    protected function loadTranslations()
-    {
-        $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', 'polyglot');
     }
 
     /**

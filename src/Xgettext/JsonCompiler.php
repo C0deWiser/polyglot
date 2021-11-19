@@ -46,20 +46,26 @@ class JsonCompiler implements CompilerContract
         }
 
         if ($this->source instanceof PoFileHandler) {
-            $entries = $this->source->allEntries()
-                ->reject(function (Entry $entry) {
-                    return $entry->isObsolete();
-                })
-                ->mapWithKeys(function (Entry $entry) {
-                    if ($entry->isPlural()) {
-                        return [$entry->getMsgId() . '|' . $entry->getMsgIdPlural() => $entry->getMsgStrPlurals()];
-                    } else {
-                        return [$entry->getMsgId() => $entry->getMsgStr()];
-                    }
-                })
-                ->toArray();
-
-            $this->target->putContent(json_encode($entries));
+            $this->target->putContent(json_encode(
+                $this->source->allEntries()
+                    ->translated()
+                    ->reject(function (Entry $entry) {
+                        return $entry->isObsolete();
+                    })
+                    ->api()
+                    ->map(function (array $row) {
+                        unset($row['flags']);
+                        unset($row['fuzzy']);
+                        unset($row['obsolete']);
+                        unset($row['reference']);
+                        unset($row['developer_comments']);
+                        unset($row['comment']);
+                        if (!$row['context']) {
+                            unset($row['context']);
+                        }
+                        return $row;
+                    })
+            ));
         }
     }
 }

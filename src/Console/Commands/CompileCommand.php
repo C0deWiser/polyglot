@@ -59,7 +59,10 @@ class CompileCommand extends Command
 
                 $lang_path->allFiles()->po()
                     ->each(function (PoFileHandler $source) use ($compiler) {
-                        // e.g. resources/lang/en/LC_MESSAGES/messages.mo
+
+                        // resources/lang/en/LC_MESSAGES/messages.po
+                        // resources/lang/en/LC_MESSAGES/messages.mo
+
                         $target = Str::replaceLast('.po', '.mo', $source->filename());
                         $compiler->setSource($source);
                         $compiler->setTarget($target);
@@ -76,9 +79,11 @@ class CompileCommand extends Command
 
                 $lang_path->allFiles()->json()
                     ->each(function (JsonFileHandler $source) use ($compiler) {
-                        // e.g. storage/lang/en.json
-                        $target = storage_path('lang') .
-                            DIRECTORY_SEPARATOR . $source->basename();
+
+                        // resources/lang/en.json
+                        // storage/lang/en.json
+
+                        $target = Str::replaceFirst(resource_path('lang'), storage_path('lang'), $source);
 
                         $compiler->setSource($source);
                         $compiler->setTarget($target);
@@ -89,11 +94,15 @@ class CompileCommand extends Command
 
                 $lang_path->allFiles()->php()
                     ->each(function (PhpFileHandler $source) use ($compiler) {
-                        // e.g. storage/lang/en/group.json
-                        $locale = $source->parent()->basename();
-                        $target = storage_path('lang') .
-                            DIRECTORY_SEPARATOR . $locale .
-                            DIRECTORY_SEPARATOR . $source->name() . '.json';
+
+                        // resources/lang/en/group.php
+                        // storage/lang/en/group.json
+
+                        // resources/lang/vendor/package/en/group.php
+                        // storage/lang/vendor/package/en/group.json
+
+                        $target = Str::replaceFirst(resource_path('lang'), storage_path('lang'), $source);
+                        $target = Str::replaceLast('.php', '.json', $target);
 
                         $compiler->setSource($source);
                         $compiler->setTarget($target);
