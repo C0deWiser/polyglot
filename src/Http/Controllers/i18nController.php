@@ -18,7 +18,7 @@ class i18nController extends Controller
 
         $data = [
             'enabled' => $config['enabled'],
-            'locales' => $config['locales'],
+            'locales' => array_values($config['locales']),
             'stat' => $lang_path->allFiles()->statistics()->toArray()
         ];
 
