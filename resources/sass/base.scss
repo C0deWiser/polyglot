@@ -368,8 +368,9 @@ blockquote {
     td {
         vertical-align: middle !important;
         transition: background-color .5s;
-        .msg-id, .msg-str {
-            line-break: anywhere;
+        .msgid, .msgstr {
+            width: 420px;
+            margin-bottom: 0;
         }
     }
 }

@@ -40,7 +40,7 @@ export default {
 
     computed: {
         can_copy() {
-            let can = true;
+            let can = !this.row.obsolete;
 
             if (this.row.msgid_plural) {
                 if (this.single || this.plural) can = false;

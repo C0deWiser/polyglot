@@ -110,7 +110,7 @@ export default {
             <span>There aren't any strings.</span>
         </div>
 
-        <table v-if="strings.length > 0" class="table table-hover table-sm mb-0">
+        <table v-if="strings.length > 0" class="table table-hover table-sm mb-0 file-viewer">
             <thead>
             <tr>
                 <th>String</th>
@@ -122,16 +122,14 @@ export default {
             <tr v-for="(string, key) in strings" @click="openEditor(string, key)"
                 :class="{'table-active':selectedRow===key, 'table-dark':string.obsolete===true, 'table-warning':string.fuzzy===true}">
                 <td>
-                    <div class="msg-id">
-                        {{ msgId(string) }}
-                    </div>
+                    <blockquote class="msgid">{{ msgId(string) }}</blockquote>
 
                     <small class="msg-context text-muted" v-if="string.context">
                         Context: {{ string.context }}
                     </small>
                 </td>
                 <td>
-                    <div class="msg-str">{{ msgStr(string) }}</div>
+                    <blockquote class="msgstr">{{ msgStr(string) }}</blockquote>
 
                     <small class="translator_comments text-muted"
                            v-if="string.comment">
