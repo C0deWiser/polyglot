@@ -46,7 +46,7 @@ class L10nController extends Controller
             $response['stat'] = $entries->statistics()->toArray();
 
             if ($resource instanceof PoFileHandler) {
-                $response['headers'] = $resource->getHeader()->asArray();
+                $response['headers'] = $resource->headers();
             }
         }
 
@@ -99,7 +99,7 @@ class L10nController extends Controller
 
         if (($entry && $entry->isPlural()) || (!$entry && $request->has('msgid_plural'))) {
             $rules['msgid_plural'] = 'required|string';
-            $rules['msgstr'] = 'array|size:' . $resource->getHeader()->getPluralFormsCount();
+            $rules['msgstr'] = 'array|size:' . $resource->header()->getPluralFormsCount();
         }
 
         $validated = $request->validate($rules);

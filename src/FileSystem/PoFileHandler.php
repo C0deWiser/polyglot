@@ -7,6 +7,7 @@ use Codewiser\Polyglot\Contracts\EntryCollectionContract;
 use Codewiser\Polyglot\FileSystem\Contracts\FileHandlerContract;
 use Codewiser\Polyglot\FileSystem\Traits\HasStatistics;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
+use Illuminate\Support\Collection;
 use Sepia\PoParser\Catalog\Catalog;
 use Sepia\PoParser\Catalog\Entry;
 use Sepia\PoParser\Catalog\Header;
@@ -18,7 +19,25 @@ class PoFileHandler extends FileHandler implements FileHandlerContract
 {
     use HasStatistics;
 
-    public function getHeader(): ?Header
+    public function headers(): Collection
+    {
+        if ($header = $this->header()) {
+            return collect($header->asArray())
+                ->map(function (string $header) {
+                    $h = explode(':', $header);
+                    $key = array_shift($h);
+                    $value = trim(implode(':', $h));
+                    return [
+                        'key' => $key,
+                        'value' => $value
+                    ];
+                });
+        }
+
+        return collect();
+    }
+
+    public function header(): ?Header
     {
         if ($catalog = $this->catalog()) {
             return $catalog->getHeader();
