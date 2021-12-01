@@ -88,7 +88,8 @@ class Polyglot extends \Illuminate\Translation\Translator
     {
         // Replacing built-in placeholder
         $_key = Str::replace(':count', 'count', $key);
-        if (parent::choice($_key, $number, [], $locale) != $_key) {
+        $keys = explode('|', $_key);
+        if (!in_array(parent::choice($_key, $number, [], $locale), $keys)) {
             // Parent successfully translate given key
             return parent::choice($key, $number, $replace, $locale);
         }
