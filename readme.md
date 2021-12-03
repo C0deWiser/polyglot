@@ -31,7 +31,13 @@ With Polyglot you may be sure, that you application is fully localized.
 
 Install [Gettext](https://www.gnu.org/software/gettext/) on your server and make sure, that php has `ext-gettext` extension enabled.
 
-You may install Polyglot into your project using the Composer package manager:
+Install [easygettext](https://www.npmjs.com/package/easygettext) npm package (part of [vue-gettext](https://www.npmjs.com/package/vue-gettext)) if you want to extract strings from `js` and `vue` files.
+
+```shell
+npm i -D easygettext
+```
+
+Now you are ready to install Polyglot into your project using the Composer package manager:
 
 ```shell
 composer require codewiser/polyglot

@@ -46,6 +46,13 @@ class XgettextExtractor implements ExtractorContract
     protected string $xgettext = 'xgettext';
 
     /**
+     * gettext-extract executable.
+     *
+     * @var string
+     */
+    protected string $npm_xgettext = 'gettext-extract';
+
+    /**
      * Default text domain for xgettext.
      *
      * @var string
@@ -77,6 +84,16 @@ class XgettextExtractor implements ExtractorContract
     public function setExecutable(string $executable): void
     {
         $this->xgettext = $executable;
+    }
+
+    /**
+     * Set gettext-extract executable.
+     *
+     * @param string $executable
+     */
+    public function setNpmExecutable(string $executable): void
+    {
+        $this->npm_xgettext = $executable;
     }
 
     public function setTextDomain(string $text_domain): void
@@ -164,8 +181,77 @@ class XgettextExtractor implements ExtractorContract
         }
 
         foreach ($this->resourceListing($resource, ['*.js', '*.vue'], $excluding) as $filename) {
-            $this->runXGetText('JavaScript', $filename, $output);
+            // Compile into temporary .pot
+            $tmp = new PoFileHandler($this->temporize($filename) . '.pot');
+            $tmp->parent()->ensureDirectoryExists();
+
+            // Call gettext-extract
+            $this->runNpmXGetText($filename, $tmp);
+
+            // Merge into $output
+            if ($tmp->exists()) {
+                $this->mergeStrings($tmp, $output);
+                $tmp->delete();
+            } else {
+                // Fallback to xgettext
+                $this->runXGetText('JavaScript', $filename, $output);
+            }
         }
+    }
+
+    protected function mergeStrings(PoFileHandler $source, PoFileHandler $target)
+    {
+        $catalog = $target->catalog();
+
+        $source->allEntries()
+            ->each(function (Entry $entry) use ($catalog) {
+                $record = $catalog->getEntry($entry->getMsgId(), $entry->getMsgCtxt());
+
+                if (!$record) {
+                    $record = new Entry($entry->getMsgId());
+                    $record->setMsgCtxt($entry->getMsgCtxt());
+                    $catalog->addEntry($record);
+                }
+
+                if ($entry->isPlural()) {
+                    $record->setMsgIdPlural($entry->getMsgIdPlural());
+                    $record->setMsgStrPlurals($entry->getMsgStrPlurals());
+                } else {
+                    $record->setMsgStr($entry->getMsgStr());
+                }
+
+                $record->setDeveloperComments(array_merge(
+                    $entry->getDeveloperComments(),
+                    $record->getDeveloperComments()
+                ));
+
+                $record->setFlags(array_unique(array_merge(
+                    $entry->getFlags(),
+                    $record->getFlags()
+                )));
+
+                $record->setReference(array_merge(
+                    $entry->getReference(),
+                    $record->getReference()
+                ));
+            });
+
+        $target->save($catalog);
+    }
+
+    protected function runNpmXGetText(string $source, PoFileHandler $target)
+    {
+        $command = [
+            $this->npm_xgettext,
+            '--output ' . $target->filename(),
+            $source
+        ];
+
+        $command = implode(' ', $command);
+
+        exec($command);
+
+        $this->relativizePaths($target);
     }
 
     /**
@@ -222,8 +308,13 @@ class XgettextExtractor implements ExtractorContract
 
         exec($command);
 
+        $this->relativizePaths($target);
+    }
+
+    protected function relativizePaths(PoFileHandler $file)
+    {
         try {
-            $content = $target->getContent();
+            $content = $file->getContent();
 
             // xgettext collects context, make it relative
             $content = Str::replace($this->temp_path, '', $content);
@@ -231,7 +322,7 @@ class XgettextExtractor implements ExtractorContract
 
             $content = $this->compilePotHeader($content);
 
-            $target->putContent($content);
+            $file->putContent($content);
 
         } catch (FileNotFoundException $e) {
         }

@@ -194,6 +194,10 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
         $extractor->setExclude((array)$text_domain_config['exclude'] ?? []);
         $extractor->setExecutable($polyglot_config['executables']['xgettext']);
 
+        if (@$polyglot_config['executables']['npm_xgettext']) {
+            $extractor->setNpmExecutable($polyglot_config['executables']['npm_xgettext']);
+        }
+
         return $extractor;
     }
 
