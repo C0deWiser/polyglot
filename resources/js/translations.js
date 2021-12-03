@@ -3,7 +3,7 @@ import axios from "axios";
 export default {
     data() {
         return {
-            locale: undefined,
+            appLocale: undefined,
             translations: [],
         }
     },
@@ -14,7 +14,15 @@ export default {
          * @param locale
          */
         setLocale: function (locale) {
-            this.locale = locale;
+            this.appLocale = locale;
+        },
+        /**
+         * Get application locale.
+         *
+         * @returns {*}
+         */
+        getLocale: function() {
+            return this.appLocale;
         },
         /**
          * Load translations from the remote.
@@ -63,7 +71,7 @@ export default {
             });
             replacements.count = count;
         
-            message = message[this.pluralIndex(this.locale, count)];
+            message = message[this.pluralIndex(this.appLocale, count)];
             return this.replacePlaceholders(
                 message ? message : plural,
                 replacements
