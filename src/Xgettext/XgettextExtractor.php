@@ -190,7 +190,11 @@ class XgettextExtractor implements ExtractorContract
 
             // Merge into $output
             if ($tmp->exists()) {
-                $this->mergeStrings($tmp, $output);
+                if ($output->exists()) {
+                    $this->mergeStrings($tmp, $output);
+                } else {
+                    $tmp->copyTo($output);
+                }
                 $tmp->delete();
             } else {
                 // Fallback to xgettext
