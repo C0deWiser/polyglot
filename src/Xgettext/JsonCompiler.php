@@ -53,21 +53,12 @@ class JsonCompiler implements CompilerContract
                     })
                     ->api()
                     ->mapWithKeys(function (array $row) {
-                        unset($row['flags']);
-                        unset($row['fuzzy']);
-                        unset($row['obsolete']);
-                        unset($row['reference']);
-                        unset($row['developer_comments']);
-                        unset($row['comment']);
-                        if (!$row['context']) {
-                            unset($row['context']);
-                        }
 
                         $key = [];
-                        if ($row['context'])
+                        if (isset($row['context']))
                             $key[] = $row['context'];
                         $key[] = $row['msgid'];
-                        if ($row['msgid_plural'])
+                        if (isset($row['msgid_plural']))
                             $key[] = $row['msgid_plural'];
 
                         return [implode('|', $key) => $row['msgstr']];
