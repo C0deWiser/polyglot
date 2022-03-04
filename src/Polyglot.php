@@ -5,6 +5,7 @@ namespace Codewiser\Polyglot;
 use Countable;
 use Illuminate\Contracts\Translation\Loader;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Psr\Log\LoggerInterface;
 
@@ -20,7 +21,7 @@ class Polyglot extends \Illuminate\Translation\Translator
     protected string $loaded_domain = '';
     protected string $current_locale = '';
 
-    protected ?LoggerInterface $logger = null;
+    protected bool $logger = false;
 
     public function __construct(Loader $loader, $locale, $text_domain)
     {
@@ -136,7 +137,7 @@ class Polyglot extends \Illuminate\Translation\Translator
             putenv('LANG=' . $locale);
             $setLocale = setLocale(LC_ALL, $locale);
             if ($this->logger) {
-                $this->logger->debug("setLocale({$setLocale})");
+                Log::debug("setLocale({$setLocale})");
             }
         }
     }
@@ -155,9 +156,9 @@ class Polyglot extends \Illuminate\Translation\Translator
             $bind_textdomain_codeset = bind_textdomain_codeset($this->text_domain, 'UTF-8');
 
             if ($this->logger) {
-                $this->logger->debug("textdomain({$textdomain})");
-                $this->logger->debug("bindtextdomain({$bindtextdomain})");
-                $this->logger->debug("bind_textdomain_codeset({$bind_textdomain_codeset})");
+                Log::debug("textdomain({$textdomain})");
+                Log::debug("bindtextdomain({$bindtextdomain})");
+                Log::debug("bind_textdomain_codeset({$bind_textdomain_codeset})");
             }
 
             $this->loaded_domain = $this->text_domain;
@@ -256,11 +257,8 @@ class Polyglot extends \Illuminate\Translation\Translator
         }
     }
 
-    /**
-     * @param LoggerInterface|null $logger
-     */
-    public function setLogger(?LoggerInterface $logger): void
+    public function enableLogger(): void
     {
-        $this->logger = $logger;
+        $this->logger = true;
     }
 }

@@ -132,7 +132,7 @@ return [
     | Polyglot Logger
     |--------------------------------------------------------------------------
     |
-    | False to disable, true or channel name to enable.
+    | Boolean.
     |
     */
 

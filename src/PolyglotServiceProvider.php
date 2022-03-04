@@ -111,7 +111,7 @@ class PolyglotServiceProvider extends \Illuminate\Translation\TranslationService
             $trans->setFallback($app['config']['app.fallback_locale']);
 
             if ($config['log']) {
-                $trans->setLogger(Log::channel(is_string($config['log']) ?: null));
+                $trans->enableLogger();
             }
 
             return $trans;
