@@ -6,6 +6,7 @@ use Countable;
 use Illuminate\Contracts\Translation\Loader;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use Psr\Log\LoggerInterface;
 
 class Polyglot extends \Illuminate\Translation\Translator
 {
@@ -18,6 +19,8 @@ class Polyglot extends \Illuminate\Translation\Translator
 
     protected string $loaded_domain = '';
     protected string $current_locale = '';
+
+    protected ?LoggerInterface $logger = null;
 
     public function __construct(Loader $loader, $locale, $text_domain)
     {
@@ -131,7 +134,10 @@ class Polyglot extends \Illuminate\Translation\Translator
             $this->current_locale = $locale;
 
             putenv('LANG=' . $locale);
-            setLocale(LC_ALL, $locale);
+            $setLocale = setLocale(LC_ALL, $locale);
+            if ($this->logger) {
+                $this->logger->debug("setLocale({$setLocale})");
+            }
         }
     }
 
@@ -144,9 +150,15 @@ class Polyglot extends \Illuminate\Translation\Translator
     {
         if ($this->loaded_domain != $this->text_domain) {
 
-            textdomain($this->text_domain);
-            bindtextdomain($this->text_domain, resource_path('lang'));
-            bind_textdomain_codeset($this->text_domain, 'UTF-8');
+            $textdomain = textdomain($this->text_domain);
+            $bindtextdomain = bindtextdomain($this->text_domain, resource_path('lang'));
+            $bind_textdomain_codeset = bind_textdomain_codeset($this->text_domain, 'UTF-8');
+
+            if ($this->logger) {
+                $this->logger->debug("textdomain({$textdomain})");
+                $this->logger->debug("bindtextdomain({$bindtextdomain})");
+                $this->logger->debug("bind_textdomain_codeset({$bind_textdomain_codeset})");
+            }
 
             $this->loaded_domain = $this->text_domain;
         }
@@ -242,5 +254,13 @@ class Polyglot extends \Illuminate\Translation\Translator
             default:
                 return 'UNKNOWN';
         }
+    }
+
+    /**
+     * @param LoggerInterface|null $logger
+     */
+    public function setLogger(?LoggerInterface $logger): void
+    {
+        $this->logger = $logger;
     }
 }

@@ -126,4 +126,15 @@ return [
         'msgcat' => env('MSGCAT_EXECUTABLE', 'msgcat'),
         'npm_xgettext' => env('NPM_EASYGETTEXT', 'gettext-extract')
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Polyglot Logger
+    |--------------------------------------------------------------------------
+    |
+    | False to disable, true or channel name to enable.
+    |
+    */
+
+    'log' => env('POLYGLOT_LOG', false),
 ];

@@ -6,6 +6,7 @@ use Codewiser\Polyglot\Console\Commands\CompileCommand;
 use Codewiser\Polyglot\Console\Commands\InstallCommand;
 use Codewiser\Polyglot\Console\Commands\PublishCommand;
 use Codewiser\Polyglot\Console\Commands\CollectCommand;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 
 class PolyglotServiceProvider extends \Illuminate\Translation\TranslationServiceProvider
@@ -108,6 +109,10 @@ class PolyglotServiceProvider extends \Illuminate\Translation\TranslationService
             $trans = new Polyglot($loader, $locale, $text_domain);
 
             $trans->setFallback($app['config']['app.fallback_locale']);
+
+            if ($config['log']) {
+                $trans->setLogger(Log::channel(is_string($config['log']) ?: null));
+            }
 
             return $trans;
         });
