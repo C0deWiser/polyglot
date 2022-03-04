@@ -48,12 +48,11 @@ class JsonCompiler implements CompilerContract
         if ($this->source instanceof PoFileHandler) {
             $this->target->putContent(json_encode(
                 $this->source->allEntries()
-                    ->translated()
                     ->reject(function (Entry $entry) {
                         return $entry->isObsolete();
                     })
                     ->api()
-                    ->map(function (array $row) {
+                    ->mapWithKeys(function (array $row) {
                         unset($row['flags']);
                         unset($row['fuzzy']);
                         unset($row['obsolete']);
@@ -63,7 +62,15 @@ class JsonCompiler implements CompilerContract
                         if (!$row['context']) {
                             unset($row['context']);
                         }
-                        return $row;
+
+                        $key = [];
+                        if ($row['context'])
+                            $key[] = $row['context'];
+                        $key[] = $row['msgid'];
+                        if ($row['msgid_plural'])
+                            $key[] = $row['msgid_plural'];
+
+                        return [implode('|', $key) => $row['msgstr']];
                     })
             ));
         }

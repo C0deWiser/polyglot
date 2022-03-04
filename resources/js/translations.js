@@ -21,7 +21,7 @@ export default {
          *
          * @returns {*}
          */
-        getLocale: function() {
+        getLocale: function () {
             return this.appLocale;
         },
         /**
@@ -45,12 +45,22 @@ export default {
          * @private
          */
         $gettext(message = "", replacements = {}) {
-            let msgstr = message;
-            this.translations.forEach((entry) => {
-                if (!entry.msgid_plural && entry.msgid === message) {
-                    msgstr = entry.msgstr;
-                }
-            });
+            let msgstr = this.translations[message] || message;
+
+            return this.replacePlaceholders(msgstr, replacements);
+        },
+        /**
+         * Translate string with context.
+         *
+         * @param {string} context
+         * @param {string} message
+         * @param {Object} replacements
+         * @returns {String}
+         * @private
+         */
+        $pgettext(context, message = "", replacements = {}) {
+            let msgstr = this.translations[context + '|' + message] || message;
+
             return this.replacePlaceholders(msgstr, replacements);
         },
         /**
@@ -63,14 +73,10 @@ export default {
          * @returns {String}
          */
         $ngettext(singular, plural, count, replacements = {}) {
-            let message = [singular, plural];
-            this.translations.forEach((entry) => {
-                if (entry.msgid === singular && entry.msgid_plural === plural) {
-                    message = entry.msgstr;
-                }
-            });
+            let message = this.translations[singular + '|' + plural] || [singular, plural];
+
             replacements.count = count;
-        
+
             message = message[this.pluralIndex(this.appLocale, count)];
             return this.replacePlaceholders(
                 message ? message : plural,
