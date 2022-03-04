@@ -106,13 +106,9 @@ class PolyglotServiceProvider extends \Illuminate\Translation\TranslationService
 
             $text_domain = @$config['xgettext'][0]['text_domain'] ?? 'messages';
 
-            $trans = new Polyglot($loader, $locale, $text_domain);
+            $trans = new Polyglot($loader, $locale, $text_domain, (boolean)@$config['log']);
 
             $trans->setFallback($app['config']['app.fallback_locale']);
-
-            if ($config['log']) {
-                $trans->enableLogger();
-            }
 
             return $trans;
         });

@@ -23,9 +23,10 @@ class Polyglot extends \Illuminate\Translation\Translator
 
     protected bool $logger = false;
 
-    public function __construct(Loader $loader, $locale, $text_domain)
+    public function __construct(Loader $loader, $locale, $text_domain, $logger = false)
     {
         $this->text_domain = $text_domain;
+        $this->logger = $logger;
 
         parent::__construct($loader, $locale);
     }
@@ -255,10 +256,5 @@ class Polyglot extends \Illuminate\Translation\Translator
             default:
                 return 'UNKNOWN';
         }
-    }
-
-    public function enableLogger(): void
-    {
-        $this->logger = true;
     }
 }
