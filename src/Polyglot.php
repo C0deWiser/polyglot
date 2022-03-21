@@ -38,17 +38,13 @@ class Polyglot extends \Illuminate\Translation\Translator
      */
     public function setLocale($locale)
     {
-        $locales = static::getLocales();
+        parent::setLocale($locale);
 
-        // Trying to downgrade from en[_US[.utf8]] to en
-        $lang = Arr::isAssoc($locales) ? array_search($locale, $locales) : $locale;
-        if (!$lang) {
-            $lang = $locale;
-        }
+        // Trying to determine gettext locale
+        $env_var = Str::upper('LOCALE_' . $locale);
 
-        parent::setLocale($lang);
+        $this->putEnvironment(env($env_var, $locale));
 
-        $this->putEnvironment($locale);
         $this->loadTranslations();
     }
 
