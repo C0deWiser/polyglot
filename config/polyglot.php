@@ -25,13 +25,18 @@ return [
     | The application locales determines the listing of locales that will be used
     | by Polyglot to populate collected translation strings across locales.
     |
+    | Key is for lang/locale directory.
+    | Value is for server installed locale.
+    |
     | To avoid server specific issues use locale names applicable to
     | https://www.php.net/manual/ru/function.setlocale.php function.
     |
     |
     */
 
-    'locales' => ['en_US'],
+    'locales' => [
+        'en' => 'en_US'
+    ],
 
     /*
     |--------------------------------------------------------------------------

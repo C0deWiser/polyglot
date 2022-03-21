@@ -4,10 +4,10 @@ namespace Codewiser\Polyglot;
 
 use Countable;
 use Illuminate\Contracts\Translation\Loader;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Psr\Log\LoggerInterface;
 
 class Polyglot extends \Illuminate\Translation\Translator
 {
@@ -38,7 +38,15 @@ class Polyglot extends \Illuminate\Translation\Translator
      */
     public function setLocale($locale)
     {
-        parent::setLocale($locale);
+        $locales = static::getLocales();
+
+        // Trying to downgrade from en[_US[.utf8]] to en
+        $lang = Arr::isAssoc($locales) ? array_search($locale, $locales) : $locale;
+        if (!$lang) {
+            $lang = $locale;
+        }
+
+        parent::setLocale($lang);
 
         $this->putEnvironment($locale);
         $this->loadTranslations();
@@ -229,6 +237,8 @@ class Polyglot extends \Illuminate\Translation\Translator
     }
 
     /**
+     * Get known locales assoc array. Key is lang folder, value is ISO locale.
+     *
      * @return array
      */
     public static function getLocales(): array
