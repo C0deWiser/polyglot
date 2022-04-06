@@ -91,7 +91,7 @@ The `xgettext` extractor should be properly configured. At least one group of so
 After collecting strings, Polyglot will populate collected strings through every configured locale. Use locale names as described in https://www.php.net/manual/ru/function.setlocale.php function.
 
 ```php
-'locales' => ['en_US', 'en_GB', 'it_IT', 'es_ES'],
+'locales' => ['en', 'it', 'es'],
 ```
 
 You may access this list using `Polyglot` facade.
@@ -100,17 +100,6 @@ You may access this list using `Polyglot` facade.
 use Codewiser\Polyglot\Polyglot;
 
 $supported_locales = Polyglot::getLocales();
-```
-
-You may configure array of locales with explicit keys and use it for building user interface or something...
-
-```php
-'locales' => [
-    'American English' => 'en_US', 
-    'British English' => 'en_GB', 
-    'Italiano' => 'it_IT', 
-    'Español' => 'es_ES'
-],
 ```
 
 ### Dashboard Authorization
@@ -185,22 +174,18 @@ After collecting strings your application's `resourse/lang` folder may look like
 
     resources/
       lang/
-        es_ES/
+        es/
           auth.php
           passwords.php
-        en_GB/
+        en/
           auth.php
           passwords.php
-        en_US/
+        it/
           auth.php
           passwords.php
-        it_IT/
-          auth.php
-          passwords.php
-        es_ES.json
-        en_GB.json
-        en_US.json
-        it_IT.json
+        es.json
+        en.json
+        it.json
 
 You only left to translate files.
 
@@ -216,16 +201,13 @@ So, if you enable Polyglot, after you run `polyglot:collect` Artisan command, yo
 
     resources/
       lang/
-        es_ES/
+        es/
           LC_MESSAGES/
             messages.po
-        en_GB/
+        en/
           LC_MESSAGES/
             messages.po
-        en_US/
-          LC_MESSAGES/
-            messages.po
-        it_IT/
+        it/
           LC_MESSAGES/
             messages.po
 
@@ -238,6 +220,22 @@ php artisan polyglot:compile
 Beside every `po` file will appear `mo` file.
 
 > Do remember, that php caches contents of `mo` files. So, after compiling, be sure, you have restarted the web server.
+
+### Server support
+
+`gettext` depends on server supporting of required locales. For example, your application provides Italian language (`it`). And your server supports following locales:
+
+``` bash
+locale -a | grep it
+
+it_CH
+it_CH.utf8
+it_IT
+it_IT@euro
+it_IT.utf8
+```
+
+Then you should define `LOCALE_IT=it_IT` in the `.env` file to instruct `gettext` to use `it_IT` locale for `it` language.
 
 ### Compatability with Laravel Translator
 
