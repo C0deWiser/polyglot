@@ -223,7 +223,7 @@ Beside every `po` file will appear `mo` file.
 
 ### Server support
 
-`gettext` depends on server supporting of required locales. For example, your application provides Italian language (`it`). And your server supports following locales:
+`gettext` depends on server support of locales. For example, your application provides Italian language (`it`). And your server supports following locales:
 
 ``` bash
 locale -a | grep it
