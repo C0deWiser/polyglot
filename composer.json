@@ -3,7 +3,7 @@
     "description": "Translation strings parser and web editor for Laravel applications",
     "keywords": ["gettext", "trans", "laravel", "localization", "i18n", "L10n", "parse"],
     "license": "MIT",
-    "version": "0.6.2",
+    "version": "0.6.3",
     "authors": [
         {
             "name": "pm",

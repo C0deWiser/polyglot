@@ -3,7 +3,6 @@
 namespace Codewiser\Polyglot\FileSystem\Contracts;
 
 use Codewiser\Polyglot\Collections\FileCollection;
-use Codewiser\Polyglot\FileSystem\Contracts\ResourceContract;
 
 /**
  * File explorer (finder) interface.

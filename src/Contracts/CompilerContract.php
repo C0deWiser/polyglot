@@ -20,5 +20,9 @@ interface CompilerContract
      * @param FileContract|string $target
      */
     public function setTarget($target): void;
+
+    /**
+     * Compile target file.
+     */
     public function compile();
 }

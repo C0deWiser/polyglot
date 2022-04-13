@@ -4,7 +4,6 @@ namespace Codewiser\Polyglot\FileSystem\Contracts;
 
 use Codewiser\Polyglot\Contracts\EntryCollectionContract;
 use Codewiser\Polyglot\Contracts\StatisticsContract;
-use Codewiser\Polyglot\FileSystem\Contracts\FileContract;
 use Sepia\PoParser\Catalog\Entry;
 
 interface FileHandlerContract extends FileContract

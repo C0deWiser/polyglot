@@ -2,7 +2,7 @@
 
 namespace Codewiser\Polyglot\FileSystem\Contracts;
 
-use Codewiser\Polyglot\FileSystem\Contracts\ResourceContract;
+use Illuminate\Contracts\Filesystem\FileNotFoundException;
 
 interface FileContract extends ResourceContract
 {
@@ -44,7 +44,7 @@ interface FileContract extends ResourceContract
      * @param bool $lock
      * @return string
      *
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * @throws FileNotFoundException
      */
     public function getContent(bool $lock = false): string;
 }

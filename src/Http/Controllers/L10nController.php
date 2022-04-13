@@ -26,6 +26,12 @@ class L10nController extends Controller
 
         if ($resource instanceof DirectoryContract) {
             $response['files'] = $finder->files()
+                ->filter(function (ResourceContract $resource) {
+                    if ($resource instanceof FileHandlerContract) {
+                        return in_array($resource->extension(), ['json', 'php', 'po']);
+                    }
+                    return true;
+                })
                 ->map(function (ResourceContract $resource) {
                     $data = $resource->toArray();
 

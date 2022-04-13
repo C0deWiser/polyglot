@@ -13,12 +13,12 @@ use Sepia\PoParser\Catalog\Entry;
 interface EntryCollectionContract
 {
     /**
-     * Find entry by key.
+     * Find entry in a collection.
      *
-     * @param Entry $key
+     * @param Entry $entry
      * @return Entry|null
      */
-    public function exists(\Sepia\PoParser\Catalog\Entry $entry): ?Entry;
+    public function exists(Entry $entry): ?Entry;
 
     /**
      * Prepare data for api response.
