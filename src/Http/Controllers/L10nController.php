@@ -3,6 +3,7 @@
 namespace Codewiser\Polyglot\Http\Controllers;
 
 use Codewiser\Polyglot\FileSystem\Contracts\DirectoryContract;
+use Codewiser\Polyglot\FileSystem\Contracts\FileContract;
 use Codewiser\Polyglot\FileSystem\Contracts\FileHandlerContract;
 use Codewiser\Polyglot\FileSystem\Contracts\FinderContract;
 use Codewiser\Polyglot\FileSystem\Contracts\ResourceContract;
@@ -27,7 +28,7 @@ class L10nController extends Controller
         if ($resource instanceof DirectoryContract) {
             $response['files'] = $finder->files()
                 ->filter(function (ResourceContract $resource) {
-                    if ($resource instanceof FileHandlerContract) {
+                    if ($resource instanceof FileContract) {
                         return in_array($resource->extension(), ['json', 'php', 'po']);
                     }
                     return true;
@@ -43,7 +44,8 @@ class L10nController extends Controller
                     }
 
                     return $data;
-                });
+                })
+                ->values();
         }
         if ($resource instanceof FileHandlerContract) {
             $entries = $resource->allEntries();
