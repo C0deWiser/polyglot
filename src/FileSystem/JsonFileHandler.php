@@ -50,7 +50,7 @@ class JsonFileHandler extends FileHandler implements FileHandlerContract
             }
         });
 
-        return $this->save($strings);
+        return $this->save($strings->sort());
     }
 
     public function save(EntryCollectionContract $entries): bool

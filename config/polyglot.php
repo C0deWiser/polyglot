@@ -4,7 +4,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Polyglot Switch
+    | Polyglot Mode Switch
     |--------------------------------------------------------------------------
     |
     | Disabled Polyglot provides Artisan console command to extract translation
@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'enabled' => env('POLYGLOT_ENABLED', false),
+    'enabled' => env('POLYGLOT_GETTEXT', false),
 
     /*
     |--------------------------------------------------------------------------
@@ -25,42 +25,20 @@ return [
     | The application locales determines the listing of locales that will be used
     | by Polyglot to populate collected translation strings across locales.
     |
-    | To avoid server specific issues use locale names applicable to
-    | https://www.php.net/manual/ru/function.setlocale.php function.
-    |
-    | To set gettext locale just define LOCALE_{LANG} env.
-    | For example, LOCALE_EN=en_US
-    |
     */
 
     'locales' => ['en'],
 
     /*
     |--------------------------------------------------------------------------
-    | Polyglot Extractor Configuration
+    | Sources Configuration
     |--------------------------------------------------------------------------
     |
-    | Extractor parses source codes, finding translation strings.
-    |
-    | 'xgettext`    - extracts translation strings from source codes
-    |                 using the power of xgettext utility.
+    | Define one or many folders to collect translation strings.
     |
     */
 
-    'extractor' => 'xgettext',
-
-    /*
-    |--------------------------------------------------------------------------
-    | Xgettext Extractor Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Gettext groups translations into 'text domains', so we need to configure
-    | at least one. For every text domain configure source files and folders
-    | to parse and optionally exclude some files and folders from being parsed.
-    |
-    */
-
-    'xgettext' => [
+    'sources' => [
         [
             'sources' => [
                 app_path(),
@@ -134,7 +112,7 @@ return [
     | Polyglot Logger
     |--------------------------------------------------------------------------
     |
-    | Boolean.
+    | Just for debug.
     |
     */
 

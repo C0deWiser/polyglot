@@ -130,15 +130,13 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
 
     protected function getSeparator($app): SeparatorContract
     {
-        switch ($app['config']['polyglot']['extractor']) {
-            case 'xgettext':
-                $separator = new XgettextSeparator();
-                $separator->setFilesystem(new Filesystem);
-                $separator->setBasePath(app_path());
-                $separator->setTempPath($this->getTempPath());
-                return $separator;
-        }
+        $separator = new XgettextSeparator();
+        $separator->setFilesystem(new Filesystem);
+        $separator->setBasePath(app_path());
+        $separator->setTempPath($this->getTempPath());
+        return $separator;
     }
+
     protected function registerCompiler()
     {
         $this->app->singleton(CompilerManager::class, function ($app) {
@@ -155,6 +153,7 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
             return $manager;
         });
     }
+
     protected function registerExtractor()
     {
         $this->app->singleton(ExtractorsManager::class, function ($app) {
@@ -162,12 +161,8 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
 
             $manager = new ExtractorsManager();
 
-            switch ($config['extractor']) {
-                case 'xgettext':
-                    foreach ($config['xgettext'] as $text_domain) {
-                        $manager->addExtractor($this->getExtractor($config, $text_domain));
-                    }
-                    break;
+            foreach ($config['sources'] as $text_domain) {
+                $manager->addExtractor($this->getExtractor($config, $text_domain));
             }
 
             $manager->setSeparator($this->getSeparator($app));
@@ -177,7 +172,6 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
             return $manager;
         });
     }
-
 
 
     protected function getExtractor(array $polyglot_config, array $text_domain_config): XgettextExtractor
