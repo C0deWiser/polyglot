@@ -25,6 +25,14 @@ export default {
             return this.appLocale;
         },
         /**
+         * Set translations.
+         *
+         * @param data
+         */
+        setTranslations: function(data) {
+            this.translations = data;
+        },
+        /**
          * Load translations from the remote.
          *
          * @param {string} uri - JSON-file uri
@@ -33,7 +41,7 @@ export default {
         awaitTranslations: function (uri) {
             axios.get(uri)
                 .then(response => {
-                    this.translations = response.data;
+                    this.setTranslations(response.data);
                 });
         },
         /**

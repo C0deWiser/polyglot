@@ -107,10 +107,10 @@ export default {
 
         <ul class="nav nav-pills card-bg-secondary" role="tablist" v-if="headers">
             <li class="nav-item">
-                <a class="nav-link active as-link" data-toggle="tab" role="tab" data-target="#strings">Strings</a>
+                <a class="nav-link active as-link" data-toggle="tab" role="tab" data-target="#strings">{{ $root.$gettext('Strings') }}</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link as-link" data-toggle="tab" role="tab" data-target="#headers">Headers</a>
+                <a class="nav-link as-link" data-toggle="tab" role="tab" data-target="#headers">{{ $root.$gettext('Headers') }}</a>
             </li>
         </ul>
 
@@ -119,14 +119,14 @@ export default {
 
                 <div v-if="strings.length === 0"
                      class="d-flex flex-column align-items-center justify-content-center card-bg-secondary p-5 bottom-radius">
-                    <span>There aren't any strings.</span>
+                    <span>{{ $root.$gettext('There aren\'t any strings.') }}</span>
                 </div>
 
                 <table v-if="strings.length > 0" class="table table-hover table-sm mb-0 file-viewer">
                     <thead>
                     <tr>
-                        <th>String</th>
-                        <th>Translation</th>
+                        <th>{{ $root.$gettext('String') }}</th>
+                        <th>{{ $root.$gettext('Translation') }}</th>
                     </tr>
                     </thead>
 
@@ -137,7 +137,7 @@ export default {
                             <blockquote class="msgid">{{ msgId(string) }}</blockquote>
 
                             <small class="msg-context text-muted" v-if="string.context">
-                                Context: {{ string.context }}
+                                {{ $root.$gettext('Context') }}: {{ string.context }}
                             </small>
                         </td>
                         <td>
@@ -145,7 +145,7 @@ export default {
 
                             <small class="translator_comments text-muted"
                                    v-if="string.comment">
-                                Translator: {{ string.comment }}
+                                {{ $root.$gettext('Translator') }}: {{ string.comment }}
                             </small>
                         </td>
                     </tr>
@@ -157,14 +157,14 @@ export default {
 
                 <div v-if="headers.length === 0"
                      class="d-flex flex-column align-items-center justify-content-center card-bg-secondary p-5 bottom-radius">
-                    <span>There aren't any headers.</span>
+                    <span>{{ $root.$gettext('There aren\'t any headers.') }}</span>
                 </div>
 
                 <table v-if="headers.length > 0" class="table table-hover table-sm mb-0 file-viewer">
                     <thead>
                     <tr>
-                        <th>Header</th>
-                        <th>Value</th>
+                        <th>{{ $root.$gettext('Header') }}</th>
+                        <th>{{ $root.$gettext('Value') }}</th>
                     </tr>
                     </thead>
 

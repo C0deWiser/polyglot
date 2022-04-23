@@ -2,11 +2,14 @@
 
 namespace Codewiser\Polyglot\Http\Controllers;
 
+use Codewiser\Polyglot\Http\Translations;
 use Codewiser\Polyglot\Polyglot;
 use Illuminate\Support\Facades\App;
 
 class HomeController extends Controller
 {
+    use Translations;
+
     /**
      * Single page application catch-all route.
      *
@@ -19,6 +22,7 @@ class HomeController extends Controller
             'cssFile' => 'app.css',
             'polyglotScriptVariables' => Polyglot::scriptVariables(),
             'isDownForMaintenance' => App::isDownForMaintenance(),
+            'trans' => $this->getTranslations(app()->getLocale())
         ]);
     }
 }

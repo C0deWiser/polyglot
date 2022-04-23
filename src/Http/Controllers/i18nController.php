@@ -26,9 +26,9 @@ class i18nController extends Controller
         $lastTranslated = $lang_path->allFiles()->translatable()->lastModified();
         $lastCompiled = $lang_path->allFiles()->mo()->lastModified();
 
-        $data['lastTranslated'] = $lastTranslated ? $lastTranslated->diffForHumans() : 'Unknown';
-        $data['lastCollected'] = $lastCollected ? $lastCollected->diffForHumans() : 'Unknown';
-        $data['lastCompiled'] = $lastCompiled ? $lastCompiled->diffForHumans() : 'Unknown';
+        $data['lastTranslated'] = $lastTranslated ? $lastTranslated->diffForHumans() : trans('Unknown');
+        $data['lastCollected'] = $lastCollected ? $lastCollected->diffForHumans() : trans('Unknown');
+        $data['lastCompiled'] = $lastCompiled ? $lastCompiled->diffForHumans() : trans('Unknown');
 
         return response()->json($data);
     }

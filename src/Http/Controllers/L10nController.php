@@ -125,7 +125,7 @@ class L10nController extends Controller
         ];
 
         if ($user = $request->user()) {
-            $headers['Last-Translator'] = "{$user->name} <{$user->email}>";
+            $headers['Last-Translator'] = "{@$user->name} <{@$user->email}>";
         }
 
         $resource->updateHeader($headers);

@@ -42,7 +42,11 @@ export default {
         this.loadFiles();
     },
 
-    computed: {},
+    computed: {
+        i_search() {
+            return this.$root.$gettext('Search');
+        }
+    },
 
     /**
      * Watch these properties for changes.
@@ -56,7 +60,7 @@ export default {
 
             if (this.search) {
                 this.strings.forEach((row => {
-                    console.info(row.msgid, row.msgid.search(this.search));
+                    // console.info(row.msgid, row.msgid.search(this.search));
                     let regexp = new RegExp(this.search, 'i');
                     if (row.msgid.search(regexp) > -1) {
                         filtered.push(row);
@@ -107,7 +111,7 @@ export default {
             <div class="card-header d-flex align-items-center justify-content-between">
                 <h5>L10n</h5>
 
-                <input type="text" class="form-control" placeholder="Search" style="width:200px"
+                <input type="text" class="form-control" :placeholder="i_search" style="width:200px"
                        v-model="search" v-if="ready && strings && strings.length > 0">
             </div>
 
@@ -119,7 +123,7 @@ export default {
                         d="M12 10a2 2 0 0 1-3.41 1.41A2 2 0 0 1 10 8V0a9.97 9.97 0 0 1 10 10h-8zm7.9 1.41A10 10 0 1 1 8.59.1v2.03a8 8 0 1 0 9.29 9.29h2.02zm-4.07 0a6 6 0 1 1-7.25-7.25v2.1a3.99 3.99 0 0 0-1.4 6.57 4 4 0 0 0 6.56-1.42h2.1z"></path>
                 </svg>
 
-                <span v-if="!error">Loading...</span>
+                <span v-if="!error">{{ $root.$gettext('Loading...') }}</span>
 
                 <span v-if="error">{{ error }}</span>
             </div>
@@ -129,7 +133,7 @@ export default {
 
                 <div v-if="ready && files && files.length === 0"
                      class="d-flex flex-column align-items-center justify-content-center card-bg-secondary p-5 bottom-radius">
-                    <span>There aren't any files.</span>
+                    <span>{{ $root.$gettext('There aren\'t any files.') }}</span>
                 </div>
 
                 <FileBrowser v-if="ready && files && files.length > 0" :files="files"
