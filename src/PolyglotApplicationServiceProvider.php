@@ -58,6 +58,7 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
     protected function registerResources()
     {
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'polyglot');
+        $this->loadJsonTranslationsFrom(__DIR__ . '/../resources/lang');
     }
 
     /**
