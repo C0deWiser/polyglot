@@ -194,18 +194,16 @@ You may configure additional group of source files that way:
     'exclude' => resource_path('views/admin'),
   ],
   [
-    'text_domain' => 'backend', 
-    'category' => LC_MESSAGES,
+    'text_domain' => 'backend',
     'include' => [
         resource_path('views/admin'),
-        resource_path('js/admin'),
     ],
     'exclude' => [],
   ],
 ],
 ```
 
-> Default value for `text_domain` is string `messages`. Default value for `category` is constant `LC_MESSAGES`.
+> Default value for `text_domain` is string `messages`.
 
 ### Collecting strings
 
@@ -384,8 +382,8 @@ Feel free to set javascript and vue files as sources for collecting strings:
 ```php
 'sources' => [
     [
+    	'text_domain' => 'frontend',
         'include' => [
-            app_path(),
             resource_path('js')
         ],
         'exclude' => [],
@@ -408,13 +406,10 @@ Artisan `polyglot:compile` command will compile every translation file into `jso
     storage/
       lang/
         es/
-          backend.json
           frontend.json
         en/
-          backend.json
           frontend.json
         it/
-          backend.json
           frontend.json
 
 ### Delivering Strings
