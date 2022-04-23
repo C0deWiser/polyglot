@@ -108,7 +108,7 @@ Define at least one group of source files to collect strings from.
 ```php
 'sources' => [
     [
-        'sources' => [
+        'include' => [
             app_path(),
             resource_path('views')
         ],
@@ -133,7 +133,7 @@ Once you have configured `xgettext` in your application's `config/polyglot.php` 
 php artisan polyglot:collect
 ```
 
-Polyglot uses `xgettext` to collect translation strings, understanding `trans`, `trans_choice`, `@trans` and other Laravel specific directives.
+Polyglot uses `sources` to collect translation strings, understanding `trans`, `trans_choice`, `@trans` and other Laravel specific directives.
 
 After collecting strings your application's `resourse/lang` folder may look like:
 
@@ -182,14 +182,13 @@ Set `POLYGLOT_GETTEXT=true` environment variable to use Gettext to localize your
 
 #### Text Domains
 
-
-You may configure additional geoup of source files that way:
+You may configure additional group of source files that way:
 
 ```php
 'sources' => [
   [
     'text_domain' => 'frontend',
-    'sources' => [
+    'include' => [
         app_path(),
         resource_path('views'),
     ],
@@ -198,7 +197,7 @@ You may configure additional geoup of source files that way:
   [
     'text_domain' => 'backend', 
     'category' => LC_MESSAGES,
-    'sources' => [
+    'include' => [
         resource_path('views/admin'),
         resource_path('js/admin'),
     ],

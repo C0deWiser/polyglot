@@ -40,7 +40,7 @@ return [
 
     'sources' => [
         [
-            'sources' => [
+            'include' => [
                 app_path(),
                 resource_path('views')
             ],

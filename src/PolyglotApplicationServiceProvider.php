@@ -185,7 +185,7 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
         $extractor->setFilesystem(new Filesystem);
         $extractor->setBasePath(base_path());
         $extractor->setTempPath($this->getTempPath());
-        $extractor->setSources((array)$text_domain_config['sources']);
+        $extractor->setSources((array)$text_domain_config['include']);
         $extractor->setExclude((array)$text_domain_config['exclude'] ?? []);
         $extractor->setExecutable($polyglot_config['executables']['xgettext']);
 
