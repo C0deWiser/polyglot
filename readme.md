@@ -17,8 +17,6 @@ Polyglot provides a beautiful translation editor and can extract translations st
 
 With Polyglot you may be sure, that you application is fully localized.
 
-> Before digging into Polyglot you should familiarize yourself with [Gettext](https://www.gnu.org/software/gettext/).
-
 ## Installation
 
 Install [Gettext](https://www.gnu.org/software/gettext/) on your server and make sure, that php has `ext-gettext` extension enabled.
@@ -39,7 +37,36 @@ php artisan polyglot:install
 
 After publishing Polyglot's assets, its primary configuration file will be located at `config/polyglot.php`. This configuration file allows you to configure Polyglot working mode. Each configuration option includes a description of its purpose, so be sure to thoroughly explore this file.
 
-### Dashboard Authorization
+## Upgrading Polyglot
+
+When upgrading to any new Polyglot version, you should re-publish Polyglot's assets:
+
+```shell
+php artisan polyglot:publish
+```
+
+To keep the assets up-to-date and avoid issues in future updates, you may add the `polyglot:publish` command to the `post-update-cmd` scripts in your application's `composer.json` file:
+
+```json
+{
+    "scripts": {
+        "post-update-cmd": [
+            "@php artisan polyglot:publish --ansi"
+        ]
+    }
+}
+```
+
+## Web editor
+![File browser](docs/pg-files.png)
+
+![Strings](docs/pg-strings.png)
+
+![Editor](docs/pg-editor.png)
+
+### Configuration
+
+#### Dashboard Authorization
 
 Polyglot exposes a dashboard at the `/polyglot` URI. By default, you will only be able to access this dashboard in the local environment.
 
@@ -65,39 +92,9 @@ protected function gate()
 }
 ```
 
-#### Alternative Authentication Strategies
+##### Alternative Authentication Strategies
 
 Remember that Laravel automatically injects the authenticated user into the gate closure. If your application is providing Polyglot security via another method, such as IP restrictions, then your Polyglot users may not need to "login". Therefore, you will need to change `function ($user)` closure signature above to `function ($user = null)` in order to force Laravel to not require authentication.
-
-## Upgrading Polyglot
-
-When upgrading to any new Polyglot version, you should re-publish Polyglot's assets:
-
-```shell
-php artisan polyglot:publish
-```
-
-To keep the assets up-to-date and avoid issues in future updates, you may add the `polyglot:publish` command to the `post-update-cmd` scripts in your application's `composer.json` file:
-
-```json
-{
-    "scripts": {
-        "post-update-cmd": [
-            "@php artisan polyglot:publish --ansi"
-        ]
-    }
-}
-```
-
-## Web editor
-
-Web editor works without any additional configuration. Just open `/polyglot` url of your application.
-
-![File browser](docs/pg-files.png)
-
-![Strings](docs/pg-strings.png)
-
-![Editor](docs/pg-editor.png)
 
 ## Strings Collector
 
@@ -171,6 +168,8 @@ class AcceptLanguage
 ```
 
 ## Gettext Translator
+
+> Before reading, you should familiarize yourself with [Gettext](https://www.gnu.org/software/gettext/).
 
 ### Configuration
 
@@ -378,6 +377,30 @@ Install [easygettext](https://www.npmjs.com/package/easygettext) npm package (pa
 npm i -D easygettext
 ```
 
+### Configuration
+
+Feel free to set javascript and vue files as sources for collecting strings:
+
+```php
+'sources' => [
+    [
+        'include' => [
+            app_path(),
+            resource_path('js')
+        ],
+        'exclude' => [],
+    ]
+],
+```
+
+### Collecting Strings
+
+Collecting strings from javascript and vue files is exactly the same, as collecting strings from php files:
+
+```shell
+php artisan polyglot:collect
+```
+
 ### Compiling Strings
 
 Artisan `polyglot:compile` command will compile every translation file into `json` format and put them into `storage` folder. After compiling `storage/lang` may look like:
@@ -396,7 +419,7 @@ Artisan `polyglot:compile` command will compile every translation file into `jso
 
 ### Delivering Strings
 
-It is not enought to compile json files. Translation strings should be delivered to Java Script application.
+It is not enough to compile json files. Translation strings should be delivered to vue application.
 
 #### As JSON
 
@@ -409,13 +432,13 @@ You may deliver translation strings as a JSON:
    <meta charset="utf-8">
 
    <script>
-		window.translations = @json(
-	   		json_decode(
-		    	file_get_content(
-	   				storage_path('lang/' . app()->getLocale() . '/frontend.json')
-	    		)
-			), true
-		)
+      window.translations = @json(
+         json_decode(
+            file_get_content(
+               storage_path('lang/' . app()->getLocale() . '/frontend.json')
+            )
+         ), true
+      )
     </script>
 </head>
 <body>
@@ -443,7 +466,6 @@ const App = {
 
 You may publish `storage/lang` to the `public` folder and load translations by url.
 
-
 First, add new symlink to `config/filesystems.php` of your application:
 
 ```php
@@ -455,7 +477,7 @@ First, add new symlink to `config/filesystems.php` of your application:
 Publish link:
 
 ```bash
-> php artisan storage:link
+php artisan storage:link
 ```
 
 Then load file in vue app:
@@ -477,39 +499,34 @@ const App = {
 
 Supported directives are:
 
-* `$root.$gettext(message, replacements = {})`
-
-	Translate string.
+* Translate string:
 	
 	```javascript
 	<template>
 	    <div>
-			<h1>{{ $root.$gettext('Hello :username', {username: "world"}) }}</h1>
-		</div>
+	        <h1>{{ $root.$gettext('Hello :username', {username: "world"}) }}</h1>
+	    </div>
 	</template>
 	```
 
 	
-* `$root.$ngettext(single, plural, count, replacements = {})`
-
-	Translate pluralized string.
+* Translate pluralized string:
 	
 	```javascript
 	<template>
 	    <div>
-			<h1>{{ $root.$ngettext('There is :count day left', 'There are :count days left', $n) }}</h1>
-		</div>
+	        <h1>{{ $root.$ngettext('There is :count day left', 'There are :count days left', $n) }}</h1>
+	    </div>
 	</template>
 	```
 	
-* `$root.$pgettext(context, message, replacements = {})`
-
-	Translate string with context.
+* Translate string with context:
 	
 	```javascript
 	<template>
 	    <div>
-			<h1>{{ $root.$pgettext('Month', 'May') }}</h1>
-		</div>
+	        <h1>{{ $root.$pgettext('Month', 'May') }}</h1>
+	    </div>
 	</template>
 	```	
+
