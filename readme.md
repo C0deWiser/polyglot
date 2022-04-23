@@ -125,14 +125,6 @@ After collecting strings, Polyglot will populate collected strings through every
 'locales' => ['en', 'it', 'es'],
 ```
 
-You may access this list using `Polyglot` facade.
-
-```php
-use Codewiser\Polyglot\Polyglot;
-
-$app_locales = Polyglot::getLocales();
-```
-
 ### Collecting strings
 
 Once you have configured `xgettext` in your application's `config/polyglot.php` configuration file, you may collect strings using the polyglot Artisan command. This single command will collect all translation strings from the configured sources:
