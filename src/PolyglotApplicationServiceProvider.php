@@ -59,6 +59,9 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
     {
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'polyglot');
         $this->loadJsonTranslationsFrom(__DIR__ . '/../resources/lang');
+        $this->publishes([
+            __DIR__.'/../resources/lang' => resource_path('lang/vendor/polyglot'),
+        ]);
     }
 
     /**
