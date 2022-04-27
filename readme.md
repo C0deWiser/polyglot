@@ -124,7 +124,7 @@ After collecting strings, Polyglot will populate collected strings through every
 
 ### Collecting strings
 
-Once you have configured `xgettext` in your application's `config/polyglot.php` configuration file, you may collect strings using the polyglot Artisan command. This single command will collect all translation strings from the configured sources:
+Once you have configured `sources` in your application's `config/polyglot.php` configuration file, you may collect strings using the polyglot Artisan command. This single command will collect all translation strings from the configured sources:
 
 ```shell
 php artisan polyglot:collect
@@ -176,7 +176,7 @@ class AcceptLanguage
 Set `POLYGLOT_GETTEXT=true` environment variable to use Gettext to localize your application.
 
 ```php
-'enabled' => env('POLYGLOT_GETTEXT', false),
+'enabled' => env('POLYGLOT_GETTEXT', true),
 ```
 
 #### Text Domains
