@@ -58,10 +58,10 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
     protected function registerResources()
     {
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'polyglot');
-        $this->loadJsonTranslationsFrom(__DIR__ . '/../lang');
-        $this->loadTranslationsFrom(__DIR__ . '/../lang', 'polyglot');
+        $this->loadJsonTranslationsFrom(__DIR__ . '/../resources/lang');
+        $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', 'polyglot');
         $this->publishes([
-            __DIR__.'/../lang' => resource_path('lang/vendor/polyglot'),
+            __DIR__.'/../resources/lang' => base_path('lang/vendor/polyglot'),
         ]);
     }
 
@@ -125,7 +125,7 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
 
         if ($producer) {
             $producer->setFilesystem(new Filesystem());
-            $producer->setStorage(resource_path('lang'));
+            $producer->setStorage(base_path('lang'));
             $producer->setLocales($config['locales']);
         }
 
