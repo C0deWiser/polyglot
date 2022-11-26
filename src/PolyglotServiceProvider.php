@@ -51,6 +51,7 @@ class PolyglotServiceProvider extends \Illuminate\Translation\TranslationService
     {
         $this->publishes([
             POLYGLOT_PATH . '/public' => public_path('vendor/polyglot'),
+            POLYGLOT_PATH . '/resources/lang' => resource_path('lang/vendor/polyglot')
         ], ['polyglot-assets', 'laravel-assets']);
     }
 
