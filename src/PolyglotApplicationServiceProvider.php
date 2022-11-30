@@ -61,9 +61,6 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'polyglot');
         $this->loadJsonTranslationsFrom(__DIR__ . '/../resources/lang');
         $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', 'polyglot');
-        $this->publishes([
-            __DIR__.'/../resources/lang' => resource_path('lang/vendor/polyglot'),
-        ]);
     }
 
     /**
@@ -99,7 +96,7 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
     protected function registerFinder()
     {
         $this->app->singleton(FinderContract::class, function ($app) {
-            return new Finder(resource_path('lang'), new Filesystem());
+            return new Finder(lang_folder(), new Filesystem());
         });
     }
 
@@ -126,7 +123,7 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
 
         if ($producer) {
             $producer->setFilesystem(new Filesystem());
-            $producer->setStorage(resource_path('lang'));
+            $producer->setStorage(lang_folder());
             $producer->setLocales($config['locales']);
         }
 

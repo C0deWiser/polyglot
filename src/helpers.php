@@ -1,4 +1,25 @@
 <?php
+
+if (!function_exists('lang_folder')) {
+
+    /**
+     * Get the path to the language folder.
+     *
+     * @param string $path
+     * @return string
+     */
+    function lang_folder(string $path = ''): string
+    {
+        if (function_exists('lang_path')) {
+            return lang_path($path);
+        }
+
+        $path = ltrim($path, '/');
+
+        return resource_path($path ? 'lang/' . $path : 'lang');
+    }
+}
+
 if (!function_exists('pgettext')) {
     /**
      * Particular (with context) gettext.

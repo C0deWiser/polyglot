@@ -21,7 +21,7 @@
             "Codewiser\\Polyglot\\": "src"
         },
         "files" : [
-            "src/pgettext.php"
+            "src/helpers.php"
         ]
     },
     "autoload-dev": {
