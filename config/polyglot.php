@@ -109,6 +109,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Gettext Keywords
+    |--------------------------------------------------------------------------
+    |
+    | See https://www.gnu.org/software/gettext/manual/html_node/xgettext-Invocation.html
+    |
+    | Here you may define additional keywords used in your application.
+    |
+    */
+    'keywords' => [
+        '__',
+        'trans'
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Polyglot Logger
     |--------------------------------------------------------------------------
     |

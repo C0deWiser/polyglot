@@ -10,6 +10,7 @@ use Codewiser\Polyglot\Producers\ProducerOfPhp;
 use Codewiser\Polyglot\Producers\ProducerOfPo;
 use Codewiser\Polyglot\Xgettext\JsonCompiler;
 use Codewiser\Polyglot\Xgettext\MoCompiler;
+use Codewiser\Polyglot\Xgettext\Precompiler;
 use Codewiser\Polyglot\Xgettext\XgettextExtractor;
 use Codewiser\Polyglot\Xgettext\XgettextSeparator;
 use Illuminate\Filesystem\Filesystem;
@@ -193,6 +194,16 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
         $extractor->setExclude((array)$text_domain_config['exclude'] ?? []);
         $extractor->setExecutable($polyglot_config['executables']['xgettext']);
 
+        if ($keywords = config('polyglot.keywords')) {
+            $extractor->setKeywords($keywords);
+        }
+
+        $precompiler = new Precompiler();
+        $precompiler->setFilesystem(new Filesystem);
+        $precompiler->setBasePath(base_path());
+        $precompiler->setTempPath($this->getTempPath());
+        $extractor->setPrecompiler($precompiler);
+
         if (@$polyglot_config['executables']['npm_xgettext']) {
             $extractor->setNpmExecutable($polyglot_config['executables']['npm_xgettext']);
         }
@@ -202,7 +213,6 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
 
     protected function getTempPath(): string
     {
-
         return storage_path('temp');
     }
 }

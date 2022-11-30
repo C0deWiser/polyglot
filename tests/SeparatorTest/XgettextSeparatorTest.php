@@ -4,6 +4,7 @@ namespace Tests\SeparatorTest;
 
 use Codewiser\Polyglot\Contracts\ExtractorContract;
 use Codewiser\Polyglot\Contracts\SeparatorContract;
+use Codewiser\Polyglot\Xgettext\Precompiler;
 use Codewiser\Polyglot\Xgettext\XgettextExtractor;
 use Codewiser\Polyglot\Xgettext\XgettextSeparator;
 use Illuminate\Filesystem\Filesystem;
@@ -18,6 +19,12 @@ class XgettextSeparatorTest extends SeparatorTest
         $extractor->setTempPath($this->temp_path);
         $extractor->setBasePath($this->base_path);
         $extractor->setSources([$this->sources_path]);
+
+        $precompiler = new Precompiler();
+        $precompiler->setFilesystem(new Filesystem);
+        $precompiler->setBasePath($this->base_path);
+        $precompiler->setTempPath($this->temp_path);
+        $extractor->setPrecompiler($precompiler);
 
         return $extractor;
     }

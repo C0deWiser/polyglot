@@ -2,27 +2,17 @@
 
 namespace Codewiser\Polyglot\Xgettext;
 
-use Codewiser\Polyglot\Collections\EntryCollection;
-use Codewiser\Polyglot\Collections\FileCollection;
 use Codewiser\Polyglot\Contracts\ExtractorContract;
-use Codewiser\Polyglot\FileSystem\Contracts\FileContract;
+use Codewiser\Polyglot\Contracts\PrecompilerContract;
 use Codewiser\Polyglot\FileSystem\Contracts\FileHandlerContract;
 use Codewiser\Polyglot\FileSystem\Contracts\ResourceContract;
-use Codewiser\Polyglot\FileSystem\FileHandler;
 use Codewiser\Polyglot\FileSystem\PoFileHandler;
 use Codewiser\Polyglot\FileSystem\ResourceHandler;
 use Codewiser\Polyglot\Polyglot;
 use Codewiser\Polyglot\Traits\AsExtractor;
 use Codewiser\Polyglot\Traits\FilesystemSetup;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Illuminate\View\Compilers\BladeCompiler;
-use Sepia\PoParser\Catalog\Entry;
-use Sepia\PoParser\Parser;
-use Sepia\PoParser\SourceHandler\FileSystem;
 
 /**
  * Extracts strings from app source code using xgettext.
@@ -66,6 +56,10 @@ class XgettextExtractor implements ExtractorContract
      */
     protected int $category;
 
+    protected array $keywords = [];
+
+    protected ?PrecompilerContract $precompiler = null;
+
     public function __construct(string $app_name,
                                 string $text_domain = 'messages',
                                 int    $category = LC_MESSAGES
@@ -90,15 +84,11 @@ class XgettextExtractor implements ExtractorContract
      * Set gettext-extract executable.
      *
      * @param string $executable
+     * @deprecated
      */
     public function setNpmExecutable(string $executable): void
     {
         $this->npm_xgettext = $executable;
-    }
-
-    public function setTextDomain(string $text_domain): void
-    {
-        $this->text_domain = $text_domain;
     }
 
     public function getTextDomain(): string
@@ -109,11 +99,6 @@ class XgettextExtractor implements ExtractorContract
     public function getCategory(): int
     {
         return $this->category;
-    }
-
-    public function setCategory(int $category): void
-    {
-        $this->category = $category;
     }
 
     public function getExtracted(): ?FileHandlerContract
@@ -165,97 +150,19 @@ class XgettextExtractor implements ExtractorContract
      */
     protected function collectStrings(ResourceContract $resource, PoFileHandler $output, array $excluding = [])
     {
-        foreach ($this->resourceListing($resource, '*.php', $excluding) as $filename) {
+        foreach ($this->resourceListing($resource, ['*.php', '*.js', '*.vue'], $excluding) as $filename) {
 
-            $filename = new FileHandler($filename);
-
-            if (Str::endsWith($filename, '.blade.php')) {
-                $tmp = $this->makeTemporaryBlade($filename);
-            } else {
-                $tmp = $this->makeTemporaryPhp($filename);
-            }
-            $this->prepareTemporary($tmp);
-
-            $this->runXGetText('PHP', $tmp, $output);
-            $tmp->delete();
-        }
-
-        foreach ($this->resourceListing($resource, ['*.js', '*.vue'], $excluding) as $filename) {
-            // Compile into temporary .pot
-            $tmp = new PoFileHandler($this->temporize($filename) . '.pot');
-            $tmp->parent()->ensureDirectoryExists();
-
-            // Call gettext-extract
-            $this->runNpmXGetText($filename, $tmp);
-
-            // Merge into $output
-            if ($tmp->exists()) {
-                if ($output->exists()) {
-                    $this->mergeStrings($tmp, $output);
-                } else {
-                    $tmp->copyTo($output);
+            foreach ($this->precompiler->compiled($filename) as $tmp) {
+                switch ($tmp->extension()) {
+                    case 'php':
+                        $this->runXGetText('PHP', $tmp, $output);
+                        break;
+                    case 'js':
+                        $this->runXGetText('JavaScript', $tmp, $output);
+                        break;
                 }
-                $tmp->delete();
-            } else {
-                // Fallback to xgettext
-                $this->runXGetText('JavaScript', $filename, $output);
             }
         }
-    }
-
-    protected function mergeStrings(PoFileHandler $source, PoFileHandler $target)
-    {
-        $catalog = $target->catalog();
-
-        $source->allEntries()
-            ->each(function (Entry $entry) use ($catalog) {
-                $record = $catalog->getEntry($entry->getMsgId(), $entry->getMsgCtxt());
-
-                if (!$record) {
-                    $record = new Entry($entry->getMsgId());
-                    $record->setMsgCtxt($entry->getMsgCtxt());
-                    $catalog->addEntry($record);
-                }
-
-                if ($entry->isPlural()) {
-                    $record->setMsgIdPlural($entry->getMsgIdPlural());
-                    $record->setMsgStrPlurals($entry->getMsgStrPlurals());
-                } else {
-                    $record->setMsgStr($entry->getMsgStr());
-                }
-
-                $record->setDeveloperComments(array_merge(
-                    $entry->getDeveloperComments(),
-                    $record->getDeveloperComments()
-                ));
-
-                $record->setFlags(array_unique(array_merge(
-                    $entry->getFlags(),
-                    $record->getFlags()
-                )));
-
-                $record->setReference(array_merge(
-                    $entry->getReference(),
-                    $record->getReference()
-                ));
-            });
-
-        $target->save($catalog);
-    }
-
-    protected function runNpmXGetText(string $source, PoFileHandler $target)
-    {
-        $command = [
-            $this->npm_xgettext,
-            '--output ' . $target->filename(),
-            $source
-        ];
-
-        $command = implode(' ', $command);
-
-        exec($command);
-
-        $this->relativizePaths($target);
     }
 
     /**
@@ -301,6 +208,10 @@ class XgettextExtractor implements ExtractorContract
             '--keyword=dnpgettext:2c,3,4',
             '--keyword=dcnpgettext:2c,3,4'
         ];
+
+        foreach ($this->keywords as $keyword) {
+            $command[] = '--keyword=' . $keyword;
+        }
 
         if ($target->exists()) {
             $command[] = '--join-existing';
@@ -378,73 +289,6 @@ class XgettextExtractor implements ExtractorContract
     }
 
     /**
-     * Compile given blade template into temporary php file.
-     *
-     * @param FileContract $filename
-     * @return FileContract
-     */
-    protected function makeTemporaryBlade(FileContract $filename): FileContract
-    {
-        $tmp = $this->temporize($filename);
-        $tmp->delete();
-        $tmp->parent()->ensureDirectoryExists();
-
-        $compiler = new BladeCompiler($this->filesystem, $tmp->parent());
-
-        try {
-            $tmp->putContent($compiler->compileString($filename->getContent()));
-        } catch (FileNotFoundException $e) {
-        }
-
-        return $tmp;
-    }
-
-    /**
-     * Make temporary copy of php file.
-     *
-     * @param FileContract $filename
-     * @return FileContract
-     */
-    protected function makeTemporaryPhp(FileContract $filename): FileContract
-    {
-        $tmp = $this->temporize($filename);
-        $tmp->delete();
-        $tmp->parent()->ensureDirectoryExists();
-        $filename->copyTo($tmp);
-
-        return $tmp;
-    }
-
-    /**
-     * Prepare given temporary file to be parsed by xgettext.
-     *
-     * @param FileContract $filename
-     */
-    protected function prepareTemporary(FileContract $filename)
-    {
-        try {
-            $content = $filename->getContent();
-        } catch (FileNotFoundException $e) {
-            return;
-        }
-
-        $content = Str::replace("app('translator')->get", '__', $content);
-        $content = Str::replace("Lang::get", ' __', $content);
-        $content = preg_replace(
-            '~trans_choice\s*?\(\s*?[\'"](.*?)\|(.*?)[\'"]\s*?,(.+?)\)~mi',
-            "ngettext('$1', '$2', $3)",
-            $content
-        );
-        $content = preg_replace(
-            '~trans_choice\s*?\(\s*?[\'"](.*?)[\'"]\s*?,(.+?)\)~mi',
-            "ngettext('$1', '$1', $2)",
-            $content
-        );
-
-        $filename->putContent($content);
-    }
-
-    /**
      * Update pot file header.
      *
      * @param string $content
@@ -452,13 +296,27 @@ class XgettextExtractor implements ExtractorContract
      */
     protected function compilePotHeader(string $content): string
     {
-        $content = Str::replace(
+        return Str::replace(
             'Content-Type: text/plain; charset=CHARSET',
             'Content-Type: text/plain; charset=UTF-8',
             $content
         );
+    }
 
-        return $content;
+    /**
+     * @param PrecompilerContract|null $precompiler
+     */
+    public function setPrecompiler(?PrecompilerContract $precompiler): void
+    {
+        $this->precompiler = $precompiler;
+    }
+
+    /**
+     * @param array $keywords
+     */
+    public function setKeywords(array $keywords): void
+    {
+        $this->keywords = $keywords;
     }
 
 }

@@ -6,6 +6,7 @@ use Codewiser\Polyglot\Contracts\ExtractorContract;
 use Codewiser\Polyglot\FileSystem\Contracts\FileHandlerContract;
 use Codewiser\Polyglot\FileSystem\JsonFileHandler;
 use Codewiser\Polyglot\FileSystem\PhpFileHandler;
+use Codewiser\Polyglot\Xgettext\Precompiler;
 use Codewiser\Polyglot\Xgettext\XgettextExtractor;
 use Illuminate\Filesystem\Filesystem;
 use Sepia\PoParser\Catalog\Entry;
@@ -20,6 +21,12 @@ class PoFileHandlerTest extends FileHandlerTest
         $extractor->setTempPath($this->temp_path);
         $extractor->setBasePath($this->base_path);
         $extractor->setSources([$this->sources_path]);
+
+        $precompiler = new Precompiler();
+        $precompiler->setFilesystem(new Filesystem);
+        $precompiler->setBasePath($this->base_path);
+        $precompiler->setTempPath($this->temp_path);
+        $extractor->setPrecompiler($precompiler);
 
         $extractor->extract();
 

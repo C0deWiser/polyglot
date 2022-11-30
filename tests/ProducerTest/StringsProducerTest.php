@@ -7,6 +7,7 @@ use Codewiser\Polyglot\Contracts\ProducerContract;
 use Codewiser\Polyglot\Contracts\SeparatorContract;
 use Codewiser\Polyglot\Producers\ProducerOfJson;
 use Codewiser\Polyglot\Producers\ProducerOfPhp;
+use Codewiser\Polyglot\Xgettext\Precompiler;
 use Codewiser\Polyglot\Xgettext\XgettextExtractor;
 use Codewiser\Polyglot\Xgettext\XgettextSeparator;
 use Illuminate\Filesystem\Filesystem;
@@ -24,6 +25,12 @@ class StringsProducerTest extends ProducerTest
 
         // Context is not recognized by php processor
         $extractor->setExclude([$this->context_path]);
+
+        $precompiler = new Precompiler();
+        $precompiler->setFilesystem(new Filesystem);
+        $precompiler->setBasePath($this->base_path);
+        $precompiler->setTempPath($this->temp_path);
+        $extractor->setPrecompiler($precompiler);
 
         $extractor->extract();
 

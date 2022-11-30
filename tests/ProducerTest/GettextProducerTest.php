@@ -8,6 +8,7 @@ use Codewiser\Polyglot\Contracts\SeparatorContract;
 use Codewiser\Polyglot\Producers\ProducerOfJson;
 use Codewiser\Polyglot\Producers\ProducerOfPhp;
 use Codewiser\Polyglot\Producers\ProducerOfPo;
+use Codewiser\Polyglot\Xgettext\Precompiler;
 use Codewiser\Polyglot\Xgettext\XgettextExtractor;
 use Codewiser\Polyglot\Xgettext\XgettextSeparator;
 use Illuminate\Filesystem\Filesystem;
@@ -22,6 +23,12 @@ class GettextProducerTest extends ProducerTest
         $extractor->setTempPath($this->temp_path);
         $extractor->setBasePath($this->base_path);
         $extractor->setSources([$this->sources_path]);
+
+        $precompiler = new Precompiler();
+        $precompiler->setFilesystem(new Filesystem);
+        $precompiler->setBasePath($this->base_path);
+        $precompiler->setTempPath($this->temp_path);
+        $extractor->setPrecompiler($precompiler);
 
         $extractor->extract();
 
