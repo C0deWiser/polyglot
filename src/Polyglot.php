@@ -209,7 +209,7 @@ class Polyglot extends \Illuminate\Translation\Translator
     {
         $composer = __DIR__ . '/../composer.json';
         $data = json_decode(file_get_contents($composer), true);
-        return (string)$data['version'];
+        return (string)($data['version'] ?? 'unknown');
     }
 
     /**
