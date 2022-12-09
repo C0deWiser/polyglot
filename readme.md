@@ -7,7 +7,7 @@
 - [Web Editor](#web-editor)
 - [Strings Collector](#strings-collector)
 - [Gettext Translator](#gettext-translator)
-- [Vue Support](#vue)
+- [Vue|JavaScript Support](#vue-and-javascript-support)
 
 ## Introduction
 
@@ -365,39 +365,9 @@ Both Gettext (while parsing source codes) and a translator may mark string as fu
     msgid "May"
     msgstr ""
 
-## Vue
+## Vue and JavaScript Support
 
-### Installation
-
-Install [easygettext](https://www.npmjs.com/package/easygettext) npm package (part of [vue-gettext](https://www.npmjs.com/package/vue-gettext)) if you want to extract strings from `js` and `vue` files.
-
-```shell
-npm i -D easygettext
-```
-
-### Configuration
-
-Feel free to set javascript and vue files as sources for collecting strings:
-
-```php
-'sources' => [
-    [
-    	'text_domain' => 'frontend',
-        'include' => [
-            resource_path('js')
-        ],
-        'exclude' => [],
-    ]
-],
-```
-
-### Collecting Strings
-
-Collecting strings from javascript and vue files is exactly the same, as collecting strings from php files:
-
-```shell
-php artisan polyglot:collect
-```
+Vue and JavaScript sources supported as well.
 
 ### Compiling Strings
 
@@ -412,116 +382,5 @@ Artisan `polyglot:compile` command will compile every translation file into `jso
         it/
           frontend.json
 
-### Delivering Strings
-
-It is not enough to compile json files. Translation strings should be delivered to vue application.
-
-#### As JSON
-
-You may deliver translation strings as a JSON:
-
-```html
-<!DOCTYPE html>
-<html lang="{{ app()->getLocale() }}">
-<head>
-   <meta charset="utf-8">
-
-   <script>
-      window.translations = @json(
-         json_decode(
-            file_get_content(
-               storage_path('lang/' . app()->getLocale() . '/frontend.json')
-            )
-         ), true
-      )
-    </script>
-</head>
-<body>
-
-</body>
-</html>
-```
-
-Then load it in vue app:
-
-```javascript
-import translations from "../../vendor/codewiser/polyglot/resources/js/translations";
-
-const App = {
-    mixins: [translations],
-    
-    mounted() {
-        this.setLocale(document.documentElement.lang);
-        this.setTranslations(window.translations)
-    }
-}
-```
-
-#### By URL
-
-You may publish `storage/lang` to the `public` folder and load translations by url.
-
-First, add new symlink to `config/filesystems.php` of your application:
-
-```php
-'links' => [
-    public_path('lang') => storage_path('lang'),
-],
-```
-
-Publish link:
-
-```bash
-php artisan storage:link
-```
-
-Then load file in vue app:
-
-```javascript
-import translations from "../../vendor/codewiser/polyglot/resources/js/translations";
-
-const App = {
-    mixins: [translations],
-    
-    mounted() {
-        this.setLocale(document.documentElement.lang);
-        this.awaitTranslations('/lang/' + this.getLocale() + '/frontend.json');
-    }
-}
-```
-
-### Using Strings
-
-Supported directives are:
-
-* Translate string:
-	
-	```javascript
-	<template>
-	    <div>
-	        <h1>{{ $root.$gettext('Hello :username', {username: "world"}) }}</h1>
-	    </div>
-	</template>
-	```
-
-	
-* Translate pluralized string:
-	
-	```javascript
-	<template>
-	    <div>
-	        <h1>{{ $root.$ngettext('There is :count day left', 'There are :count days left', $n) }}</h1>
-	    </div>
-	</template>
-	```
-	
-* Translate string with context:
-	
-	```javascript
-	<template>
-	    <div>
-	        <h1>{{ $root.$pgettext('Month', 'May') }}</h1>
-	    </div>
-	</template>
-	```	
+You may use these files to localize the frontend.
 

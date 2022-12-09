@@ -103,8 +103,7 @@ return [
         'msginit' => env('MSGINIT_EXECUTABLE', 'msginit'),
         'msgmerge' => env('MSGMERGE_EXECUTABLE', 'msgmerge'),
         'msgfmt' => env('MSGFMT_EXECUTABLE', 'msgfmt'),
-        'msgcat' => env('MSGCAT_EXECUTABLE', 'msgcat'),
-        'npm_xgettext' => env('NPM_EASYGETTEXT', 'gettext-extract')
+        'msgcat' => env('MSGCAT_EXECUTABLE', 'msgcat')
     ],
 
     /*

@@ -84,7 +84,7 @@ export default {
                     <h5 class="modal-title">{{ $root.$gettext('Editor') }}</h5>
                 </div>
                 <form @submit.prevent="$emit('submit', changed)" @reset="$emit('close')" v-if="row">
-                    <div class="modal-body">
+                    <div class="modal-body" :title="$root.$gettext('Editor')">
 
                         <div v-if="error" class="alert alert-danger" role="alert">
                             {{ error }}

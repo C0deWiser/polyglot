@@ -8,10 +8,6 @@ use Codewiser\Polyglot\FileSystem\PoFileHandler;
 use Codewiser\Polyglot\Polyglot;
 use Codewiser\Polyglot\Traits\AsSeparator;
 use Codewiser\Polyglot\Traits\FilesystemSetup;
-use Illuminate\Support\Str;
-use Sepia\PoParser\Parser;
-use Sepia\PoParser\PoCompiler;
-use Sepia\PoParser\SourceHandler\FileSystem;
 
 /**
  * Separates POT file.

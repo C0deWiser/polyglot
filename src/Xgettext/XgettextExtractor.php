@@ -36,13 +36,6 @@ class XgettextExtractor implements ExtractorContract
     protected string $xgettext = 'xgettext';
 
     /**
-     * gettext-extract executable.
-     *
-     * @var string
-     */
-    protected string $npm_xgettext = 'gettext-extract';
-
-    /**
      * Default text domain for xgettext.
      *
      * @var string
@@ -78,17 +71,6 @@ class XgettextExtractor implements ExtractorContract
     public function setExecutable(string $executable): void
     {
         $this->xgettext = $executable;
-    }
-
-    /**
-     * Set gettext-extract executable.
-     *
-     * @param string $executable
-     * @deprecated
-     */
-    public function setNpmExecutable(string $executable): void
-    {
-        $this->npm_xgettext = $executable;
     }
 
     public function getTextDomain(): string

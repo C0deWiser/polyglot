@@ -201,10 +201,6 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
         $precompiler->setTempPath($this->getTempPath());
         $extractor->setPrecompiler($precompiler);
 
-        if (@$polyglot_config['executables']['npm_xgettext']) {
-            $extractor->setNpmExecutable($polyglot_config['executables']['npm_xgettext']);
-        }
-
         return $extractor;
     }
 

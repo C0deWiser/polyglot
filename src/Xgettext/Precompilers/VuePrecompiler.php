@@ -46,6 +46,12 @@ class VuePrecompiler extends FallbackPrecompiler
     {
         $content = Str::replace(['{{', '}}'], ['<?php ', ' ?>'], $content);
 
+        $content = preg_replace(
+            '/(:\S+=["\'])(.*?)(["\'][\s\n>])/i',
+            '$1 <?php $2 ?> $3',
+        $content
+        );
+
         return $content;
     }
 }
