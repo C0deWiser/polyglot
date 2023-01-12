@@ -39,6 +39,8 @@ class Polyglot extends \Illuminate\Translation\Translator
      */
     public function setLocale($locale)
     {
+        $constructed = $this->locale;
+
         parent::setLocale($locale);
 
         // Trying to determine gettext locale
@@ -48,7 +50,11 @@ class Polyglot extends \Illuminate\Translation\Translator
 
         $this->loadTranslations();
 
-        event(new LocaleWasChanged($locale));
+        if ($constructed) {
+            // Do not fire event from constructor,
+            // as the translator not in service repository yet...
+            event(new LocaleWasChanged($locale));
+        }
     }
 
     /**
