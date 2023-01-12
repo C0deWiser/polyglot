@@ -2,6 +2,7 @@
 
 namespace Codewiser\Polyglot;
 
+use Codewiser\Polyglot\Events\LocaleWasChanged;
 use Countable;
 use Illuminate\Contracts\Translation\Loader;
 use Illuminate\Support\Arr;
@@ -46,6 +47,8 @@ class Polyglot extends \Illuminate\Translation\Translator
         $this->putEnvironment(env($env_var, $locale));
 
         $this->loadTranslations();
+
+        event(new LocaleWasChanged($locale));
     }
 
     /**
