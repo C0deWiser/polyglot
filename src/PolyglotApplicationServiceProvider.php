@@ -96,7 +96,7 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
     protected function registerFinder()
     {
         $this->app->singleton(FinderContract::class, function ($app) {
-            return new Finder(lang_folder(), new Filesystem());
+            return new Finder(lang_path(), new Filesystem());
         });
     }
 
@@ -123,7 +123,7 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
 
         if ($producer) {
             $producer->setFilesystem(new Filesystem());
-            $producer->setStorage(lang_folder());
+            $producer->setStorage(lang_path());
             $producer->setLocales($config['locales']);
         }
 

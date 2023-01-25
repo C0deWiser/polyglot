@@ -49,7 +49,7 @@ class CompileCommand extends Command
      */
     public function handle()
     {
-        $lang_path = new DirectoryHandler(resource_path('lang'));
+        $lang_path = new DirectoryHandler(lang_path());
 
         if ($this->options()['gettext']) {
             $compiler = Polyglot::compilers()->getCompiler('gettext');
@@ -83,7 +83,7 @@ class CompileCommand extends Command
                         // resources/lang/en.json
                         // storage/lang/en.json
 
-                        $target = Str::replaceFirst(resource_path('lang'), storage_path('lang'), $source);
+                        $target = Str::replaceFirst(lang_path(), storage_path('lang'), $source);
 
                         $compiler->setSource($source);
                         $compiler->setTarget($target);
@@ -101,7 +101,7 @@ class CompileCommand extends Command
                         // resources/lang/vendor/package/en/group.php
                         // storage/lang/vendor/package/en/group.json
 
-                        $target = Str::replaceFirst(resource_path('lang'), storage_path('lang'), $source);
+                        $target = Str::replaceFirst(lang_path(), storage_path('lang'), $source);
                         $target = Str::replaceLast('.php', '.json', $target);
 
                         $compiler->setSource($source);

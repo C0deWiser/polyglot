@@ -41,7 +41,7 @@ class PolyglotServiceProvider extends \Illuminate\Translation\TranslationService
             ], 'polyglot-config');
 
             $this->publishes([
-                __DIR__ . '/../resources/lang' => lang_folder('vendor/polyglot')
+                __DIR__ . '/../resources/lang' => lang_path('vendor/polyglot')
             ]);
         }
     }

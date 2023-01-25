@@ -1,6 +1,6 @@
 <?php
 
-if (!function_exists('lang_folder')) {
+if (!function_exists('lang_path')) {
 
     /**
      * Get the path to the language folder.
@@ -8,15 +8,18 @@ if (!function_exists('lang_folder')) {
      * @param string $path
      * @return string
      */
-    function lang_folder(string $path = ''): string
+    function lang_path(string $path = ''): string
     {
-        if (function_exists('lang_path')) {
-            return lang_path($path);
+        $path = trim($path, DIRECTORY_SEPARATOR);
+        $path = $path ? 'lang' . DIRECTORY_SEPARATOR . $path : 'lang';
+
+        if (file_exists(base_path('lang'))) {
+            // Laravel 9+
+            return base_path($path);
         }
 
-        $path = ltrim($path, '/');
-
-        return resource_path($path ? 'lang/' . $path : 'lang');
+        // Laravel 8
+        return resource_path($path);
     }
 }
 
