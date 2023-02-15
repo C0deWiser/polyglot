@@ -384,3 +384,5 @@ Artisan `polyglot:compile` command will compile every translation file into `jso
 
 You may use these files to localize the frontend.
 
+Polyglot provides `translations.js` that your application may use as mixin. Polyglot dashboard localized that way.
+
