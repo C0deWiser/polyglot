@@ -96,44 +96,54 @@ class EntryCollection extends \Illuminate\Support\Collection implements EntryCol
     {
         return $this
             ->sort(function (Entry $left, Entry $right) {
-                // Untranslated
                 // Fuzzy
+                // Untranslated
                 // Translated
                 // Obsolete
-                // Alphabet
+                // ---
+                // Without context
+                // With context alphabetically
+                // By message id alphabetically
 
-                $leftIsTranslated = $left->isPlural() ?
-                    collect($left->getMsgStrPlurals())->reject()->isEmpty() :
-                    $left->getMsgStr();
+                $weight = function(Entry $entry, Entry $other) {
+                    $weight = 0;
 
-                $rightIsTranslated = $right->isPlural() ?
-                    collect($right->getMsgStrPlurals())->reject()->isEmpty() :
-                    $right->getMsgStr();
+                    $isTranslated = $entry->isPlural() ?
+                        collect($entry->getMsgStrPlurals())->reject()->isEmpty() :
+                        $entry->getMsgStr();
 
-                if ($left->isObsolete() && $right->isObsolete()) {
-                    if (!$leftIsTranslated) return -1;
-                    if (!$rightIsTranslated) return 1;
+                    if ($entry->isObsolete()) {
+                        // to the bottom
+                        $weight+= 9;
+                    } else {
+                        if ($isTranslated) {
+                            $weight+= 2;
+                        } else {
+                            $weight-= 2;
+                        }
+                    }
+                    if ($entry->isFuzzy()) {
+                        // to the top
+                        $weight-= 6;
+                    }
+                    if ($entry->getMsgCtxt() && $other->getMsgCtxt()) {
+                        // Group by context
+                        $weight+= strcasecmp($entry->getMsgCtxt(), $other->getMsgCtxt());
+                    } elseif ($entry->getMsgCtxt()) {
+                        $weight+= 1;
+                    }
+
+                    return $weight;
+                };
+
+                $leftWeight = call_user_func($weight, $left, $right);
+                $rightWeight = call_user_func($weight, $right, $left);
+
+                if ($leftWeight == $rightWeight) {
                     return strcasecmp($left->getMsgId(), $right->getMsgId());
                 }
-                // Obsolete is on the bottom
-                if ($left->isObsolete()) return 1;
-                if ($right->isObsolete()) return -1;
 
-                if (!$leftIsTranslated && !$rightIsTranslated) {
-                    return strcasecmp($left->getMsgId(), $right->getMsgId());
-                }
-                if ($left->isFuzzy() && $right->isFuzzy()) {
-                    return strcasecmp($left->getMsgId(), $right->getMsgId());
-                }
-                // Untranslated on the top
-                if (!$leftIsTranslated) return -1;
-                if (!$rightIsTranslated) return 1;
-
-
-                if ($left->isFuzzy()) return -1;
-                if ($right->isFuzzy()) return 1;
-
-                return strcasecmp($left->getMsgId(), $right->getMsgId());
+                return $leftWeight - $rightWeight;
             })
             ->map(function (Entry $entry) {
                 $row = [];
