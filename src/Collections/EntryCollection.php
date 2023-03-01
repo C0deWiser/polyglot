@@ -105,45 +105,24 @@ class EntryCollection extends \Illuminate\Support\Collection implements EntryCol
                 // With context alphabetically
                 // By message id alphabetically
 
-                $weight = function(Entry $entry, Entry $other) {
-                    $weight = 0;
+                $isTranslated = fn(Entry $entry) => $entry->isPlural() ?
+                    collect($entry->getMsgStrPlurals())->reject()->isEmpty() :
+                    $entry->getMsgStr();
 
-                    $isTranslated = $entry->isPlural() ?
-                        collect($entry->getMsgStrPlurals())->reject()->isEmpty() :
-                        $entry->getMsgStr();
+                if ($left->isObsolete() && !$right->isObsolete()) return 1;
+                if (!$left->isObsolete() && $right->isObsolete()) return -1;
+                if (!$left->isFuzzy() && $right->isFuzzy()) return 1;
+                if ($left->isFuzzy() && !$right->isFuzzy()) return -1;
+                if ($isTranslated($left) && !$isTranslated($right)) return 1;
+                if (!$isTranslated($left) && $isTranslated($right)) return -1;
+                if ($left->getMsgCtxt() && !$right->getMsgCtxt()) return 1;
+                if (!$left->getMsgCtxt() && $right->getMsgCtxt()) return -1;
 
-                    if ($entry->isObsolete()) {
-                        // to the bottom
-                        $weight+= 9;
-                    } else {
-                        if ($isTranslated) {
-                            $weight+= 2;
-                        } else {
-                            $weight-= 2;
-                        }
-                    }
-                    if ($entry->isFuzzy()) {
-                        // to the top
-                        $weight-= 6;
-                    }
-                    if ($entry->getMsgCtxt() && $other->getMsgCtxt()) {
-                        // Group by context
-                        $weight+= strcasecmp($entry->getMsgCtxt(), $other->getMsgCtxt());
-                    } elseif ($entry->getMsgCtxt()) {
-                        $weight+= 1;
-                    }
-
-                    return $weight;
-                };
-
-                $leftWeight = call_user_func($weight, $left, $right);
-                $rightWeight = call_user_func($weight, $right, $left);
-
-                if ($leftWeight == $rightWeight) {
-                    return strcasecmp($left->getMsgId(), $right->getMsgId());
+                if ($left->getMsgCtxt() && $right->getMsgCtxt() && $left->getMsgCtxt() !== $right->getMsgCtxt()) {
+                    return strcasecmp($left->getMsgCtxt(), $right->getMsgCtxt());
                 }
 
-                return $leftWeight - $rightWeight;
+                return strcasecmp($left->getMsgId(), $right->getMsgId());
             })
             ->map(function (Entry $entry) {
                 $row = [];
