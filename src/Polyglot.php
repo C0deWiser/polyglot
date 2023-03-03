@@ -166,7 +166,7 @@ class Polyglot extends \Illuminate\Translation\Translator
         if ($this->loaded_domain != $this->text_domain) {
 
             $textdomain = textdomain($this->text_domain);
-            $bindtextdomain = bindtextdomain($this->text_domain, resource_path('lang'));
+            $bindtextdomain = bindtextdomain($this->text_domain, lang_path());
             $bind_textdomain_codeset = bind_textdomain_codeset($this->text_domain, 'UTF-8');
 
             if ($this->logger) {
