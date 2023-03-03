@@ -60,9 +60,11 @@ export default {
 
             if (this.search) {
                 this.strings.forEach((row => {
-                    // console.info(row.msgid, row.msgid.search(this.search));
                     let regexp = new RegExp(this.search, 'i');
-                    if (row.msgid.search(regexp) > -1) {
+                    if (row.msgid.search(regexp) > -1 ||
+                        (row.msgstr && row.msgstr.search(regexp) > -1) ||
+                        (row.comment && row.comment.search(regexp) > -1) ||
+                        (row.context && row.context.search(regexp) > -1)) {
                         filtered.push(row);
                     }
                 }));
