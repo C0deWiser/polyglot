@@ -81,7 +81,11 @@ export default {
 
             this.loading = true;
 
-            this.$http.get(Polyglot.basePath + '/api/L10n/' + this.hash)
+            // Server, as usual, prevents calling random php
+            // Escape file extension
+            let path = this.hash.replace('.', '__dot__');
+
+            this.$http.get(Polyglot.basePath + '/api/L10n/' + path)
                 .then(response => {
 
                     this.path = response.data.path;

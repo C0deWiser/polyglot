@@ -18,6 +18,10 @@ class L10nController extends Controller
 
     public function get(FinderContract $finder, string $path = '/')
     {
+        // Server, as usual, prevents calling random php
+        // Unescape file extension
+        $path = str_replace('__dot__', '.', $path);
+
         $finder->setPath($path);
         $resource = $finder->getPath();
 
