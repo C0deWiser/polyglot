@@ -91,12 +91,20 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
         $this->registerExtractor();
         $this->registerFinder();
         $this->registerCompiler();
+        $this->registerTemp();
     }
 
     protected function registerFinder()
     {
         $this->app->singleton(FinderContract::class, function ($app) {
             return new Finder(lang_path(), new Filesystem());
+        });
+    }
+
+    protected function registerTemp()
+    {
+        $this->app->singleton('polyglot_temp', function ($app) {
+            return new Finder($this->getTempPath(), new Filesystem());
         });
     }
 
@@ -206,6 +214,6 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
 
     protected function getTempPath(): string
     {
-        return storage_path('temp');
+        return storage_path('temp/polyglot');
     }
 }

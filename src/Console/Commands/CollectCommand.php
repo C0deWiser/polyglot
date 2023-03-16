@@ -5,6 +5,8 @@ namespace Codewiser\Polyglot\Console\Commands;
 
 
 use Codewiser\Polyglot\FileSystem\Contracts\FileHandlerContract;
+use Codewiser\Polyglot\FileSystem\Contracts\ResourceContract;
+use Codewiser\Polyglot\FileSystem\Finder;
 use Codewiser\Polyglot\Polyglot;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
@@ -99,6 +101,19 @@ class CollectCommand extends Command
             });
         }
 
+        $this->info('Clear temp dir');
+        $this->clearTemp();
+
         return 0;
+    }
+
+    protected function clearTemp()
+    {
+        /** @var Finder $temp */
+        $temp = app('polyglot_temp');
+
+        $temp->allFiles()->each(function (ResourceContract $file) {
+            $file->delete();
+        });
     }
 }
