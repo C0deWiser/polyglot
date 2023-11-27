@@ -163,7 +163,6 @@ class XgettextExtractor implements ExtractorContract
             $this->xgettext,
             '--language=' . $language,
             '--no-wrap',
-            '--sort-output',
             '--from-code=UTF-8',
             '--package-name="' . $this->app_name . '"',
             '--output=' . $target->filename(),
