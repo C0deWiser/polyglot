@@ -19,12 +19,12 @@ class i18nController extends Controller
         $data = [
             'enabled' => $config['enabled'],
             'locales' => array_values($config['locales']),
-            'stat' => $lang_path->allFiles()->statistics()->toArray()
+            'stat' => $lang_path->exists() ? $lang_path->allFiles()->statistics()->toArray() : []
         ];
 
         $lastCollected = Polyglot::extractors()->getExtracted()->lastModified();
-        $lastTranslated = $lang_path->allFiles()->translatable()->lastModified();
-        $lastCompiled = $lang_path->allFiles()->mo()->lastModified();
+        $lastTranslated = $lang_path->exists() ? $lang_path->allFiles()->translatable()->lastModified() : null;
+        $lastCompiled = $lang_path->exists() ? $lang_path->allFiles()->mo()->lastModified() : null;
 
         $data['lastTranslated'] = $lastTranslated ? $lastTranslated->diffForHumans() : trans('Unknown');
         $data['lastCollected'] = $lastCollected ? $lastCollected->diffForHumans() : trans('Unknown');

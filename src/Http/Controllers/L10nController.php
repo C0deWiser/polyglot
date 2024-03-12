@@ -26,7 +26,7 @@ class L10nController extends Controller
         $resource = $finder->getPath();
 
         $response = [
-            'path' => $resource->toArray() + ['root' => $finder->isRoot()]
+            'path' => ($resource->exists() ? $resource->toArray() : []) + ['root' => $finder->isRoot()]
         ];
 
         if ($resource instanceof DirectoryContract) {
