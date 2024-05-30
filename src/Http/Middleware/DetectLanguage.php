@@ -7,6 +7,9 @@ use Codewiser\Polyglot\Http\Translations;
 use Codewiser\Polyglot\Polyglot;
 use Illuminate\Http\Request;
 
+/**
+ * @deprecated
+ */
 class DetectLanguage
 {
     use Translations;

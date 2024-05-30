@@ -6,6 +6,9 @@ use Closure;
 use Codewiser\Polyglot\Polyglot;
 use Illuminate\Http\Request;
 
+/**
+ * @deprecated
+ */
 class AcceptLanguage
 {
     public function handle(Request $request, Closure $next)

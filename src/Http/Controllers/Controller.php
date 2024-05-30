@@ -3,7 +3,6 @@
 namespace Codewiser\Polyglot\Http\Controllers;
 
 use Codewiser\Polyglot\Http\Middleware\Authorize;
-use Codewiser\Polyglot\Http\Middleware\DetectLanguage;
 use Illuminate\Routing\Controller as BaseController;
 
 class Controller extends BaseController
@@ -15,6 +14,6 @@ class Controller extends BaseController
      */
     public function __construct()
     {
-        $this->middleware([Authorize::class, DetectLanguage::class]);
+        $this->middleware([Authorize::class]);
     }
 }
