@@ -5,78 +5,20 @@ namespace Codewiser\Polyglot;
 use Countable;
 use Illuminate\Contracts\Translation\Loader;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
 use Psr\Log\LoggerInterface;
 
 class Polyglot extends \Illuminate\Translation\Translator
 {
     protected string $loaded_domain = '';
-    protected string $current_system_locale = '';
-    protected array $system_locales = [];
 
     public function __construct(Loader $loader, $locale,
         protected string $text_domain,
-        protected array $system_preferences = [],
-        protected ?LoggerInterface $logger = null)
+        protected SystemLocale $systemLocale,
+        protected ?LoggerInterface $logger = null,
+    )
     {
         parent::__construct($loader, $locale);
-    }
-
-    protected function systemLocale($locale): string
-    {
-        if (isset($this->system_locales[$locale])) {
-            return $this->system_locales[$locale];
-        }
-
-        // Trying to determine gettext locale
-        $systemLocale = null;
-        $preferred = $this->system_preferences[$locale] ?? [];
-
-        if (!$preferred) {
-            $this->logger?->warning("No system preferences defined for locale $locale");
-        }
-
-        $command = "locale -a | grep $locale";
-        $result = Process::run($command);
-
-        if ($result->successful()) {
-            $supported = array_filter(explode("\n", $result->output()));
-
-            usort($supported, function ($a, $b) {
-                if (strlen($a) == strlen($b)) {
-                    return 0;
-                }
-                return (strlen($a) < strlen($b)) ? -1 : 1;
-            });
-
-            $this->logger?->debug($command, $supported);
-
-            foreach ($preferred as $preferredLocale) {
-                if (in_array($preferredLocale, $supported)) {
-                    $systemLocale = $preferredLocale;
-                    break;
-                }
-            }
-            if (!$systemLocale) {
-                $this->logger?->error("No system locale found for $locale");
-            }
-        } else {
-            $this->logger?->alert($command, [
-                'exitCode'    => $result->exitCode(),
-                'errorOutput' => $result->errorOutput(),
-            ]);
-        }
-
-        if (!$systemLocale) {
-            $systemLocale = $preferred[0] ?? $supported[0] ?? $locale;
-        }
-
-        $this->logger?->debug("Use $systemLocale as system locale for $locale");
-
-        $this->system_locales[$locale] = $systemLocale;
-
-        return $systemLocale;
     }
 
     /**
@@ -178,14 +120,14 @@ class Polyglot extends \Illuminate\Translation\Translator
     /**
      * Configure environment to gettext load proper files.
      *
-     * @param  string  $systemLocale
+     * @param  string  $locale
      */
-    protected function putEnvironment(string $systemLocale): void
+    protected function putEnvironment(string $locale): void
     {
-        $systemLocale = $this->systemLocale($systemLocale);
+        $systemLocale = $this->systemLocale->detect($locale);
 
-        if ($this->current_system_locale != $systemLocale) {
-            $this->current_system_locale = $systemLocale;
+        if ($this->systemLocale->changed($systemLocale)) {
+            $this->systemLocale->remember($systemLocale);
 
             $result = putenv('LANG='.$systemLocale);
             $this->logger?->debug("putenv(LANG=$systemLocale) == $result");
