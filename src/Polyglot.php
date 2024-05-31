@@ -20,9 +20,9 @@ class Polyglot extends \Illuminate\Translation\Translator
         array $supported_locales,
         protected ?LoggerInterface $logger = null,
     ) {
-        parent::__construct($loader, $locale);
-
         self::$supported_locales = $supported_locales;
+
+        parent::__construct($loader, $locale);
     }
 
     /**
