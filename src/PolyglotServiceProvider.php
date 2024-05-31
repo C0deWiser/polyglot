@@ -6,7 +6,6 @@ use Codewiser\Polyglot\Console\Commands\CollectCommand;
 use Codewiser\Polyglot\Console\Commands\CompileCommand;
 use Codewiser\Polyglot\Console\Commands\InstallCommand;
 use Codewiser\Polyglot\Console\Commands\PublishCommand;
-use Illuminate\Support\Facades\Log;
 use Psr\Log\LoggerInterface;
 
 class PolyglotServiceProvider extends \Illuminate\Translation\TranslationServiceProvider
@@ -102,16 +101,6 @@ class PolyglotServiceProvider extends \Illuminate\Translation\TranslationService
     {
         $this->registerLoader();
 
-        $this->app->singleton(SystemLocale::class, function ($app) {
-            $config = $app['config']['polyglot'];
-
-            return new SystemLocale(
-                system_preferences: $config['system_locales'] ?? [],
-                logger: $this->polyglotLogger($config),
-                cache: cache()->driver()
-            );
-        });
-
         $this->app->singleton('translator', function ($app) {
             $loader = $app['translation.loader'];
             $locale = $app['config']['app.locale'];
@@ -121,7 +110,8 @@ class PolyglotServiceProvider extends \Illuminate\Translation\TranslationService
 
             $trans = new Polyglot($loader, $locale,
                 text_domain: $text_domain,
-                systemLocale: app(SystemLocale::class),
+                codeset: $config['codeset'] ?? 'UTF-8',
+                supported_locales: $config['locales'],
                 logger: $this->polyglotLogger($config),
             );
 

@@ -22,51 +22,29 @@ class XgettextExtractor implements ExtractorContract
     use FilesystemSetup, AsExtractor;
 
     /**
-     * Application name used for .pot headers
-     *
-     * @var string
-     */
-    protected string $app_name;
-
-    /**
      * xgettext executable.
      *
      * @var string
      */
     protected string $xgettext = 'xgettext';
 
-    /**
-     * Default text domain for xgettext.
-     *
-     * @var string
-     */
-    protected string $text_domain;
-
-    /**
-     * Default category for xgettext.
-     *
-     * @var int
-     */
-    protected int $category;
-
     protected array $keywords = [];
 
     protected ?PrecompilerContract $precompiler = null;
 
-    public function __construct(string $app_name,
-                                string $text_domain = 'messages',
-                                int    $category = LC_MESSAGES
-    )
-    {
-        $this->app_name = $app_name;
-        $this->text_domain = $text_domain;
-        $this->category = $category;
+    public function __construct(
+        protected string $app_name,
+        protected string $codeset,
+        protected string $text_domain = 'messages',
+        protected int $category = LC_MESSAGES,
+    ) {
+        //
     }
 
     /**
      * Set xgettext executable.
      *
-     * @param string $executable
+     * @param  string  $executable
      */
     public function setExecutable(string $executable): void
     {
@@ -98,10 +76,10 @@ class XgettextExtractor implements ExtractorContract
     public function getPortableObjectTemplate(): PoFileHandler
     {
         return new PoFileHandler(
-            $this->temp_path .
-            DIRECTORY_SEPARATOR . class_basename($this) .
-            DIRECTORY_SEPARATOR . Polyglot::getCategoryName($this->category) .
-            DIRECTORY_SEPARATOR . $this->text_domain . '.pot'
+            $this->temp_path.
+            DIRECTORY_SEPARATOR.class_basename($this).
+            DIRECTORY_SEPARATOR.Polyglot::getCategoryName($this->category).
+            DIRECTORY_SEPARATOR.$this->text_domain.'.pot'
         );
     }
 
@@ -126,14 +104,13 @@ class XgettextExtractor implements ExtractorContract
     /**
      * Collect strings from given directory/file to given output file, excluding some resources...
      *
-     * @param ResourceContract $resource
-     * @param PoFileHandler $output
-     * @param array $excluding
+     * @param  ResourceContract  $resource
+     * @param  PoFileHandler  $output
+     * @param  array  $excluding
      */
     protected function collectStrings(ResourceContract $resource, PoFileHandler $output, array $excluding = [])
     {
         foreach ($this->resourceListing($resource, ['*.php', '*.js', '*.vue'], $excluding) as $filename) {
-
             foreach ($this->precompiler->compiled($filename) as $tmp) {
                 switch ($tmp->extension()) {
                     case 'php':
@@ -150,9 +127,9 @@ class XgettextExtractor implements ExtractorContract
     /**
      * Run xgettext.
      *
-     * @param string $language
-     * @param string $source
-     * @param PoFileHandler $target
+     * @param  string  $language
+     * @param  string  $source
+     * @param  PoFileHandler  $target
      */
     protected function runXGetText(string $language, string $source, PoFileHandler $target)
     {
@@ -161,11 +138,11 @@ class XgettextExtractor implements ExtractorContract
 
         $command = [
             $this->xgettext,
-            '--language=' . $language,
+            '--language='.$language,
             '--no-wrap',
-            '--from-code=UTF-8',
-            '--package-name="' . $this->app_name . '"',
-            '--output=' . $target->filename(),
+            '--from-code='.$this->codeset,
+            '--package-name="'.$this->app_name.'"',
+            '--output='.$target->filename(),
 //            '--output-dir=' . dirname($target),
             '--add-comments',
             '--keyword', // Disable defaults
@@ -191,7 +168,7 @@ class XgettextExtractor implements ExtractorContract
         ];
 
         foreach ($this->keywords as $keyword) {
-            $command[] = '--keyword=' . $keyword;
+            $command[] = '--keyword='.$keyword;
         }
 
         if ($target->exists()) {
@@ -219,7 +196,6 @@ class XgettextExtractor implements ExtractorContract
             $content = $this->compilePotHeader($content);
 
             $file->putContent($content);
-
         } catch (FileNotFoundException $e) {
         }
     }
@@ -227,9 +203,10 @@ class XgettextExtractor implements ExtractorContract
     /**
      * Get file listing in directory.
      *
-     * @param ResourceContract $resource
-     * @param string|string[] $masks
-     * @param array $excluding
+     * @param  ResourceContract  $resource
+     * @param  string|string[]  $masks
+     * @param  array  $excluding
+     *
      * @return array|string[]
      */
     public function resourceListing(ResourceContract $resource, $masks, array $excluding = []): array
@@ -239,12 +216,11 @@ class XgettextExtractor implements ExtractorContract
         //$resource = rtrim($resource, DIRECTORY_SEPARATOR);
 
         if ($file = $resource->asFile()) {
-            if (in_array('*.' . $file->extension(), (array)$masks)) {
+            if (in_array('*.'.$file->extension(), (array) $masks)) {
                 $files[] = $resource->filename();
             }
         } elseif ($dir = $resource->asDirectory()) {
-            foreach ((array)$masks as $mask) {
-
+            foreach ((array) $masks as $mask) {
                 foreach ($dir->glob($mask) as $filename) {
                     $files[] = $filename->filename();
                 }
@@ -272,20 +248,21 @@ class XgettextExtractor implements ExtractorContract
     /**
      * Update pot file header.
      *
-     * @param string $content
+     * @param  string  $content
+     *
      * @return string
      */
     protected function compilePotHeader(string $content): string
     {
         return Str::replace(
             'Content-Type: text/plain; charset=CHARSET',
-            'Content-Type: text/plain; charset=UTF-8',
+            'Content-Type: text/plain; charset='.$this->codeset,
             $content
         );
     }
 
     /**
-     * @param PrecompilerContract|null $precompiler
+     * @param  PrecompilerContract|null  $precompiler
      */
     public function setPrecompiler(?PrecompilerContract $precompiler): void
     {
@@ -293,7 +270,7 @@ class XgettextExtractor implements ExtractorContract
     }
 
     /**
-     * @param array $keywords
+     * @param  array  $keywords
      */
     public function setKeywords(array $keywords): void
     {

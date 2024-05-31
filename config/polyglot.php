@@ -26,16 +26,21 @@ return [
     | by Polyglot to populate collected translation strings across locales.
     |
     | Every locale should be installed to the system. Inspect installed locales
-    | with `locale -a` command. List system locales to system_locales variable
-    | in order of preferential.
+    | with `locale -a` command. Make sure that system supports application
+    | locales with proper codeset.
     |
+    | Codeset also matters for xgettext utility.
+    |
+    | See also
+    | https://www.php.net/manual/en/function.setlocale.php
+    | https://www.php.net/manual/en/function.bind-textdomain-codeset.php
     */
 
-    'locales' => ['en'],
-
-    'system_locales' => [
-        'en' => ['en', 'en_GB', 'en_GB.UTF-8', 'en_US', 'en_US.UTF-8'],
+    'locales' => [
+        'en' => ['en_US', 'en_US.utf8', 'en_US.UTF-8']
     ],
+
+    'codeset' => env('GETTEXT_CODESET', 'UTF-8'),
 
     /*
     |--------------------------------------------------------------------------

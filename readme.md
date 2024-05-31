@@ -116,11 +116,32 @@ Define at least one group of source files to collect strings from.
 
 #### Application locales
 
-After collecting strings, Polyglot will populate collected strings through every configured locale.
+Gettext depends on server support of locales. 
+For example, your application provides Italian language (`it`). 
+And your server supports following locales:
+
+``` bash
+> locale -a | grep it
+
+it_CH
+it_CH.utf8
+it_IT
+it_IT@euro
+it_IT.utf8
+```
+
+Then you should list system locales in order of preference.
+Read more at https://www.php.net/manual/en/function.setlocale.php
 
 ```php
-'locales' => ['en', 'it', 'es'],
+'locales' => [
+    'en' => ['en_US', 'en_US.utf8', 'en_US.UTF-8'] 
+    'it' => ['it_IT', 'it_IT.utf8', 'it_IT.UTF-8'], 
+    'es' => ['es_ES', 'es_ES.utf8', 'es_ES.UTF-8'],
+],
 ```
+
+After collecting strings, Polyglot will populate collected strings through every configured locale.
 
 ### Collecting strings
 
@@ -235,26 +256,6 @@ php artisan polyglot:compile
 Beside every `po` file will appear `mo` file.
 
 > Do remember, that php caches contents of `mo` files. So, after compiling, be sure, you have restarted the web server.
-
-### Server support
-
-Gettext depends on server support of locales. For example, your application provides Italian language (`it`). And your server supports following locales:
-
-``` bash
-> locale -a | grep it
-
-it_CH
-it_CH.utf8
-it_IT
-it_IT@euro
-it_IT.utf8
-```
-
-Then you should define `LOCALE_IT=it_IT` in the `.env` file to instruct `gettext` to use `it_IT` locale for `it` language.
-
-```env
-LOCALE_IT=it_IT
-```
 
 ### Backward Compatability
 

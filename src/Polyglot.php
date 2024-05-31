@@ -10,15 +10,19 @@ use Psr\Log\LoggerInterface;
 
 class Polyglot extends \Illuminate\Translation\Translator
 {
-    protected string $loaded_domain = '';
+    protected static array $supported_locales;
 
-    public function __construct(Loader $loader, $locale,
+    public function __construct(
+        Loader $loader,
+        $locale,
         protected string $text_domain,
-        protected SystemLocale $systemLocale,
+        protected string $codeset,
+        array $supported_locales,
         protected ?LoggerInterface $logger = null,
-    )
-    {
+    ) {
         parent::__construct($loader, $locale);
+
+        self::$supported_locales = $supported_locales;
     }
 
     /**
@@ -124,17 +128,13 @@ class Polyglot extends \Illuminate\Translation\Translator
      */
     protected function putEnvironment(string $locale): void
     {
-        $systemLocale = $this->systemLocale->detect($locale);
+        $result = putenv('LANG='.$locale);
+        $this->logger?->debug("putenv(LANG=$locale) == $result");
 
-        if ($this->systemLocale->changed($systemLocale)) {
-            $this->systemLocale->remember($systemLocale);
+        $locales = self::$supported_locales[$locale] ?? [$locale];
 
-            $result = putenv('LANG='.$systemLocale);
-            $this->logger?->debug("putenv(LANG=$systemLocale) == $result");
-
-            $result = setLocale(LC_ALL, $systemLocale);
-            $this->logger?->debug("setLocale(LC_ALL, $systemLocale) == $result");
-        }
+        $result = setLocale(LC_ALL, $locales);
+        $this->logger?->debug("setLocale(LC_ALL, ".json_encode($locales).") == $result");
     }
 
     /**
@@ -144,18 +144,14 @@ class Polyglot extends \Illuminate\Translation\Translator
      */
     protected function loadTranslations(): void
     {
-        if ($this->loaded_domain != $this->text_domain) {
-            $result = textdomain($this->text_domain);
-            $this->logger?->debug("textdomain($this->text_domain) == $result");
+        $result = textdomain($this->text_domain);
+        $this->logger?->debug("textdomain($this->text_domain) == $result");
 
-            $result = bindtextdomain($this->text_domain, lang_path());
-            $this->logger?->debug("bindtextdomain($this->text_domain, ".lang_path().") == $result");
+        $result = bindtextdomain($this->text_domain, lang_path());
+        $this->logger?->debug("bindtextdomain($this->text_domain, ".lang_path().") == $result");
 
-            $result = bind_textdomain_codeset($this->text_domain, 'UTF-8');
-            $this->logger?->debug("bind_textdomain_codeset($this->text_domain, UTF-8) == $result");
-
-            $this->loaded_domain = $this->text_domain;
-        }
+        $result = bind_textdomain_codeset($this->text_domain, $this->codeset);
+        $this->logger?->debug("bind_textdomain_codeset($this->text_domain, $this->codeset) == $result");
     }
 
     /**
@@ -227,7 +223,7 @@ class Polyglot extends \Illuminate\Translation\Translator
      */
     public static function getLocales(): array
     {
-        return config('polyglot.locales');
+        return array_keys(self::$supported_locales);
     }
 
     public static function getCategoryName(int $category): string

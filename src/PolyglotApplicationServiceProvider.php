@@ -187,9 +187,10 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
     protected function getExtractor(array $polyglot_config, array $text_domain_config): XgettextExtractor
     {
         $extractor = new XgettextExtractor(
-            config('app.name'),
-            $text_domain_config['text_domain'] ?? 'messages',
-            $text_domain_config['category'] ?? LC_MESSAGES
+            app_name: config('app.name'),
+            codeset: $polyglot_config['codeset'] ?? 'UTF-8',
+            text_domain: $text_domain_config['text_domain'] ?? 'messages',
+            category: $text_domain_config['category'] ?? LC_MESSAGES
         );
 
         $extractor->setFilesystem(new Filesystem);
