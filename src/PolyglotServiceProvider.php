@@ -83,7 +83,7 @@ class PolyglotServiceProvider extends \Illuminate\Translation\TranslationService
      *
      * @return void
      */
-    public function register()
+    public function register(): void
     {
         if (!defined('POLYGLOT_PATH')) {
             define('POLYGLOT_PATH', realpath(__DIR__ . '/../'));
@@ -99,7 +99,7 @@ class PolyglotServiceProvider extends \Illuminate\Translation\TranslationService
         }
     }
 
-    protected function registerPolyglot()
+    protected function registerPolyglot(): void
     {
         $this->registerLoader();
 
@@ -110,9 +110,13 @@ class PolyglotServiceProvider extends \Illuminate\Translation\TranslationService
 
             $text_domain = @$config['xgettext'][0]['text_domain'] ?? 'messages';
 
-            $trans = new Polyglot($loader, $locale, $text_domain, (boolean)@$config['log']);
+            $trans = new Polyglot($loader, $locale, $text_domain);
 
             $trans->setFallback($app['config']['app.fallback_locale']);
+            $trans->setSystemPreferences($config['system_locales'] ?? []);
+            if (is_string($config['log'] ?? false)) {
+                $trans->setLogger(logger()->channel($config['log']));
+            }
 
             return $trans;
         });

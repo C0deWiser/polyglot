@@ -2,67 +2,116 @@
 
 namespace Codewiser\Polyglot;
 
-use Codewiser\Polyglot\Events\LocaleWasChanged;
 use Countable;
 use Illuminate\Contracts\Translation\Loader;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
+use Psr\Log\LoggerInterface;
 
 class Polyglot extends \Illuminate\Translation\Translator
 {
-    /**
-     * Gettext domain.
-     *
-     * @var string
-     */
-    protected string $text_domain;
-
     protected string $loaded_domain = '';
-    protected string $current_locale = '';
+    protected string $current_system_locale = '';
+    protected array $system_locales = [];
+    protected array $system_preferences = [];
+    protected ?LoggerInterface $logger = null;
 
-    protected bool $logger = false;
-
-    public function __construct(Loader $loader, $locale, $text_domain, $logger = false)
+    public function __construct(Loader $loader, $locale, protected string $text_domain)
     {
-        $this->text_domain = $text_domain;
+        parent::__construct($loader, $locale);
+    }
+
+    public function setSystemPreferences(array $preferred_locales): static
+    {
+        $this->system_preferences = $preferred_locales;
+
+        return $this;
+    }
+
+    public function setLogger(LoggerInterface $logger): static
+    {
         $this->logger = $logger;
 
-        parent::__construct($loader, $locale);
+        return $this;
+    }
+
+    protected function systemLocale($locale): string
+    {
+        if (isset($this->system_locales[$locale])) {
+            return $this->system_locales[$locale];
+        }
+
+        // Trying to determine gettext locale
+        $systemLocale = null;
+        $preferred = $this->system_preferences[$locale] ?? [];
+
+        if (!$preferred) {
+            $this->logger?->warning("No system preferences defined for locale $locale");
+        }
+
+        $command = "locale -a | grep $locale";
+        $result = Process::run($command);
+
+        if ($result->successful()) {
+            $supported = array_filter(explode("\n", $result->output()));
+
+            usort($supported, function ($a, $b) {
+                if (strlen($a) == strlen($b)) {
+                    return 0;
+                }
+                return (strlen($a) < strlen($b)) ? -1 : 1;
+            });
+
+            $this->logger?->debug($command, $supported);
+
+            foreach ($preferred as $preferredLocale) {
+                if (in_array($preferredLocale, $supported)) {
+                    $systemLocale = $preferredLocale;
+                    break;
+                }
+            }
+            if (!$systemLocale) {
+                $this->logger?->error("No system locale found for $locale");
+            }
+        } else {
+            $this->logger?->alert($command, [
+                'exitCode'    => $result->exitCode(),
+                'errorOutput' => $result->errorOutput(),
+            ]);
+        }
+
+        if (!$systemLocale) {
+            $systemLocale = $preferred[0] ?? $supported[0] ?? $locale;
+        }
+
+        $this->logger?->debug("Use $systemLocale as system locale for $locale");
+
+        $this->system_locales[$locale] = $systemLocale;
+
+        return $systemLocale;
     }
 
     /**
      * When application sets locale we will set up gettext.
      *
-     * @param string $locale
+     * @param  string  $locale
      */
-    public function setLocale($locale)
+    public function setLocale($locale): void
     {
-        $constructed = $this->locale;
-
         parent::setLocale($locale);
 
-        // Trying to determine gettext locale
-        $env_var = Str::upper('LOCALE_' . $locale);
-
-        $this->putEnvironment(env($env_var, $locale));
+        $this->putEnvironment($locale);
 
         $this->loadTranslations();
-
-        if ($constructed) {
-            // Do not fire event from constructor,
-            // as the translator not in service repository yet...
-            event(new LocaleWasChanged($locale));
-        }
     }
 
     /**
      * Changing text domain will reconfigure gettext.
      *
-     * @param string $text_domain
+     * @param  string  $text_domain
      */
-    public function setTextDomain(string $text_domain)
+    public function setTextDomain(string $text_domain): void
     {
         $this->text_domain = $text_domain;
         $this->loadTranslations();
@@ -72,7 +121,8 @@ class Polyglot extends \Illuminate\Translation\Translator
      * Check if key suitable for php lang file.
      * Pattern is [namespace::]group.key[.dot.separated]
      *
-     * @param string $key
+     * @param  string  $key
+     *
      * @return bool
      */
     public static function isDotSeparatedKey(string $key): bool
@@ -141,18 +191,20 @@ class Polyglot extends \Illuminate\Translation\Translator
     /**
      * Configure environment to gettext load proper files.
      *
-     * @param string $locale lang[_country_region[.code_page]]
+     * @param  string  $systemLocale
      */
-    protected function putEnvironment(string $locale)
+    protected function putEnvironment(string $systemLocale): void
     {
-        if ($this->current_locale != $locale) {
-            $this->current_locale = $locale;
+        $systemLocale = $this->systemLocale($systemLocale);
 
-            putenv('LANG=' . $locale);
-            $setLocale = setLocale(LC_ALL, $locale);
-            if ($this->logger) {
-                Log::debug("setLocale({$setLocale})");
-            }
+        if ($this->current_system_locale != $systemLocale) {
+            $this->current_system_locale = $systemLocale;
+
+            $result = putenv('LANG='.$systemLocale);
+            $this->logger?->debug("putenv(LANG=$systemLocale) == $result");
+
+            $result = setLocale(LC_ALL, $systemLocale);
+            $this->logger?->debug("setLocale(LC_ALL, $systemLocale) == $result");
         }
     }
 
@@ -161,19 +213,17 @@ class Polyglot extends \Illuminate\Translation\Translator
      *
      * @return void
      */
-    protected function loadTranslations()
+    protected function loadTranslations(): void
     {
         if ($this->loaded_domain != $this->text_domain) {
+            $result = textdomain($this->text_domain);
+            $this->logger?->debug("textdomain($this->text_domain) == $result");
 
-            $textdomain = textdomain($this->text_domain);
-            $bindtextdomain = bindtextdomain($this->text_domain, lang_path());
-            $bind_textdomain_codeset = bind_textdomain_codeset($this->text_domain, 'UTF-8');
+            $result = bindtextdomain($this->text_domain, lang_path());
+            $this->logger?->debug("bindtextdomain($this->text_domain, ".lang_path().") == $result");
 
-            if ($this->logger) {
-                Log::debug("textdomain({$textdomain})");
-                Log::debug("bindtextdomain({$bindtextdomain})");
-                Log::debug("bind_textdomain_codeset({$bind_textdomain_codeset})");
-            }
+            $result = bind_textdomain_codeset($this->text_domain, 'UTF-8');
+            $this->logger?->debug("bind_textdomain_codeset($this->text_domain, UTF-8) == $result");
 
             $this->loaded_domain = $this->text_domain;
         }
@@ -194,7 +244,7 @@ class Polyglot extends \Illuminate\Translation\Translator
             throw new \RuntimeException('Polyglot assets are not published. Please run: php artisan polyglot:publish');
         }
 
-        return File::get($publishedPath) === File::get(__DIR__ . '/../public/mix-manifest.json');
+        return File::get($publishedPath) === File::get(__DIR__.'/../public/mix-manifest.json');
     }
 
     /**
@@ -216,9 +266,9 @@ class Polyglot extends \Illuminate\Translation\Translator
      */
     public static function version(): string
     {
-        $composer = __DIR__ . '/../composer.json';
+        $composer = __DIR__.'/../composer.json';
         $data = json_decode(file_get_contents($composer), true);
-        return (string)($data['version'] ?? 'unknown');
+        return (string) ($data['version'] ?? 'unknown');
     }
 
     /**
@@ -253,23 +303,15 @@ class Polyglot extends \Illuminate\Translation\Translator
 
     public static function getCategoryName(int $category): string
     {
-        switch ($category) {
-            case LC_CTYPE:
-                return 'LC_CTYPE';
-            case LC_NUMERIC:
-                return 'LC_NUMERIC';
-            case LC_TIME:
-                return 'LC_TIME';
-            case LC_COLLATE:
-                return 'LC_COLLATE';
-            case LC_MONETARY:
-                return 'LC_MONETARY';
-            case LC_MESSAGES:
-                return 'LC_MESSAGES';
-            case LC_ALL:
-                return 'LC_ALL';
-            default:
-                return 'UNKNOWN';
-        }
+        return match ($category) {
+            LC_CTYPE    => 'LC_CTYPE',
+            LC_NUMERIC  => 'LC_NUMERIC',
+            LC_TIME     => 'LC_TIME',
+            LC_COLLATE  => 'LC_COLLATE',
+            LC_MONETARY => 'LC_MONETARY',
+            LC_MESSAGES => 'LC_MESSAGES',
+            LC_ALL      => 'LC_ALL',
+            default     => 'UNKNOWN',
+        };
     }
 }

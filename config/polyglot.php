@@ -25,9 +25,17 @@ return [
     | The application locales determines the listing of locales that will be used
     | by Polyglot to populate collected translation strings across locales.
     |
+    | Every locale should be installed to the system. Inspect installed locales
+    | with `locale -a` command. List system locales to system_locales variable
+    | in order of preferential.
+    |
     */
 
     'locales' => ['en'],
+
+    'system_locales' => [
+        'en' => ['en', 'en_GB', 'en_GB.UTF-8', 'en_US', 'en_US.UTF-8'],
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -123,12 +131,12 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Polyglot Logger
+    | Polyglot Logger Channel
     |--------------------------------------------------------------------------
     |
     | Just for debug.
     |
     */
 
-    'log' => env('POLYGLOT_LOG', false),
+    'log' => env('POLYGLOT_LOG'),
 ];
