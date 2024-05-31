@@ -14,26 +14,13 @@ class Polyglot extends \Illuminate\Translation\Translator
     protected string $loaded_domain = '';
     protected string $current_system_locale = '';
     protected array $system_locales = [];
-    protected array $system_preferences = [];
-    protected ?LoggerInterface $logger = null;
 
-    public function __construct(Loader $loader, $locale, protected string $text_domain)
+    public function __construct(Loader $loader, $locale,
+        protected string $text_domain,
+        protected array $system_preferences = [],
+        protected ?LoggerInterface $logger = null)
     {
         parent::__construct($loader, $locale);
-    }
-
-    public function setSystemPreferences(array $preferred_locales): static
-    {
-        $this->system_preferences = $preferred_locales;
-
-        return $this;
-    }
-
-    public function setLogger(LoggerInterface $logger): static
-    {
-        $this->logger = $logger;
-
-        return $this;
     }
 
     protected function systemLocale($locale): string

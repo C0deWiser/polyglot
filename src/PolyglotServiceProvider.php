@@ -2,12 +2,10 @@
 
 namespace Codewiser\Polyglot;
 
+use Codewiser\Polyglot\Console\Commands\CollectCommand;
 use Codewiser\Polyglot\Console\Commands\CompileCommand;
 use Codewiser\Polyglot\Console\Commands\InstallCommand;
 use Codewiser\Polyglot\Console\Commands\PublishCommand;
-use Codewiser\Polyglot\Console\Commands\CollectCommand;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Route;
 
 class PolyglotServiceProvider extends \Illuminate\Translation\TranslationServiceProvider
 {
@@ -33,15 +31,15 @@ class PolyglotServiceProvider extends \Illuminate\Translation\TranslationService
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/../stubs/PolyglotServiceProvider.stub' => app_path('Providers/PolyglotServiceProvider.php'),
+                __DIR__.'/../stubs/PolyglotServiceProvider.stub' => app_path('Providers/PolyglotServiceProvider.php'),
             ], 'polyglot-provider');
 
             $this->publishes([
-                __DIR__ . '/../config/polyglot.php' => config_path('polyglot.php'),
+                __DIR__.'/../config/polyglot.php' => config_path('polyglot.php'),
             ], 'polyglot-config');
 
             $this->publishes([
-                __DIR__ . '/../resources/lang' => lang_path('vendor/polyglot')
+                __DIR__.'/../resources/lang' => lang_path('vendor/polyglot')
             ]);
         }
     }
@@ -54,7 +52,7 @@ class PolyglotServiceProvider extends \Illuminate\Translation\TranslationService
     protected function defineAssetPublishing()
     {
         $this->publishes([
-            POLYGLOT_PATH . '/public' => public_path('vendor/polyglot')
+            POLYGLOT_PATH.'/public' => public_path('vendor/polyglot')
         ], ['polyglot-assets', 'laravel-assets']);
     }
 
@@ -66,7 +64,6 @@ class PolyglotServiceProvider extends \Illuminate\Translation\TranslationService
     protected function registerCommands()
     {
         if ($this->app->runningInConsole()) {
-
             $commands = [
                 InstallCommand::class,
                 PublishCommand::class,
@@ -86,10 +83,10 @@ class PolyglotServiceProvider extends \Illuminate\Translation\TranslationService
     public function register(): void
     {
         if (!defined('POLYGLOT_PATH')) {
-            define('POLYGLOT_PATH', realpath(__DIR__ . '/../'));
+            define('POLYGLOT_PATH', realpath(__DIR__.'/../'));
         }
 
-        $this->mergeConfigFrom(__DIR__ . '/../config/polyglot.php', 'polyglot');
+        $this->mergeConfigFrom(__DIR__.'/../config/polyglot.php', 'polyglot');
 
         if (config('polyglot.enabled')) {
             // Replace Translator with Polyglot
@@ -110,13 +107,13 @@ class PolyglotServiceProvider extends \Illuminate\Translation\TranslationService
 
             $text_domain = @$config['xgettext'][0]['text_domain'] ?? 'messages';
 
-            $trans = new Polyglot($loader, $locale, $text_domain);
+            $trans = new Polyglot($loader, $locale,
+                text_domain: $text_domain,
+                system_preferences: $config['system_locales'] ?? [],
+                logger: is_string($config['log'] ?? null) ? logger()->channel($config['log']) : null
+            );
 
             $trans->setFallback($app['config']['app.fallback_locale']);
-            $trans->setSystemPreferences($config['system_locales'] ?? []);
-            if (is_string($config['log'] ?? false)) {
-                $trans->setLogger(logger()->channel($config['log']));
-            }
 
             return $trans;
         });
