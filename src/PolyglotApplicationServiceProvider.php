@@ -132,7 +132,7 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
         if ($producer) {
             $producer->setFilesystem(new Filesystem());
             $producer->setStorage(lang_path());
-            $producer->setLocales($config['locales']);
+            $producer->setLocales(array_keys($config['locales']));
         }
 
         return $producer;
