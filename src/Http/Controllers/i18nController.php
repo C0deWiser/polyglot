@@ -18,7 +18,7 @@ class i18nController extends Controller
 
         $data = [
             'enabled' => $config['enabled'],
-            'locales' => array_values($config['locales']),
+            'locales' => Polyglot::getLocales(),
             'stat' => $lang_path->exists() ? $lang_path->allFiles()->statistics()->toArray() : []
         ];
 
