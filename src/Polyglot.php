@@ -217,13 +217,13 @@ class Polyglot extends \Illuminate\Translation\Translator
     }
 
     /**
-     * Get known locales assoc array. Key is lang folder, value is ISO locale.
+     * Get array of known locales.
      *
      * @return array
      */
     public static function getLocales(): array
     {
-        return array_keys(self::$supported_locales);
+        return array_keys(config('polyglot.locales'));
     }
 
     public static function getCategoryName(int $category): string
