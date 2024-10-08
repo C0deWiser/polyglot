@@ -34,9 +34,9 @@ class ProducerOfPo implements ProducerContract
         $this->msgmerge = $executable;
     }
 
-    public function produce(): bool
+    public function produce(?array $locales = null): bool
     {
-        foreach ($this->locales as $locale) {
+        foreach (($locales ?? $this->locales) as $locale) {
             $category = basename($this->source->parent());
             $text_domain = $this->source->name();
 

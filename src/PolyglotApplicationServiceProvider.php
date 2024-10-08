@@ -43,11 +43,11 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
     protected function registerRoutes()
     {
         Route::group([
-            'domain' => config('polyglot.domain', null),
-            'prefix' => config('polyglot.path'),
+            'domain'     => config('polyglot.domain', null),
+            'prefix'     => config('polyglot.path'),
             'middleware' => config('polyglot.middleware', 'web'),
         ], function () {
-            $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
+            $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
         });
     }
 
@@ -58,9 +58,9 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
      */
     protected function registerResources()
     {
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'polyglot');
-        $this->loadJsonTranslationsFrom(__DIR__ . '/../resources/lang');
-        $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', 'polyglot');
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'polyglot');
+        $this->loadJsonTranslationsFrom(__DIR__.'/../resources/lang');
+        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'polyglot');
     }
 
     /**
@@ -86,7 +86,7 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/polyglot.php', 'polyglot');
+        $this->mergeConfigFrom(__DIR__.'/../config/polyglot.php', 'polyglot');
 
         $this->registerExtractor();
         $this->registerFinder();
@@ -196,8 +196,8 @@ class PolyglotApplicationServiceProvider extends ServiceProvider
         $extractor->setFilesystem(new Filesystem);
         $extractor->setBasePath(base_path());
         $extractor->setTempPath($this->getTempPath());
-        $extractor->setSources((array)$text_domain_config['include']);
-        $extractor->setExclude((array)$text_domain_config['exclude'] ?? []);
+        $extractor->setSources((array) $text_domain_config['include']);
+        $extractor->setExclude((array) ($text_domain_config['exclude'] ?? []));
         $extractor->setExecutable($polyglot_config['executables']['xgettext']);
 
         if ($keywords = config('polyglot.keywords')) {

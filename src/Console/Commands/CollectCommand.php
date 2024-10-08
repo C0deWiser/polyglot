@@ -19,6 +19,7 @@ class CollectCommand extends Command
      * @var string
      */
     protected $signature = 'polyglot:collect 
+                            {--L|lang= : The only lang to produce} 
                             {--D|domain= : The only text domain to collect} 
                             {--O|output= : Save collected strings to this dir instead of default} 
                             ';
@@ -84,13 +85,15 @@ class CollectCommand extends Command
             $separator->setSource($extracted);
             $separator->separate();
 
+            $locales = $this->option('lang') ? [$this->option('lang')] : null;
+
             $producerOfKeys = $manager->getProducersOfKeys();
             $producerOfKeys->setSource($separator->getExtractedKeys());
-            $producerOfKeys->produce();
+            $producerOfKeys->produce($locales);
 
             $producerOfStrings = $manager->getProducersOfStrings();
             $producerOfStrings->setSource($separator->getExtractedStrings());
-            $producerOfStrings->produce();
+            $producerOfStrings->produce($locales);
 
             $this->newLine();
 

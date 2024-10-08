@@ -18,9 +18,9 @@ class ProducerOfJson implements Contracts\ProducerContract
 {
     use FilesystemSetup, AsProducer;
 
-    public function produce(): bool
+    public function produce(?array $locales = null): bool
     {
-        foreach ($this->locales as $locale) {
+        foreach (($locales ?? $this->locales) as $locale) {
 
             $output = $this->getOutputFile($locale);
 

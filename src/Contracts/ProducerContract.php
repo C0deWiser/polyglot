@@ -35,9 +35,11 @@ interface ProducerContract
     /**
      * Populate extracted strings through every locale.
      *
+     * @param  null|array  $locales  *
+     *
      * @return bool
      */
-    public function produce(): bool;
+    public function produce(?array $locales = null): bool;
 
     /**
      * Get processed files.
