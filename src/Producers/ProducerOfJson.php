@@ -20,7 +20,9 @@ class ProducerOfJson implements Contracts\ProducerContract
 
     public function produce(?array $locales = null): bool
     {
-        foreach (($locales ?? $this->locales) as $locale) {
+        $locales = $locales ? array_intersect($locales, $this->locales) : $this->locales;
+
+        foreach ($locales as $locale) {
 
             $output = $this->getOutputFile($locale);
 

@@ -36,7 +36,9 @@ class ProducerOfPo implements ProducerContract
 
     public function produce(?array $locales = null): bool
     {
-        foreach (($locales ?? $this->locales) as $locale) {
+        $locales = $locales ? array_intersect($locales, $this->locales) : $this->locales;
+
+        foreach ($locales as $locale) {
             $category = basename($this->source->parent());
             $text_domain = $this->source->name();
 

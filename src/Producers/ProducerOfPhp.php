@@ -22,7 +22,9 @@ class ProducerOfPhp implements ProducerContract
 
     public function produce(?array $locales = null): bool
     {
-        foreach (($locales ?? $this->locales) as $locale) {
+        $locales = $locales ? array_intersect($locales, $this->locales) : $this->locales;
+
+        foreach ($locales as $locale) {
 
             $this->source->allEntries()
                 // Group extracted strings by first key segment
