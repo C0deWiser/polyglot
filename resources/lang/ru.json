@@ -3,7 +3,7 @@
     "Close": "Закрыть",
     "Context": "Контекст",
     "Dashboard": "Статистика",
-    "Developer Comments": "Комментарии разработчика",
+    "Developer Comment": "Комментарий разработчика",
     "Editor": "Редактор",
     "Fuzzy": "Спорно",
     "Header": "Заголовок",
@@ -40,6 +40,6 @@
     "Unknown": "Неизвестно",
     "Value": "Значение",
     "Working mode": "Режим работы",
-    "Your Comment": "Ваш комментарий",
+    "Translator Comment": "Комментарий переводчика",
     "copy from above": "скопировать"
 }

@@ -236,7 +236,7 @@ class XgettextExtractor implements ExtractorContract
         return collect($files)
             ->filter(function (string $path) use ($excluding) {
                 foreach ($excluding as $exclude) {
-                    if (strpos($path, $exclude) === 0) {
+                    if (str_starts_with($path, $exclude)) {
                         return false;
                     }
                 }

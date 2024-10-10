@@ -72,6 +72,9 @@ export default {
                 this.row.msgstr = this.row.msgid;
             }
         },
+        urlify(text) {
+            return text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+        },
     }
 }
 </script>
@@ -144,14 +147,16 @@ export default {
                         </div>
 
                         <div class="form-group" v-if="row.developer_comments && row.developer_comments.length">
-                            <label>{{ $root.$gettext('Developer Comments') }}</label>
+                            <label>{{ $root.$gettext('Developer Comment') }}</label>
                             <blockquote class="developer-comments text-muted small">
-                                <div v-for="comment in row.developer_comments" class="developer-comment">{{ comment }}</div>
+                                <template v-for="(comment,cx) in row.developer_comments" :key="'developer-comment_'+cx">
+                                    <div v-html="urlify(comment)" class="developer-comment developer-comment_urlify"></div>
+                                </template>
                             </blockquote>
                         </div>
 
                         <div class="form-group" v-if="poeditor">
-                            <label>{{ $root.$gettext('Your Comment') }}</label>
+                            <label>{{ $root.$gettext('Translator Comment') }}</label>
                             <textarea class="form-control" id="trans_comm"
                                       v-model="row.comment" :disabled="row.obsolete"></textarea>
                         </div>
