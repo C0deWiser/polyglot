@@ -128,8 +128,11 @@ class Polyglot extends \Illuminate\Translation\Translator
      */
     protected function putEnvironment(string $locale): void
     {
-        $result = putenv('LANG='.$locale);
+        $result = putenv("LANG=$locale");
         $this->logger?->debug("putenv(LANG=$locale) == $result");
+
+        $result = putenv("LC_ALL=$locale");
+        $this->logger?->debug("putenv(LC_ALL=$locale) == $result");
 
         $locales = self::$supported_locales[$locale] ?? [$locale];
 
