@@ -3,7 +3,7 @@
     "description": "Translation strings parser and web editor for Laravel applications",
     "keywords": ["gettext", "trans", "laravel", "localization", "i18n", "L10n", "parse"],
     "license": "MIT",
-    "version": "2.1.1",
+    "version": "2.1.2",
     "authors": [
         {
             "name": "pm",
@@ -14,7 +14,7 @@
         "php": "^8.1",
         "ext-gettext": "*",
         "ext-json": "*",
-        "laravel/framework": "^10.0|^11.0",
+        "laravel/framework": ">=10.0",
         "sepia/po-parser": "^6.0"
     },
     "autoload": {
