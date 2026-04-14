@@ -7,6 +7,7 @@ use Illuminate\Contracts\Translation\Loader;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Psr\Log\LoggerInterface;
+use function Illuminate\Support\enum_value;
 
 class Polyglot extends \Illuminate\Translation\Translator
 {
@@ -28,7 +29,7 @@ class Polyglot extends \Illuminate\Translation\Translator
     /**
      * When application sets locale we will set up gettext.
      *
-     * @param  string  $locale
+     * @param  \UnitEnum|string  $locale
      */
     public function setLocale($locale): void
     {
@@ -124,10 +125,12 @@ class Polyglot extends \Illuminate\Translation\Translator
     /**
      * Configure environment to gettext load proper files.
      *
-     * @param  string  $locale
+     * @param  \UnitEnum|string  $locale
      */
-    protected function putEnvironment(string $locale): void
+    protected function putEnvironment($locale): void
     {
+        $locale = enum_value($locale);
+
         $result = putenv("LANG=$locale");
         $this->logger?->debug("putenv(LANG=$locale) == $result");
 
