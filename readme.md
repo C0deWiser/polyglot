@@ -15,7 +15,7 @@ Polyglot provides a beautiful translation editor and can extract translations st
 
 ![Editor dashboard](docs/pg-dashboard.png)
 
-With Polyglot you may be sure, that you application is fully localized.
+ With Polyglot you may be sure that your application is fully localized.
 
 ## Installation
 
@@ -118,7 +118,7 @@ Define at least one group of source files to collect strings from.
 
 Gettext depends on server support of locales. 
 For example, your application provides Italian language (`it`). 
-And your server supports following locales:
+And your server supports the following locales:
 
 ``` bash
 > locale -a | grep it
@@ -153,7 +153,7 @@ php artisan polyglot:collect
 
 Polyglot uses `sources` to collect translation strings, understanding `trans`, `trans_choice`, `@trans` and other Laravel specific directives.
 
-After collecting strings your application's `resourse/lang` folder may look like:
+After collecting strings your application's `resources/lang` folder may look like:
 
     resources/
       lang/
@@ -170,7 +170,7 @@ After collecting strings your application's `resourse/lang` folder may look like
         en.json
         it.json
 
-You only left to translate files.
+All that's left is to translate the files.
 
 ### Loading Strings
 
@@ -228,7 +228,7 @@ You may configure additional group of source files that way:
 
 ### Collecting strings
 
-After you run `polyglot:collect` Artisan command, your application's `resourse/lang` folder may look like:
+After you run `polyglot:collect` Artisan command, your application's `resources/lang` folder may look like:
 
     resources/
       lang/
@@ -247,17 +247,17 @@ After you run `polyglot:collect` Artisan command, your application's `resourse/l
 
 ### Compiling strings
 
-Generated files contains collected string, that you might want to translate. After you have finished translation you should compile all `po` files to `mo` format, that is understandable by Gettext. Use Artisan command to compile.
+Generated files contain collected strings that you might want to translate. After you have finished translation you should compile all `po` files to `mo` format, which is understandable by Gettext. Use Artisan command to compile.
 
 ```shell
 php artisan polyglot:compile
 ```
 
-Beside every `po` file will appear `mo` file.
+A `mo` file will appear beside every `po` file.
 
 > Do remember, that php caches contents of `mo` files. So, after compiling, be sure, you have restarted the web server.
 
-### Backward Compatability
+### Backward Compatibility
 
 Even using Gettext driver, you may continue to use Laravel translator directives, such as `trans` and `trans_choice`.
 
@@ -309,7 +309,7 @@ npgettext(string $context, string $singular, string $plural, int $count): string
 
 ![Editor](docs/pg-poeditor.png)
 
-Gettext can be very helpful for the translator. Use following recipes to get localization done well.
+Gettext can be very helpful for the translator. Use the following recipes to get localization done well.
 
 #### References
 
@@ -352,9 +352,9 @@ Here we have two messages with equal `msgid` but with different `msgctxt` that i
 
 #### Translator comments
 
-While editing strings, translator may left one or many comments. This comments may be helpful for future translators.
+While editing strings, translator may leave one or many comments. This comments may be helpful for future translators.
 
-    # They say it was about posibilities...
+    # They say it was about possibilities...
     msgid "May"
     msgstr ""
 
